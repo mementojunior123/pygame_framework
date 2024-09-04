@@ -26,6 +26,7 @@ class Sprite:
     
     @property
     def position(self) -> pygame.Vector2:
+        if not hasattr(self, 'pivot'): self.pivot = None
         if self.pivot is None:
             return self._position
         else:
@@ -33,13 +34,17 @@ class Sprite:
     
     @position.setter
     def position(self, new_val : pygame.Vector2):
+        if not hasattr(self, 'pivot'): self.pivot = None
         if self.pivot is None:
             self._position = new_val
         else:
             self.pivot.origin = new_val
+        
+        self.align_rect()
     
     @property
     def true_position(self) -> pygame.Vector2:
+        if not hasattr(self, 'pivot'): self.pivot = None
         if self.pivot is None:
             return self._position
         else:
@@ -47,10 +52,25 @@ class Sprite:
     
     @true_position.setter
     def true_position(self, new_val):
+        if not hasattr(self, 'pivot'): self.pivot = None
         if self.pivot is None:
             self._position = new_val
         else:
             self.pivot.position = new_val
+        
+        self.align_rect()
+    
+    @property
+    def angle(self) -> float:
+        if not hasattr(self, 'pivot'): self.pivot = None
+        return self.pivot.angle
+    
+    @angle.setter
+    def angle(self, new_val : float):
+        if not hasattr(self, 'pivot'): self.pivot = None
+        self.pivot.angle = new_val
+        self.image, self.rect, new_pos = self.pivot.rotate_og_image() if self.pivot.original_image else self.pivot.rotate_image()
+        self.align_rect()
 
     @classmethod
     def register_class(cls, class_to_register : 'Sprite'):
@@ -201,9 +221,6 @@ class Sprite:
     @y.setter
     def y(self, value):
         self.position.y = value
-    
-    def align_rect(self):
-        self.rect.center = round(self.position)
 
     def get_colliding(self, collision_group : list['Sprite'], reqs : dict[str,Any] = None):
         if reqs is None: reqs = {}

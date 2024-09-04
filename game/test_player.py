@@ -1,14 +1,14 @@
 import pygame
 
 from game.sprite import Sprite
-
+from utils.pivot_2d import Pivot2D
 
 class TestPlayer(Sprite):
     active_elements : list['TestPlayer'] = []
     inactive_elements : list['TestPlayer'] = []
     #load assets
-    test_image : pygame.Surface = pygame.surface.Surface((50, 50))
-    pygame.draw.rect(test_image, "Red", (0,0, 50, 50))
+    test_image : pygame.Surface = pygame.surface.Surface((20, 60))
+    pygame.draw.rect(test_image, "Red", (0,0, *test_image.get_size()))
 
     def __init__(self) -> None:
         super().__init__()
@@ -25,6 +25,9 @@ class TestPlayer(Sprite):
         element.align_rect()
         element.zindex = 0
 
+        element.pivot = Pivot2D(element._position, element.image, (0, 255, 0))
+        element.pivot.pivot_offset = pygame.Vector2(-0, 30)
+
         cls.unpool(element)
         return element
     
@@ -40,14 +43,18 @@ class TestPlayer(Sprite):
             move_vector += pygame.Vector2(0, 1)
         if keyboard_map[pygame.K_w]:
             move_vector += pygame.Vector2(0, -1)
+        if keyboard_map[pygame.K_e]:
+            self.angle += 5 * delta
+        if keyboard_map[pygame.K_q]:
+            self.angle -= 5 * delta
         if move_vector.magnitude(): move_vector.normalize()
+        move_vector.rotate_ip(self.angle)
         self.position += move_vector * speed * delta
-        self.align_rect()
     
     def clean_instance(self):
         self.image = None
         self.rect = None
-
+        self.pivot = None
         self.position = pygame.Vector2(0,0)
         self.zindex = None
 

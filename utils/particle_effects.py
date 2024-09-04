@@ -4,6 +4,8 @@ from utils.animation import Animation
 import utils.interpolation as interpolation
 from random import random
 from math import sin, radians, cos
+from game.sprite import Sprite
+from utils.pivot_2d import Pivot2D
 
 def __random_float(a, b):
     return random() * (b-a) + a
@@ -21,16 +23,17 @@ def vec_from_angle(angle, magnitude = 1) -> pygame.Vector2:
     return pygame.Vector2(x, y) * magnitude
 
 
-class Particle:
+class Particle(Sprite):
     active_elements : list['Particle'] = []
     inactive_elements : list['Particle']  = []
     test_image = pygame.surface.Surface((4,4))
     pygame.draw.rect(test_image, 'White', (0, 0, 4, 4))
 
     def __init__(self) -> None:
-        self.position = pygame.Vector2(0,0)
+        self._position = pygame.Vector2(0,0)
         self.lifetime : float = 0
         self.lifetime_timer : Timer = Timer(-1)
+        self.pivot : Pivot2D|None = None
 
         self.velocity : pygame.Vector2
         self.accelaration : pygame.Vector2
@@ -44,9 +47,8 @@ class Particle:
         self.kill_offscreen = True
         Particle.inactive_elements.append(self)
     
-    def reset(self, pos, lifetime, update_method, main_texture : pygame.Surface, velocity = None, accel = None, drag = None, 
-              alt_textures = None, anim : Animation = None, destroy_offscreen : bool = False
-              ,angle = None, mag = None, copy_surf = False):
+    def spawn(self, pos, lifetime, update_method, main_texture : pygame.Surface, velocity = None, accel = None, drag = None, 
+              alt_textures = None, anim : Animation = None, destroy_offscreen : bool = False, angle = None, mag = None, copy_surf = False):
         self.position = pos
 
         if copy_surf is False:
@@ -141,19 +143,6 @@ class Particle:
     def is_active(self):
         return self in Particle.active_elements
 
-    @classmethod
-    def update_all(cls, delta):
-        element : cls
-        for element in cls.active_elements:
-            element.update(delta)
-    
-    @classmethod
-    def draw_all(cls, display):
-        element : cls
-        for element in cls.active_elements:
-            element.draw(display)
-
-
     @property
     def x(self):
        return self.position.x
@@ -205,8 +194,7 @@ class ParticleEffect:
         kill_offscreen = self.data.get('destroy_offscreen', True)
         angle = rand_float(self.data['angle'])
         mag = rand_float(self.data['speed'])
-
-        new_particle.reset(new_pos, life, self.data['update_method'], self.data['main_texture'], 
+        new_particle.spawn(new_pos, life, self.data['update_method'], self.data['main_texture'], 
                            velocity=velocity, accel=accel, drag=drag, alt_textures=self.data['alt_textures'], anim=self.data['animation'], 
                            destroy_offscreen=kill_offscreen, angle=angle, mag=mag, copy_surf = self.data['copy_surface'])
         
@@ -237,7 +225,7 @@ class ParticleEffect:
             count, remainder = divmod(track.timer.get_time() , track.timer.duration)
             track.timer.restart()
             if track.can_emit:
-                for _ in range(int(count)):
+                for _ in range(round(count)):
                     self.emit(track)
             track.timer.start_time -= remainder
 
@@ -295,7 +283,7 @@ class ParticleEffectTrack:
         self.can_emit = False
 
 TEMPLATE = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : None, 'speed' : None,
-            'accel_x' : [0,0], 'accel_y' : [0,0], 'drag' : [0, 0], 
+            'accel_x' : [0,0], 'accel_y' : [0,0], 'drag' : [0, 0],
             'init_spawn_count' : 0, 'cooldown' : 0.25, 'target_spawn_count' : 0, 'lifetime' : [0,0], 'part_per_wave' : 1,
             'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
             'update_method' : 'simulated', 'destroy_offscreen' : True, 'copy_surface' : False}
