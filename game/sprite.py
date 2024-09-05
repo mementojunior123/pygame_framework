@@ -24,6 +24,10 @@ class Sprite:
     def align_rect(self):
         self.rect.center = round(self.true_position)
     
+    def move_rect(self, anchor : str, position : pygame.Vector2):
+        self.rect.__setattr__(anchor, position)
+        self.true_position = pygame.Vector2(self.rect.center)
+    
     @property
     def position(self) -> pygame.Vector2:
         if not hasattr(self, 'pivot'): self.pivot = None

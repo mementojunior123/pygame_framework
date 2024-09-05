@@ -65,6 +65,11 @@ class Pivot2D:
             self._position = rotate_around_pivot_pos_only(self._origin, self._angle, self._pivot_offset)
         return self._position
     
+    @position.setter
+    def position(self, new_value : pygame.Vector2):
+        offset = new_value - self.position
+        self.origin += offset
+    
     def rotate_image(self, image : pygame.Surface) -> tuple[pygame.Surface, pygame.Rect, pygame.Vector2]:
         return rotate_around_pivot_accurate(image, self._origin, self._angle, self._pivot_offset, debug=False, colorkey=self.img_colorkey)
     

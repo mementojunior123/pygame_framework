@@ -2,12 +2,13 @@ import json
 import pygame
 from utils.my_timer import Timer
 import utils.interpolation as interpolation
-
+from typing import Any, Callable
 
 
 class AnimationTrack:
-    def __init__(self, owner, data : list[dict], name):
-        self.target = owner
+    elements : list['AnimationTrack'] = []
+    def __init__(self, owner : 'Sprite', data : list[dict], name : str|None = None, time_source : Callable[[], float]|None = None, timer_factor : float = 1):
+        self.target : Sprite = owner
         
         new_data = [None for instruction in data]
         for i, value in enumerate(data):
@@ -23,7 +24,10 @@ class AnimationTrack:
         self.has_started = False
         self.has_ended= False
         self.time_scale = 1
-        self.name = name
+        self.name : str|None = name
+
+        self.time_source : Callable[[], float]|None = time_source
+        self.timer_factor : float = timer_factor
     
     def reset(self):
         instruction : AnimationInstruction
@@ -52,13 +56,19 @@ class AnimationTrack:
         instruction.execute(self)
                 
     
-    def play(self):
+    def play(self, update_manually : bool = False):
         self.has_started= True
+        self.has_ended = False
         instruction: AnimationInstruction
         for i, instruction in enumerate(self.data):
             if self.blocking_tasks: break
             self.do_instruction(instruction, i)
             if instruction.has_ended: self.progress += 1
+        if not update_manually:
+            AnimationTrack.elements.append(self)
+    
+    def stop(self):
+        self.has_ended = True
             
 
     def update(self):
@@ -96,29 +106,47 @@ class AnimationTrack:
             if instruction.has_ended: self.progress += 1
 
         if self.progress >= self.count: self.has_ended = True
+    
+    @classmethod
+    def update_all_elements(cls):
+        to_del : list[AnimationTrack] = []
+        for element in cls.elements:
+            element.update()
+            if element.has_ended:
+                to_del.append(element)
+        for element in to_del:
+            cls.elements.remove(element)
+        to_del.clear()
         
 
 
 
 class AnimationInstruction:
     def __init__(self, data):
-        self.type = data["type"]
-        for key in data:
-            val = data[key]
-            self.__setattr__(key, val)
-        self.data = data
+        self.type : str = data["type"]
+        self.data : dict = data
 
-        self.has_started = False
-        self.has_ended = False
+        self.has_started : bool = False
+        self.has_ended : bool = False
 
-        self.start_value = None
-        self.last_update = None
-        self.last_value = None
-        self.timer : Timer = None
+        self.start_value : Any|None = None
+        self.last_update : Any|None = None
+        self.last_value : Any|None = None
+        self.timer : Timer|None = None
     
     @staticmethod
-    def new(data : dict):
-        pass
+    def new(data : dict) -> 'AnimationInstruction':
+        anim_conversion_dict : dict[str, AnimationInstruction] = {
+            "wait" : WaitInstruction,
+            "delay" : DelayInstruction,
+            "move_to" : MoveToInstruction,
+            "move_by" : MoveByInstruction
+        }
+        instruction_type : str = data['type']
+        if instruction_type in anim_conversion_dict:
+            return (anim_conversion_dict[instruction_type])(data)
+        else:
+            return AnimationInstruction(data)
     
     def execute(self, track : AnimationTrack):
         match self.type:
@@ -144,7 +172,7 @@ class AnimationInstruction:
                     indexes = [indexes]
 
                 for index in indexes:
-                    if not self.data[index].has_ended: return     
+                    if not track.data[index].has_ended: return     
                 self.has_ended = True
 
 
@@ -311,27 +339,73 @@ class AnimationInstruction:
                 self.target.image.set_alpha(result)
         
     def reset(self):
-        data = self.data
-        self.type = data["type"]
-        for key in data:
-            val = data[key]
-            self.__setattr__(key, val)
-        self.data = data
-
         self.has_started = False
         self.has_ended = False
 
         self.start_value = None
         self.last_update = None
         self.last_value = None
-        self.timer : Timer = None
+        self.timer = None
 
-    def __getitem__(self, index):
-        return self.data[index]
+
+class WaitInstruction(AnimationInstruction):
+
+    def __init__(self, data):
+        super().__init__(data)
+        self.time : float = data['time']
+
+    def execute(self, track: AnimationTrack):
+        if not self.has_started:
+            self.has_started = True
+            self.timer = Timer(self.time / self.time_scale)
+            track.blocking_tasks.append(self)
+
+        if self.timer.isover():
+            self.has_ended = True
+        return
+
+class DelayInstruction(AnimationInstruction):
+    def __init__(self, data):
+        super().__init__(data)
+        indexes : int|list[int] = data["index"]
+        self.indexes : list[int] = [indexes] if type(indexes) == int else indexes
     
-    def __setitem__(self, index, val):
-        self.data[index] = val
-        self.__setattr__(index, val)
+    def execute(self, track: AnimationTrack):
+        if not self.has_started:
+            self.has_started = True
+            track.blocking_tasks.append(self)
+        
+        for index in self.indexes:
+            if not track.data[index].has_ended: return     
+        self.has_ended = True
+
+class MoveByInstruction(AnimationInstruction):
+    def __init__(self, data):
+        super().__init__(data)
+        self.offset : pygame.Vector2 = pygame.Vector2(data['offset'])
+    
+    def execute(self, track: AnimationTrack):
+        self.has_started = True
+        track.target.position += self.offset
+        self.has_ended = True
+        return
+
+class MoveToInstruction(AnimationInstruction):
+    def __init__(self, data):
+        super().__init__(data)
+        self.anchor : str|None = data['anchor']
+        self.target : pygame.Vector2 = pygame.Vector2(data['target'])
+    
+    def execute(self, track: AnimationTrack):
+        self.has_started = True
+        if self.anchor is None:
+            track.target.position = self.target
+        elif self.anchor == 'true':
+            track.target.true_position = self.target
+        else:
+            track.target.move_rect(self.anchor, self.target)
+        self.has_ended = True
+        return
 
 TEMPLATES = [
     {"type" : "move_by", "offset" : (0,0)},
@@ -351,9 +425,15 @@ TEMPLATES = [
     {"type" : "alpha_gradient", "target" : 0, "time" : 0, "easing_style" : interpolation.linear},
              ]
 
+test_anim = [
+    {"type" : "move_by", "offset" : [50, 50]},
+    {"type" : "wait", "time" : 1},
+    {"type" : "move_to", "target" : [300, 300], "anchor" : None}
+    ]
+
 
 class Animation:
-    ANIM_DATA = {}
+    ANIM_DATA = {"test" : test_anim}
 
     @classmethod
     def get_animation(cls, name):
