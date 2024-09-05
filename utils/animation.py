@@ -48,196 +48,8 @@ class AnimationTrack:
     def __delitem__(self, index):
         del self.data[index]
     
-    def do_instruction(self, instruction : 'AnimationInstruction', index : int = None):
-
-        match instruction.type:
-
-            case "wait":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    instruction.timer = Timer(instruction.time / self.time_scale)
-                    self.blocking_tasks.append(instruction)
-
-                if instruction.timer.isover():
-
-                    instruction.has_ended = True
-                return
-            
-            case "delay":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    self.blocking_tasks.append(instruction)
-                
-                indexes = instruction.index
-                if type(indexes) is int:
-                    indexes = [indexes]
-
-                for index in indexes:
-                    if not self.data[index].has_ended: return     
-                instruction.has_ended = True
-
-
-            case "move_by":
-                instruction.has_started = True
-                self.target.x += instruction.offset[0]
-                self.target.y += instruction.offset[1]
-                self.target.rect.center = (round(self.target.x), round(self.target.y))
-                instruction.has_ended = True
-                return
-
-            case "move_to":
-                instruction.has_started = True
-                self.target.rect.__setattr__(instruction.anchor, instruction.target)
-                self.target.x, self.target.y = self.target.rect.center
-                instruction.has_ended = True
-                return
-            
-            case "slide_to":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    self.tasks.append(instruction)
-                    instruction.timer = Timer(instruction.time / self.time_scale)
-                    instruction.start_value = self.target.rect.__getattribute__(instruction.anchor)
-                    if type(instruction.easing_style) is str:
-                        instruction.easing_style = getattr(interpolation, instruction.easing_style)                 
-                    return
-                
-
-                alpha = instruction.timer.get_time() / instruction.timer.duration
-                if alpha > 1: 
-                    alpha = 1
-                    instruction.has_ended = True
-                
-
-                new_pos = interpolation.lerp(instruction.start_value, instruction.target, instruction.easing_style(alpha))
-
-                self.target.rect.__setattr__(instruction.anchor, new_pos)
-                self.target.x, self.target.y = self.target.rect.center
-                return
-            
-            case "slide_by":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    self.tasks.append(instruction)
-                    instruction.timer = Timer(instruction.time / self.time_scale)
-                    instruction.start_value = (self.target.x, self.target.y)
-                    instruction.last_value = (0,0)
-                    if type(instruction.easing_style) is str:
-                        instruction.easing_style = getattr(interpolation, instruction.easing_style)             
-                    return
-                
-                
-                alpha = instruction.timer.get_time() / instruction.timer.duration
-                if alpha > 1: 
-                    alpha = 1
-                    instruction.has_ended = True
-                
-                new_offset = interpolation.lerp((0, 0), instruction.offset, instruction.easing_style(alpha))
-                prev_offset= instruction.last_value
-                result = (new_offset[0] - prev_offset[0], new_offset[1] - prev_offset[1])
-
-                
-                self.target.x += result[0]
-                self.target.y += result[1]
-
-                self.target.rect.center = (round(self.target.x), round(self.target.y))
-                instruction.last_value = new_offset
-
-                return
-
-            case "rotate":
-                instruction.has_started = True
-                self.target.image = pygame.transform.rotate(self.target.image, instruction.angle)
-                instruction.has_ended = True
-                return
-            
-            case "rotate_over_time":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    self.tasks.append(instruction)
-                    instruction.timer = Timer(instruction.time / self.time_scale)
-                    instruction.start_value = self.target.image
-                    if type(instruction.easing_style) is str:
-                        instruction.easing_style = getattr(interpolation, instruction.easing_style)
-                    return
-                
-                alpha = instruction.timer.get_time() / instruction.timer.duration
-                if alpha > 1: 
-                    alpha = 1
-                    instruction.has_ended = True
-                
-                angle = interpolation.lerp(0, instruction.angle, instruction.easing_style(alpha))
-                self.target.image = pygame.transform.rotozoom(instruction.start_value, angle, 1)
-                old_center = self.target.rect.center
-                self.target.rect = self.target.image.get_rect(center = old_center)
-                self.target.x, self.target.y = self.target.rect.center
-
-            
-            case "switch_image":
-                instruction.has_started = True
-                source = self.target.__getattribute__(instruction.source)
-                new_image = source[instruction.index]
-                if instruction.dynamic_anchor:
-                    old_pos = self.target.rect.__getattribute__(instruction.dynamic_anchor)
-                    self.target.image = new_image
-                    self.target.rect = self.target.image.get_rect()
-                    self.target.rect.__setattr__(instruction.dynamic_anchor, old_pos)
-                else:
-                    self.target.image = new_image
-                
-                instruction.has_ended = True
-                return
-            
-            case "set_alpha":
-                instruction.has_started = True
-                self.target.image.set_alpha(instruction.target)
-                instruction.has_ended = True
-                return
-            
-            case "image_gradient":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    self.tasks.append(instruction)
-                    instruction.timer = Timer(instruction.time / self.time_scale)
-                    instruction.start_value = self.target.image
-                    if type(instruction.easing_style) is str:
-                        instruction.easing_style = getattr(interpolation, instruction.easing_style)
-                    return
-                
-                alpha = instruction.timer.get_time() / instruction.timer.duration
-                if alpha > 1: 
-                    alpha = 1
-                    instruction.has_ended = True
-
-                index = int(interpolation.lerp(0, instruction.target_index, instruction.easing_style(alpha))  )  
-                source = self.target.__getattribute__(instruction.source)
-                new_image = source[index]
-
-                if instruction.dynamic_anchor:
-                    old_pos = self.target.rect.__getattribute__(instruction.dynamic_anchor)
-                    self.target.image = new_image
-                    self.target.rect = self.target.image.get_rect()
-                    self.target.rect.__setattr__(instruction.dynamic_anchor, old_pos)
-                else:
-                    self.target.image = new_image
-            
-            case "alpha_gradient":
-                if not instruction.has_started:
-                    instruction.has_started = True
-                    self.tasks.append(instruction)
-                    instruction.timer = Timer(instruction.time / self.time_scale)
-                    instruction.start_value = self.target.image.get_alpha()
-                    if type(instruction.easing_style) is str:
-                        instruction.easing_style = getattr(interpolation, instruction.easing_style)
-                    return
-                
-                alpha = instruction.timer.get_time() / instruction.timer.duration
-                if alpha > 1: 
-                    alpha = 1
-                    instruction.has_ended = True
-
-                result = interpolation.lerp(instruction.start_value, instruction.target, instruction.easing_style(alpha))
-                self.target.image.set_alpha(result)
+    def do_instruction(self, instruction : 'AnimationInstruction', index : int|None = None):
+        instruction.execute(self)
                 
     
     def play(self):
@@ -303,6 +115,200 @@ class AnimationInstruction:
         self.last_update = None
         self.last_value = None
         self.timer : Timer = None
+    
+    @staticmethod
+    def new(data : dict):
+        pass
+    
+    def execute(self, track : AnimationTrack):
+        match self.type:
+
+            case "wait":
+                if not self.has_started:
+                    self.has_started = True
+                    self.timer = Timer(self.time / self.time_scale)
+                    track.blocking_tasks.append(self)
+
+                if self.timer.isover():
+
+                    self.has_ended = True
+                return
+            
+            case "delay":
+                if not self.has_started:
+                    self.has_started = True
+                    track.blocking_tasks.append(self)
+                
+                indexes = self.index
+                if type(indexes) is int:
+                    indexes = [indexes]
+
+                for index in indexes:
+                    if not self.data[index].has_ended: return     
+                self.has_ended = True
+
+
+            case "move_by":
+                self.has_started = True
+                self.target.x += self.offset[0]
+                self.target.y += self.offset[1]
+                self.target.rect.center = (round(self.target.x), round(self.target.y))
+                self.has_ended = True
+                return
+
+            case "move_to":
+                self.has_started = True
+                self.target.rect.__setattr__(self.anchor, self.target)
+                self.target.x, self.target.y = self.target.rect.center
+                self.has_ended = True
+                return
+            
+            case "slide_to":
+                if not self.has_started:
+                    self.has_started = True
+                    track.tasks.append(self)
+                    self.timer = Timer(self.time / self.time_scale)
+                    self.start_value = self.target.rect.__getattribute__(self.anchor)
+                    if type(self.easing_style) is str:
+                        self.easing_style = getattr(interpolation, self.easing_style)                 
+                    return
+                
+
+                alpha = self.timer.get_time() / self.timer.duration
+                if alpha > 1: 
+                    alpha = 1
+                    self.has_ended = True
+                
+
+                new_pos = interpolation.lerp(self.start_value, self.target, self.easing_style(alpha))
+
+                self.target.rect.__setattr__(self.anchor, new_pos)
+                self.target.x, self.target.y = self.target.rect.center
+                return
+            
+            case "slide_by":
+                if not self.has_started:
+                    self.has_started = True
+                    track.tasks.append(self)
+                    self.timer = Timer(self.time / self.time_scale)
+                    self.start_value = (self.target.x, self.target.y)
+                    self.last_value = (0,0)
+                    if type(self.easing_style) is str:
+                        self.easing_style = getattr(interpolation, self.easing_style)             
+                    return
+                
+                
+                alpha = self.timer.get_time() / self.timer.duration
+                if alpha > 1: 
+                    alpha = 1
+                    self.has_ended = True
+                
+                new_offset = interpolation.lerp((0, 0), self.offset, self.easing_style(alpha))
+                prev_offset= self.last_value
+                result = (new_offset[0] - prev_offset[0], new_offset[1] - prev_offset[1])
+
+                
+                self.target.x += result[0]
+                self.target.y += result[1]
+
+                self.target.rect.center = (round(self.target.x), round(self.target.y))
+                self.last_value = new_offset
+
+                return
+
+            case "rotate":
+                self.has_started = True
+                self.target.image = pygame.transform.rotate(self.target.image, self.angle)
+                self.has_ended = True
+                return
+            
+            case "rotate_over_time":
+                if not self.has_started:
+                    self.has_started = True
+                    track.tasks.append(self)
+                    self.timer = Timer(self.time / self.time_scale)
+                    self.start_value = self.target.image
+                    if type(self.easing_style) is str:
+                        self.easing_style = getattr(interpolation, self.easing_style)
+                    return
+                
+                alpha = self.timer.get_time() / self.timer.duration
+                if alpha > 1: 
+                    alpha = 1
+                    self.has_ended = True
+                
+                angle = interpolation.lerp(0, self.angle, self.easing_style(alpha))
+                self.target.image = pygame.transform.rotozoom(self.start_value, angle, 1)
+                old_center = self.target.rect.center
+                self.target.rect = self.target.image.get_rect(center = old_center)
+                self.target.x, self.target.y = self.target.rect.center
+
+            
+            case "switch_image":
+                self.has_started = True
+                source = self.target.__getattribute__(self.source)
+                new_image = source[self.index]
+                if self.dynamic_anchor:
+                    old_pos = self.target.rect.__getattribute__(self.dynamic_anchor)
+                    self.target.image = new_image
+                    self.target.rect = self.target.image.get_rect()
+                    self.target.rect.__setattr__(self.dynamic_anchor, old_pos)
+                else:
+                    self.target.image = new_image
+                
+                self.has_ended = True
+                return
+            
+            case "set_alpha":
+                self.has_started = True
+                self.target.image.set_alpha(self.target)
+                self.has_ended = True
+                return
+            
+            case "image_gradient":
+                if not self.has_started:
+                    self.has_started = True
+                    track.tasks.append(self)
+                    self.timer = Timer(self.time / self.time_scale)
+                    self.start_value = self.target.image
+                    if type(self.easing_style) is str:
+                        self.easing_style = getattr(interpolation, self.easing_style)
+                    return
+                
+                alpha = self.timer.get_time() / self.timer.duration
+                if alpha > 1: 
+                    alpha = 1
+                    self.has_ended = True
+
+                index = int(interpolation.lerp(0, self.target_index, self.easing_style(alpha))  )  
+                source = self.target.__getattribute__(self.source)
+                new_image = source[index]
+
+                if self.dynamic_anchor:
+                    old_pos = self.target.rect.__getattribute__(self.dynamic_anchor)
+                    self.target.image = new_image
+                    self.target.rect = self.target.image.get_rect()
+                    self.target.rect.__setattr__(self.dynamic_anchor, old_pos)
+                else:
+                    self.target.image = new_image
+            
+            case "alpha_gradient":
+                if not self.has_started:
+                    self.has_started = True
+                    track.tasks.append(self)
+                    self.timer = Timer(self.time / self.time_scale)
+                    self.start_value = self.target.image.get_alpha()
+                    if type(self.easing_style) is str:
+                        self.easing_style = getattr(interpolation, self.easing_style)
+                    return
+                
+                alpha = self.timer.get_time() / self.timer.duration
+                if alpha > 1: 
+                    alpha = 1
+                    self.has_ended = True
+
+                result = interpolation.lerp(self.start_value, self.target, self.easing_style(alpha))
+                self.target.image.set_alpha(result)
         
     def reset(self):
         data = self.data
