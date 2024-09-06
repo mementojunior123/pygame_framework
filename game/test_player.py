@@ -1,9 +1,10 @@
 import pygame
-
+from utils.animation import Animation
 from game.sprite import Sprite
 from utils.pivot_2d import Pivot2D
 
 class TestPlayer(Sprite):
+    test_anim : Animation = Animation.get_animation("test")
     active_elements : list['TestPlayer'] = []
     inactive_elements : list['TestPlayer'] = []
     #load assets
@@ -27,7 +28,8 @@ class TestPlayer(Sprite):
 
         element.pivot = Pivot2D(element._position, element.image, (0, 255, 0))
         element.pivot.pivot_offset = pygame.Vector2(-0, 30)
-
+        track = cls.test_anim.load(element)
+        track.play()
         cls.unpool(element)
         return element
     

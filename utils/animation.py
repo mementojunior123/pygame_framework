@@ -12,7 +12,7 @@ class AnimationTrack:
         
         new_data = [None for instruction in data]
         for i, value in enumerate(data):
-            instruction = AnimationInstruction(value)
+            instruction = AnimationInstruction.new(value)
             new_data[i] = instruction
 
         self.data : list[AnimationInstruction] = new_data
@@ -134,13 +134,31 @@ class AnimationInstruction:
         self.last_value : Any|None = None
         self.timer : Timer|None = None
     
+    def get_anchor(self, sprite : 'Sprite', anchor : str|None):
+        if anchor is None:
+            return sprite.position
+        elif anchor == 'true':
+            return sprite.true_position
+        else:
+            return sprite.rect.__getattribute__(anchor)
+    
+    def set_anchor(self, sprite : 'Sprite', anchor : str|None, position : pygame.Vector2):
+        if anchor is None:
+            sprite.position = position
+        elif anchor == 'true':
+            sprite.true_position = position
+        else:
+            sprite.move_rect(anchor, position)
+    
     @staticmethod
     def new(data : dict) -> 'AnimationInstruction':
         anim_conversion_dict : dict[str, AnimationInstruction] = {
             "wait" : WaitInstruction,
             "delay" : DelayInstruction,
             "move_to" : MoveToInstruction,
-            "move_by" : MoveByInstruction
+            "move_by" : MoveByInstruction,
+            "slide_by" : SlideByInstruction,
+            "slide_to" : SlideToInstruction
         }
         instruction_type : str = data['type']
         if instruction_type in anim_conversion_dict:
@@ -357,7 +375,7 @@ class WaitInstruction(AnimationInstruction):
     def execute(self, track: AnimationTrack):
         if not self.has_started:
             self.has_started = True
-            self.timer = Timer(self.time / self.time_scale)
+            self.timer = Timer(self.time, track.time_source, track.timer_factor)
             track.blocking_tasks.append(self)
 
         if self.timer.isover():
@@ -383,6 +401,7 @@ class MoveByInstruction(AnimationInstruction):
     def __init__(self, data):
         super().__init__(data)
         self.offset : pygame.Vector2 = pygame.Vector2(data['offset'])
+        self.last_value : None|pygame.Vector2 = None
     
     def execute(self, track: AnimationTrack):
         self.has_started = True
@@ -398,14 +417,80 @@ class MoveToInstruction(AnimationInstruction):
     
     def execute(self, track: AnimationTrack):
         self.has_started = True
-        if self.anchor is None:
-            track.target.position = self.target
-        elif self.anchor == 'true':
-            track.target.true_position = self.target
-        else:
-            track.target.move_rect(self.anchor, self.target)
+        self.set_anchor(track.target, self.anchor, self.target)
         self.has_ended = True
         return
+
+class SlideByInstruction(AnimationInstruction):
+    def __init__(self, data):
+        super().__init__(data)
+        self.offset : pygame.Vector2 = pygame.Vector2(data['offset'])
+        self.time : float = data['time']
+        self.easing_style : Callable[[float], float]
+        easing_style : str|Callable[[float], float] = data['easing_style']
+        if type(easing_style) == str: 
+            self.easing_style = getattr(interpolation, easing_style)
+        else:
+            self.easing_style = easing_style
+    
+    def execute(self, track: AnimationTrack):
+        if not self.has_started:
+            self.has_started = True
+            track.tasks.append(self)
+            self.timer = Timer(self.time, track.time_source, track.timer_factor)
+            self.start_value = pygame.Vector2(track.target.position)
+            self.last_value = pygame.Vector2(0,0)    
+            return
+        
+        
+        alpha = self.timer.get_time() / self.timer.duration
+        if alpha > 1: 
+            alpha = 1
+            self.has_ended = True
+        
+        new_offset : pygame.Vector2 = interpolation.compatibilty_lerp((0, 0), self.offset, self.easing_style(alpha))
+        prev_offset : pygame.Vector2 = self.last_value
+        result : pygame.Vector2 = new_offset - prev_offset
+
+        
+        track.target.position += result
+        self.last_value = new_offset
+
+        return
+
+class SlideToInstruction(AnimationInstruction):
+    def __init__(self, data):
+        super().__init__(data)
+        self.anchor : str|None = data['anchor']
+        self.target : pygame.Vector2 = pygame.Vector2(data['target'])
+        
+        self.time : float = data['time']
+        self.easing_style : Callable[[float], float]
+        easing_style : str|Callable[[float], float] = data['easing_style']
+        if type(easing_style) == str: 
+            self.easing_style = getattr(interpolation, easing_style)
+        else:
+            self.easing_style = easing_style
+    
+    def execute(self, track: AnimationTrack):
+        if not self.has_started:
+            self.has_started = True
+            track.tasks.append(self)
+            self.timer = Timer(self.time, track.time_source, track.timer_factor)
+            self.start_value = self.get_anchor(track.target, self.anchor)
+        
+        alpha = self.timer.get_time() / self.timer.duration
+        if alpha > 1: 
+            alpha = 1
+            self.has_ended = True
+
+        new_pos : pygame.Vector2 = interpolation.lerp(self.start_value, self.target, self.easing_style(alpha))
+        self.set_anchor(track.target, self.anchor, new_pos)
+        print('upd')
+
+        return
+
+        
 
 TEMPLATES = [
     {"type" : "move_by", "offset" : (0,0)},
@@ -426,9 +511,15 @@ TEMPLATES = [
              ]
 
 test_anim = [
-    {"type" : "move_by", "offset" : [50, 50]},
-    {"type" : "wait", "time" : 1},
-    {"type" : "move_to", "target" : [300, 300], "anchor" : None}
+    {"type" : "wait", "time" : 1}, #0
+    {"type" : "move_to", "target" : [300, 300], "anchor" : None}, #1
+    {"type" : "wait", "time" : 1}, #2
+    {"type" : "move_by", "offset" : [-150, -150]}, #3
+    {"type" : "delay", "index" : 0}, #4
+    {"type" : "slide_by", "offset" : [200, 200], "time" : 1.5, "easing_style" : interpolation.smoothstep}, #5
+    {"type" : "delay", "index" : 5}, #6
+    {"type" : "move_by", "offset" : [-200, -200]}, #7
+    {"type" : "slide_to", "target" : [0,0], "anchor" : "topleft", "time" : 2, "easing_style" : interpolation.quad_ease_in} #8
     ]
 
 

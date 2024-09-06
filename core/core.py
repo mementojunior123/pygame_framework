@@ -13,7 +13,7 @@ import core.menu
 from game.game_module import Game
 from core.task_scheduler import TaskScheduler
 from utils.tween_module import TweenTrack, TweenChain
-
+from utils.animation import AnimationTrack
 import sys
 import platform
 from typing import Any
@@ -183,6 +183,7 @@ class Core:
         TweenChain.update_all()
         self.update_delta_stream()
         self.bg_manager.update()
+        AnimationTrack.update_all_elements()
     
     def update_delta_stream(self):
         target_lentgh = round(30 / self.dt)
