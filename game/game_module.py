@@ -42,7 +42,7 @@ class Game:
         self.active = True
         self.state = self.STATES.normal
         self.prev_state = None
-        self.game_timer = Timer(-1, time_source=core_object.global_timer.get_time)
+        self.game_timer = Timer(-1)
         self.game_data = {}
         self.make_connections()
 
@@ -50,10 +50,18 @@ class Game:
         #Setup varaibles
 
     def make_connections(self):
-        pass
+        core_object.event_manager.bind(pygame.KEYDOWN, self.handle_key_event)
 
     def remove_connections(self):
-        pass
+        core_object.event_manager.unbind(pygame.KEYDOWN, self.handle_key_event)
+
+    def handle_key_event(self, event : pygame.Event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                if self.state == self.STATES.paused:
+                    self.unpause()
+                elif self.state == self.STATES.normal:
+                    self.pause()
 
     def main_logic(self, delta : float):
         pass

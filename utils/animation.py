@@ -841,8 +841,8 @@ class Animation:
         self.data = data
         self.name : str = name
     
-    def load(self, owner):
-        return AnimationTrack(owner, self.data, self.name)
+    def load(self, owner : 'Sprite', time_source : Callable[[], float]|None = None, timer_factor : float = 1):
+        return AnimationTrack(owner, self.data, self.name, time_source, timer_factor)
 
     def load_file(self, path = "data/animations/animation_data.json"):
         with open(path, "r") as read_file:

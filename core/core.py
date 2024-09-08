@@ -77,9 +77,11 @@ class Core:
     def update_dt(self, target_fps : int|float = 60):
         if self.last_dt_measurment == 0:
             self.dt = 1
+            self.last_dt_measurment = perf_counter()
         else:
-            self.dt = (perf_counter() - self.last_dt_measurment) * target_fps
-        self.last_dt_measurment = perf_counter()
+            mark = perf_counter()
+            self.dt = (mark - self.last_dt_measurment) * target_fps
+            self.last_dt_measurment = mark
     
     def set_debug_message(self, text : str):
         debug_textsprite : TextSprite = core_object.main_ui.get_sprite('debug_sprite')
