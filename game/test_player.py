@@ -1,9 +1,10 @@
 import pygame
-from utils.animation import Animation
 from game.sprite import Sprite
-from utils.pivot_2d import Pivot2D
-from utils.helpers import ColorType
 from core.core import core_object
+
+from utils.animation import Animation
+from utils.pivot_2d import Pivot2D
+
 
 class TestPlayer(Sprite):
     IMAGE_SIZE : tuple[int, int]|list[int] = (20, 60)

@@ -1,5 +1,5 @@
 import pygame
-from utils.helpers import rotate_around_pivot_accurate
+from utils.helpers import rotate_around_pivot_accurate, ColorType
 from utils.pivot_2d import Pivot2D
 
 
@@ -20,8 +20,11 @@ class UiFilter:
 class UiSprite:
     TAG_EVENT = pygame.event.custom_type()
     def __init__(self, surf : pygame.Surface, rect : pygame.Rect, tag : int, name : str|None = None, keep_og_surf = False, 
-                 attributes : dict = None, data : dict = None, forced_og_surf : pygame.Surface = None, zindex : int = 0):
+                 attributes : dict = None, data : dict = None, forced_og_surf : pygame.Surface = None, zindex : int = 0,
+                 colorkey : ColorType|str|None = None):
         self.surf : pygame.Surface = surf
+        if colorkey and (surf is not None):
+            self.surf.set_colorkey(colorkey)
         self.og_surf : None|pygame.Surface
         if keep_og_surf:
             if forced_og_surf: self.og_surf = forced_og_surf
