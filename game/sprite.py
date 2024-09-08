@@ -24,9 +24,15 @@ class Sprite:
     def align_rect(self):
         self.rect.center = round(self.true_position)
     
-    def move_rect(self, anchor : str, position : pygame.Vector2):
+    def move_rect(self, anchor : str, position : pygame.Vector2|int):
         self.rect.__setattr__(anchor, position)
         self.true_position = pygame.Vector2(self.rect.center)
+    
+    def clamp_rect(self, area : pygame.Rect):
+        if self.rect.left < area.left: self.move_rect('left', area.left)
+        if self.rect.right > area.right: self.move_rect('right', area.right)
+        if self.rect.top < area.top: self.move_rect('top', area.top)
+        if self.rect.bottom > area.bottom: self.move_rect('bottom', area.bottom)
     
     @property
     def position(self) -> pygame.Vector2:
@@ -81,6 +87,10 @@ class Sprite:
         if class_to_register not in cls.registered_classes:
             cls.registered_classes.append(class_to_register)
     
+    @property
+    def active(self):
+        return (self in self.__class__.active_elements) or (self in Sprite.active_elements)
+
     @classmethod
     def pool(cls, element):
         '''Transfers an element from active to inactive state. Nothing changes if the element is already inactive.'''

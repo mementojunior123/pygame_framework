@@ -1,8 +1,9 @@
 import pygame
 from math import copysign
-from typing import Callable, Any
+from typing import Callable, Any, Union
 from random import random
 
+ColorType = Union[list[int], tuple[int, int, int], pygame.Color]
 def rotate_around_pivot(image : pygame.Surface, rect : pygame.Rect, angle : float, 
                         anchor : pygame.Vector2 = None, offset : pygame.Vector2= None, return_new_pos = False):
     
