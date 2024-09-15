@@ -1,5 +1,6 @@
 from utils.my_timer import Timer
 from typing import Callable
+from utils.helpers import Task
 
 class TaskScheduler:
     def __init__(self) -> None:
@@ -18,7 +19,7 @@ class TaskScheduler:
     def schedule_continuous_task(self, time : float|tuple[float, Callable[[], float], float], callback : Callable, *args, **kwargs):
         new_task = Task(callback, *args, **kwargs)
         t = type(time)
-        if t == int or float:
+        if (t == int) or (t == float):
             self.continous_tasks[new_task] = Timer(time)
         else:
             self.continous_tasks[new_task] = Timer(time[0], time[1], time[2])
@@ -43,13 +44,3 @@ class TaskScheduler:
 
         for task in to_remove:
             self.continous_tasks.pop(task)
-
-
-class Task:
-    def __init__(self, callback : Callable, *args, **kwargs) -> None:
-        self.callback = callback
-        self.args = args
-        self.kwargs = kwargs
-    
-    def execute(self):
-        self.callback(*self.args, **self.kwargs)

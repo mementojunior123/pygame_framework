@@ -9,6 +9,7 @@ from core.settings import Settings
 from core.bg_manager import BgManager
 from core.ui import Ui
 from core.menu import Menu
+from core.game_storage import GameStorage
 import core.menu
 from game.game_module import Game
 from core.task_scheduler import TaskScheduler
@@ -24,6 +25,7 @@ class Core:
     CORE_EVENT = pygame.event.custom_type()
     START_GAME = pygame.event.custom_type()
     END_GAME = pygame.event.custom_type()
+    IS_DEBUG : bool = False
     def __init__(self) -> None:
         self.FPS = 60
         self.PERFORMANCE_MODE = False
@@ -44,6 +46,7 @@ class Core:
         self.main_ui = Ui()
         self.menu = Menu()
         self.game = Game()
+        self.storage = GameStorage()
         self.task_scheduler = TaskScheduler()
         self.delta_stream : deque[float] = deque([1 for _ in range(30)])
         self.dirty_display_rects : list[pygame.Rect] = []
