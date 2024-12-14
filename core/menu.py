@@ -199,6 +199,7 @@ class Menu(BaseMenu):
         {'name' : 'play_button'}, (Menu.font_40, 'Black', False))], #stage 1
         ]
         self.bg_color = (94, 129, 162)
+        self.add_connections()
     
     def update(self, delta : float):
         stage_data = self.stage_data[self.stage]

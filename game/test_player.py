@@ -79,4 +79,5 @@ class TestPlayer(Sprite):
         self._position = pygame.Vector2(0,0)
         self.zindex = None
 
+TestPlayer()
 Sprite.register_class(TestPlayer)

@@ -9,7 +9,7 @@ class Settings:
         self.info = {}
         self.default = None
     
-    def set_defualt(self, new_default : dict):
+    def set_default(self, new_default : dict):
         self.default = new_default
 
     def load(self, path : str = 'assets/data/settings.json') -> bool:

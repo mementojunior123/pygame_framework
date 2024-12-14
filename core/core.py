@@ -1,14 +1,15 @@
 import pygame
 from time import perf_counter
 from collections import deque
-
 from utils.my_timer import Timer
 from core.event_manger import EventManger
 import game.game_module
+from game.sprite import Sprite
 from core.settings import Settings
 from core.bg_manager import BgManager
 from core.ui import Ui
 from core.menu import Menu
+from utils.ui.textsprite import TextSprite
 from core.game_storage import GameStorage
 import core.menu
 from game.game_module import Game
@@ -56,6 +57,42 @@ class Core:
         Timer.time_source = self.global_timer.get_time
 
         self.window_bools : dict = {'Shown' : True, 'input_focused' : True}
+        self.frame_counter : int = 0
+        self.show_fps_timer : Timer = Timer(0.1, self.global_timer.get_time)
+        self.fps_sprite : TextSprite = TextSprite(pygame.Vector2(15 + 63 - 63, 10), 'topleft', 0, 'FPS : 0', 'fps_sprite', 
+                            text_settings=(Menu.font_40, 'White', False), text_stroke_settings=('Black', 2),
+                            text_alingment=(9999, 5), colorkey=(255, 0,0))
+        self.debug_sprite : TextSprite = TextSprite(pygame.Vector2(15, 200), 'midright', 0, '', 'debug_sprite', 
+                            text_settings=(Menu.font_40, 'White', False), text_stroke_settings=('Black', 2),
+                            text_alingment=(9999, 5), colorkey=(255, 0,0), zindex=999)
+        self.event_manager.bind(self.START_GAME, self.start_game)
+        self.event_manager.bind(self.END_GAME, self.end_game)
+    
+    def start_game(self, event : pygame.Event):
+        if event.type != self.START_GAME: return
+        
+        self.menu.prepare_exit()
+        self.game.start_game(event)
+
+        core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
+        core_object.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        core_object.event_manager.bind(pygame.KEYDOWN, self.detect_game_over)
+
+        
+        self.main_ui.add(self.fps_sprite)
+        self.main_ui.add(self.debug_sprite)
+    
+    def detect_game_over(self, event : pygame.Event):
+        if event.type == pygame.KEYDOWN: 
+            if event.key == pygame.K_ESCAPE: 
+                self.end_game(None)
+    
+    def end_game(self, event : pygame.Event = None):
+        self.game.end_game()
+        self.menu.prepare_entry(1)
+        self.event_manager.unbind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
+        self.event_manager.unbind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        self.event_manager.unbind(pygame.KEYDOWN, self.detect_game_over)
 
     def is_web(self) -> bool:
         return self.CURRENT_PLATFORM == WEBPLATFORM
@@ -189,6 +226,9 @@ class Core:
         self.update_delta_stream()
         self.bg_manager.update()
         AnimationTrack.update_all_elements()
+        if self.show_fps_timer.isover():
+            self.update_fps_sprite()
+            self.show_fps_timer.restart()
     
     def update_delta_stream(self):
         target_lentgh = round(30 / self.dt)
@@ -207,6 +247,9 @@ class Core:
         
         average = total / len(self.delta_stream)
         return 60 / average
+
+    def update_fps_sprite(self):
+        self.fps_sprite.text = f'FPS : {self.get_fps():0.0f}'
     
     def __hints(self):
         global TextSprite
