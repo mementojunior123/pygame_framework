@@ -189,6 +189,8 @@ class Menu(BaseMenu):
     def init(self):
         window_size = core_object.main_display.get_size()
         centerx = window_size[0] // 2
+        centery = window_size[1] // 2
+        wx, wy = window_size
 
         self.stage = 1
         

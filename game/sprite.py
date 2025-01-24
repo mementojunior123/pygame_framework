@@ -9,12 +9,12 @@ class Sprite:
     '''Base class for all game objects.'''
     active_elements : list['Sprite'] = []
     inactive_elements : list['Sprite']  = []
+    linked_classes : list['Sprite'] = []
+
     ordered_sprites : list['Sprite'] = []
     registered_classes : list['Sprite'] = []
     SPRITE_CLICKED : int = pygame.event.custom_type()
-
-    linked_classes : list['Sprite'] = []
-
+    
     def __init__(self) -> None:
         self._position : pygame.Vector2
         self.pivot : Pivot2D|None = None

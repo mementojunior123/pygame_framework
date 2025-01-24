@@ -32,6 +32,8 @@ from utils.ui.base_ui_elements import BaseUiElements, UiSprite
 from utils.ui.textsprite import TextSprite
 from utils.helpers import rotate_around_pivot_accurate, copysign
 from utils.particle_effects import ParticleEffect, Particle
+import utils.particle_effects
+utils.particle_effects.runtime_imports()
 from utils.my_timer import Timer
 import utils.interpolation as interpolation
 import utils.tween_module as TweenModule

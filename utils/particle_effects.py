@@ -17,7 +17,7 @@ def rand_float(iterable):
     return __random_float(iterable[0], iterable[1])
 
 
-def vec_from_angle(angle, magnitude = 1) -> pygame.Vector2:
+def vec_from_angle(angle : float, magnitude = 1) -> pygame.Vector2:
     x = sin(radians(angle))
     y = cos(radians(angle)) * -1
     return pygame.Vector2(x, y) * magnitude
@@ -26,8 +26,11 @@ def vec_from_angle(angle, magnitude = 1) -> pygame.Vector2:
 class Particle(Sprite):
     active_elements : list['Particle'] = []
     inactive_elements : list['Particle']  = []
+    linked_classes : list[Sprite] = []
+
     test_image = pygame.surface.Surface((4,4))
     pygame.draw.rect(test_image, 'White', (0, 0, 4, 4))
+    bounding_box = pygame.Rect(0, 0, 960, 540)
 
     def __init__(self) -> None:
         self._position = pygame.Vector2(0,0)
@@ -85,11 +88,11 @@ class Particle(Sprite):
     
     def update(self, delta : float):
         if self.lifetime_timer.isover():
-            self.destroy()
+            self.kill_instance_safe()
             return
         if self.kill_offscreen:
             if self.rect.colliderect(Particle.bounding_box) is False:
-                self.destroy()
+                self.kill_instance_safe()
                 return
         if self.update_method == 'simulated':
 
@@ -108,72 +111,30 @@ class Particle(Sprite):
     def draw(self, display : pygame.Surface):
         display.blit(self.image, self.rect)
     
-    @classmethod
-    def pool(cls, element):
-        '''Transfers an element from active to inactive state. Nothing changes if the element is already inactive.'''
-        if element in cls.active_elements:
-            cls.active_elements.remove(element)
-        
-        if element not in cls.inactive_elements:
-            cls.inactive_elements.append(element)
-    
-    @classmethod
-    def unpool(cls, element):
-        '''Transfers an element from inactive to active state. Nothing changes if the element is already active.'''
-        if element not in cls.active_elements:
-            cls.active_elements.append(element)
-        
-        if element in cls.inactive_elements:
-            cls.inactive_elements.remove(element)
-    
-    @classmethod
-    def clear_elements(cls):
-        '''Pools every element of the class'''
-        element: cls
-        for element in cls.active_elements:
-            cls.inactive_elements.append(element)
-        cls.active_elements.clear() 
-    
-    
-    def destroy(self):
-        cls = self.__class__
-        cls.pool(self)
-        self.active = False
-    
-    def is_active(self):
-        return self in Particle.active_elements
-
-    @property
-    def x(self):
-       return self.position.x
-    @x.setter
-    def x(self, value):
-        self.position.x = value
-    @property
-    def y(self):
-        return self.position.y
-    @y.setter
-    def y(self, value):
-        self.position.y = value
-    
 class ParticleEffect:
     elements : list['ParticleEffect'] = []
-    data : dict[str, dict] = {}
-    def __init__(self, data, persistance, dynamic_origin = False) -> None:
-        self.data = data
+    effects_data : dict[str, dict] = {}
+    def __init__(self, data : dict, persistance : bool, dynamic_origin : bool = False) -> None:
+        self.data : dict = data
         ParticleEffect.elements.append(self)
         self.tracks : list[ParticleEffectTrack] = []
         self.plays_remaining = None
-        self.destroy_on_end = True
-        self.is_persistent = persistance
-        self.dynamic_origin = dynamic_origin
-        self.position = pygame.Vector2(0,0)
+        self.started_playing : bool = False
+        self.destroy_on_end : bool = True
+        self.is_persistent : bool = persistance
+        self.dynamic_origin : bool = dynamic_origin
+        self.position : pygame.Vector2 = pygame.Vector2(0,0)
+        self._zombie : bool = False
     
     @classmethod
-    def load_effect(cls, name, persistance = False, dynamic_origin = False):
-        if name in cls.data:
-            return ParticleEffect(cls.data[name], persistance, dynamic_origin)
-        return None
+    def load_effect(cls, name : str, persistance : bool = False, dynamic_origin : bool = False):
+        if name not in cls.effects_data: return None
+        effect_data = cls.effects_data[name]
+        if effect_data['type'] is None:
+            return ParticleEffect(cls.effects_data[name], persistance, dynamic_origin)
+        match effect_data['type']:
+            case _:
+                return None
     
     def emit(self, track : 'ParticleEffectTrack'):
         new_particle : Particle = Particle.inactive_elements[0]
@@ -201,15 +162,17 @@ class ParticleEffect:
         track.active.append(new_particle)
         track.total_count += 1
     
-    def play(self, pos : pygame.Vector2):
+    def play(self, pos : pygame.Vector2) -> 'ParticleEffectTrack':
+        self.started_playing = True
         new_track = ParticleEffectTrack(pos, self.data['cooldown'])
         self.tracks.append(new_track)
         for _ in range(self.data['init_spawn_count']):
             self.emit(new_track)
+        return new_track
 
     def update(self):
-        if len(self.tracks) <= 0 and self.is_persistent == False:
-            self.destroy()
+        if len(self.tracks) <= 0 and self.is_persistent == False and self.started_playing == True:
+            self.kill_safe()
             return
         to_del = []
         for track in self.tracks:
@@ -251,18 +214,31 @@ class ParticleEffect:
             track.cleanup()
         self.tracks.clear()
 
-
+    def kill_safe(self):
+        self._zombie = True
+        self.stop()
+    
     def destroy(self):
         ParticleEffect.elements.remove(self)
         self.stop()
     
     @classmethod
     def update_all(cls):
+        to_del : list[ParticleEffect] = []
         for element in cls.elements:
             element.update()
+            if element._zombie:
+                to_del.append(element)
+        for element in to_del:
+            cls.elements.remove(element)
     
     def shedule_destruction(self):
         self.destroy_on_end = True
+
+class SpecialParticleEffect(ParticleEffect):
+    def __init__(self, data : dict, persistance : bool, dynamic_origin : bool = False):
+        super().__init__(data, persistance, dynamic_origin)
+        self.type : str = data['type']
 
 
 class ParticleEffectTrack:
@@ -276,7 +252,7 @@ class ParticleEffectTrack:
     
     def cleanup(self):
         for part in self.active:
-            part.destroy()
+            part.kill_instance_safe()
         self.active.clear()
     
     def stop_emission(self):
@@ -286,5 +262,10 @@ TEMPLATE = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'vel
             'accel_x' : [0,0], 'accel_y' : [0,0], 'drag' : [0, 0],
             'init_spawn_count' : 0, 'cooldown' : 0.25, 'target_spawn_count' : 0, 'lifetime' : [0,0], 'part_per_wave' : 1,
             'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
-            'update_method' : 'simulated', 'destroy_offscreen' : True, 'copy_surface' : False}
+            'update_method' : 'simulated', 'destroy_offscreen' : True, 'copy_surface' : False, 'type' : None}
 
+
+def runtime_imports():
+    global core_object
+    from core.core import core_object
+    Particle.bounding_box = pygame.Rect(0, 0, *core_object.main_display.get_size())
