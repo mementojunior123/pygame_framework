@@ -13,7 +13,7 @@ window = pygame.display.set_mode(window_size)
 pygame.mixer.set_num_channels(32)
 
 from core.core import Core, core_object
-
+import core.settings as settings_module
 core = core_object
 core.init(window)
 core.FPS = 120
@@ -41,10 +41,10 @@ import utils.tween_module as TweenModule
 import game.game_states as game_states
 from game.test_player import TestPlayer
 
-core.settings.set_default({'Brightness' : 0})
-core.settings.load()
-
-core.set_brightness(core.settings.info['Brightness'])
+core.storage.load(is_web=core.is_web())
+core.settings.load(is_web=core.is_web())
+settings_module.runtime_imports()
+core.settings.apply()
 
 core.menu.init()
 core.game.init()
