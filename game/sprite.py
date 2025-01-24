@@ -13,6 +13,8 @@ class Sprite:
     registered_classes : list['Sprite'] = []
     SPRITE_CLICKED : int = pygame.event.custom_type()
 
+    linked_classes : list['Sprite'] = []
+
     def __init__(self) -> None:
         self._position : pygame.Vector2
         self.pivot : Pivot2D|None = None
@@ -111,34 +113,23 @@ class Sprite:
     @classmethod
     def pool(cls, element):
         '''Transfers an element from active to inactive state. Nothing changes if the element is already inactive.'''
-        if element in cls.active_elements:
-            cls.active_elements.remove(element)
-        
-        if element in Sprite.active_elements:
-            Sprite.active_elements.remove(element)
-        
-        if element not in cls.inactive_elements:
-            cls.inactive_elements.append(element)
 
-        if element not in Sprite.inactive_elements:
-            Sprite.inactive_elements.append(element)
+        for linked_class in cls.linked_classes + [cls]:
+            if element in linked_class.active_elements:
+                linked_class.active_elements.remove(element)         
+            
+            if element not in linked_class.inactive_elements:
+                linked_class.inactive_elements.append(element)
     
     @classmethod
     def unpool(cls, element):
         '''Transfers an element from inactive to active state. Nothing changes if the element is already active.'''
+        for linked_class in cls.linked_classes + [cls]:
+            if element not in linked_class.active_elements:
+                linked_class.active_elements.append(element)
 
-        if element not in cls.active_elements:
-            cls.active_elements.append(element)
-        
-        if element not in Sprite.active_elements:
-            Sprite.active_elements.append(element)
-
-
-        if element in cls.inactive_elements:
-            cls.inactive_elements.remove(element)
-
-        if element in Sprite.inactive_elements:
-            Sprite.inactive_elements.remove(element)
+            if element in linked_class.inactive_elements:
+                linked_class.inactive_elements.remove(element)
 
 
     

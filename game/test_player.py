@@ -11,6 +11,7 @@ class TestPlayer(Sprite):
     test_anim : Animation = Animation.get_animation("test")
     active_elements : list['TestPlayer'] = []
     inactive_elements : list['TestPlayer'] = []
+    linked_classes : list['Sprite'] = [Sprite]
     #load assets
     test_image : pygame.Surface = pygame.surface.Surface(IMAGE_SIZE)
     pygame.draw.rect(test_image, "Red", (0,0, *IMAGE_SIZE))
