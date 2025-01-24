@@ -71,7 +71,7 @@ async def main():
             core.main_ui.render(window)
 
         core.update()
-        if core.settings.info['Brightness'] != 0:
+        if core.settings.brightness != 0:
             window.blit(core.brightness_map, (0,0), special_flags=core.brightness_map_blend_mode)
             
         pygame.display.update()
