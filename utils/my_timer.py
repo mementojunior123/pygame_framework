@@ -1,5 +1,7 @@
 from time import perf_counter
-from typing import Callable
+from typing import Callable, TypeAlias
+
+TimeSource : TypeAlias = Callable[[], float]
 
 class Timer:
     
@@ -10,9 +12,9 @@ class Timer:
     def get_timestamp(self) -> float:
         return self.time_source() * self.scale_factor
     
-    def __init__(self, treshold : float = -1, time_source : Callable[[], float]|None = None, scale_factor : float = 1.0) -> None:
+    def __init__(self, treshold : float = -1, time_source : TimeSource|None = None, scale_factor : float = 1.0) -> None:
         self.duration = treshold
-        self.time_source : Callable[[], float]
+        self.time_source : TimeSource
         if time_source: self.time_source = time_source
         self.scale_factor : float = scale_factor
         self.start_time = self.get_timestamp()

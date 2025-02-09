@@ -15,6 +15,7 @@ from game.sprite import Sprite
 from utils.helpers import average, random_float
 from utils.ui.brightness_overlay import BrightnessOverlay
 from game.game_states import GameState, GameStates
+import utils.particle_effects
 
 class Game:
     font_40 = pygame.Font('assets/fonts/Pixeltype.ttf', 40)
@@ -120,6 +121,7 @@ class Game:
 
         #Cleanup ingame object
         Sprite.kill_all_sprites()
+        utils.particle_effects.ParticleEffect.elements.clear()
         core_object.main_ui.clear_all()
 
         #Clear game varaibles

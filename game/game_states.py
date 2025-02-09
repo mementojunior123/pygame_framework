@@ -13,6 +13,7 @@ from utils.my_timer import Timer
 from game.sprite import Sprite
 from utils.helpers import average, random_float
 from utils.ui.brightness_overlay import BrightnessOverlay
+from utils.particle_effects import ParticleEffect
 
 class GameState:
     def __init__(self, game_object : 'Game'):
@@ -57,6 +58,8 @@ class TestGameState(NormalGameState):
     def __init__(self, game_object : 'Game'):
         self.game = game_object
         self.player : TestPlayer = TestPlayer.spawn(pygame.Vector2(random.randint(0, 960),random.randint(0, 540)))
+        self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
+        self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
 
     def main_logic(self, delta : float):
         super().main_logic(delta)
