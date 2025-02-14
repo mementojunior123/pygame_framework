@@ -1,6 +1,7 @@
 import pygame
 import random
 from utils.ui.ui_sprite import UiSprite
+from utils.ui.ui_sprite_group import UiSpriteGroup
 from utils.ui.textsprite import TextSprite
 from utils.ui.base_ui_elements import BaseUiElements
 import utils.tween_module as TweenModule
@@ -20,9 +21,9 @@ class BaseMenu:
 
     def __init__(self) -> None:
         self.stage : int
-        self.stages : list[list[UiSprite]]
+        self.stages : list[list[UiSprite|UiSpriteGroup]]
         self.bg_color : ColorType|str
-        self.temp : dict[UiSprite, Timer] = {}
+        self.temp : dict[UiSprite|UiSpriteGroup, Timer] = {}
         
     def init(self):
         self.bg_color = (94, 129, 162)
@@ -30,10 +31,12 @@ class BaseMenu:
         self.stage_data : list[dict] = [None, {}]
         self.stages = [None, []]
     
-    def add_temp(self, element : UiSprite, time : float|Timer, override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
+    def add_temp(self, element : UiSprite|UiSpriteGroup, time : float|Timer, 
+                 override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
         if element not in self.temp or override == True:
             timer = time if type(time) == Timer else Timer(time, time_source, time_scale)
             self.temp[element] = timer
+    
     def alert_player(self, text : str, alert_speed : float = 1):
         text_sprite = TextSprite(pygame.Vector2(core_object.main_display.get_width() // 2, 90), 'midtop', 0, text, 
                         text_settings=(core_object.menu.font_60, 'White', False), text_stroke_settings=('Black', 2), colorkey=(0,255,0))
@@ -103,35 +106,35 @@ class BaseMenu:
         new_event = pygame.event.Event(core_object.START_GAME, {})
         pygame.event.post(new_event)
 
-    def get_sprite(self, stage, tag):
+    def get_sprite(self, stage : int, tag : int) -> UiSprite|None:
         """Returns the 1st sprite with a corresponding tag.
         None is returned if it was not found in the stage."""
         if tag is None or stage is None: return None
 
-        the_list = self.stages[stage]
+        the_list : list[UiSprite|UiSpriteGroup] = self.stages[stage]
         for sprite in the_list:
             if sprite.tag == tag:
                 return sprite
         return None
     
-    def get_sprite_by_name(self, stage, name):
+    def get_sprite_by_name(self, stage, name) -> UiSprite|UiSpriteGroup|None:
         """Returns the 1st sprite with a corresponding name.
         None is returned if it was not found in the stage."""
         if name is None or stage is None: return None
 
         the_list = self.stages[stage]
-        sprite : UiSprite
+        sprite : UiSprite|UiSpriteGroup
         for sprite in the_list:
             if sprite.name == name:
                 return sprite
         return None
 
-    def get_sprite_index(self, stage, name = None, tag = None):
+    def get_sprite_index(self, stage, name = None, tag = None) -> int|None:
         '''Returns the index of the 1st occurence of sprite with a corresponding name or tag.
         None is returned if the sprite is not found'''
         if name is None and tag is None: return None
         the_list = self.stages[stage]
-        sprite : UiSprite
+        sprite : UiSprite|UiSpriteGroup
         for i, sprite in enumerate(the_list):
             if sprite.name == name and name is not None:
                 return i
@@ -139,7 +142,8 @@ class BaseMenu:
                 return i
         return None
     
-    def find_and_replace(self, new_sprite : UiSprite, stage : int, name : str|None = None, tag : int|None = None, sprite : UiSprite|None = None) -> bool:
+    def find_and_replace(self, new_sprite : UiSprite|UiSpriteGroup, stage : int, name : str|None = None, 
+                         tag : int|None = None, sprite : UiSprite|UiSpriteGroup|None = None) -> bool:
         found : bool = False
         for index, sprite in enumerate(self.stages[stage]):
             if sprite == new_sprite and sprite is not None:
@@ -173,11 +177,15 @@ class BaseMenu:
     def handle_mouse_event(self, event : pygame.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos : tuple = event.pos
-            sprite : UiSprite
+            sprite : UiSprite|UiSpriteGroup
             for sprite in self.stages[self.stage]:
-                if type(sprite) != UiSprite: continue
-                if sprite.rect.collidepoint(mouse_pos):
-                    sprite.on_click()
+                if type(sprite) == UiSprite:
+                    if sprite.rect.collidepoint(mouse_pos):
+                        sprite.on_click()
+                elif type(sprite) == UiSpriteGroup:
+                    for real_sprite in sprite.elements:
+                        if real_sprite.rect.collidepoint(mouse_pos):
+                            real_sprite.on_click()
 
 class Menu(BaseMenu):
     font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
