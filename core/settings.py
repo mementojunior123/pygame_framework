@@ -26,17 +26,11 @@ DEFAULT_SETTINGS : SettingsDict = {
 class Settings:
     default : SettingsDict = DEFAULT_SETTINGS
 
-    @classmethod
-    def set_default(cls, new_default : SettingsDict) -> bool:
-        if not cls.validate_data(new_default): return False
-        cls.default = new_default
-        return True
-
     def __init__(self) -> None:
-        self.brightness : int = 0
+        self.brightness : int = self.default['Brightness']
     
     def reset(self):
-        self.brightness = 0
+        self._load_data(self.default)
 
     def apply(self):
         core_object.set_brightness(self.brightness)
@@ -93,6 +87,12 @@ class Settings:
     def set_web(self, key : str, value : Any):
         window.localStorage.setItem(key, str(value))
 
+    @classmethod
+    def set_default(cls, new_default : SettingsDict) -> bool:
+        if not cls.validate_data(new_default): return False
+        cls.default = new_default
+        return True
+    
 def runtime_imports():
     global core_object
     from core.core import core_object
