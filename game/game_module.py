@@ -38,7 +38,10 @@ class Game:
         self.game_timer = Timer(-1)
         self.game_data = {}
         self.make_connections()
-        self.state = self.STATES.TestGameState(self)
+        if event.mode == 'test':
+            self.state = self.STATES.TestGameState(self)
+        else:
+            self.state = self.STATES.TestGameState(self)
 
         
     def alert_player(self, text : str, alert_speed : float = 1):

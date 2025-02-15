@@ -230,8 +230,9 @@ class BaseMenu:
 test_list : list[str] = ['up', 'right', 'showdown', 'critical', 'double-up', 'switch', 'fake-run', 'remontada']
 class TestUiGroup(UiSpriteGroup):
     base_name = 'TestGroup'
-    def __init__(self, *args : tuple[UiSprite], serial : str = ''):
+    def __init__(self, *args : tuple[UiSprite], serial : str = '', center : pygame.Vector2 = pygame.Vector2(480, 270)):
         super().__init__(*args, serial=serial)
+        self.center = center
     
     @staticmethod
     def new_group(page : int, sep : int = 4, center = pygame.Vector2(480, 270)) -> 'TestUiGroup':
@@ -325,7 +326,7 @@ class Menu(BaseMenu):
         match self.stage:
             case 1:
                 if name == "play_button":
-                    pygame.event.post(pygame.Event(core_object.START_GAME, {}))
+                    pygame.event.post(pygame.Event(core_object.START_GAME, {'mode' : 'test'}))
                 if name == 'test_button':
                     self.goto_stage(2)
             case 2:
