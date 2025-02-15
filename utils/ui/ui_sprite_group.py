@@ -10,11 +10,15 @@ class UiSpriteGroup:
         self.tag : None = None
         self.elements : list[UiSprite] = [arg for arg in args]
         self.name : str = self.base_name + serial
+        self.visible : bool = True
     
     def draw(self, display : pygame.Surface):
         for element in self.elements:
             element.draw(display)
-    
+
+    def __index__(self, index : int):
+        return self.elements[index]
+
     @staticmethod
-    def new_group():
+    def new_group() -> 'UiSpriteGroup':
         return UiSpriteGroup(serial='')
