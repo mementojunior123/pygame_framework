@@ -7,6 +7,11 @@ from utils.pivot_2d import Pivot2D
 
 
 class TestPlayer(Sprite):
+    debug_circle_size : int = 10
+    debug_circle = pygame.Surface((debug_circle_size, debug_circle_size))
+    debug_circle.set_colorkey((0, 255, 0))
+    debug_circle.fill((0,255 ,0))
+    pygame.draw.circle(debug_circle, 'Red', (debug_circle_size // 2, debug_circle_size // 2), debug_circle_size // 2)
     IMAGE_SIZE : tuple[int, int]|list[int] = (20, 60)
     test_anim : Animation = Animation.get_animation("test")
     active_elements : list['TestPlayer'] = []
@@ -29,6 +34,7 @@ class TestPlayer(Sprite):
         super().__init__()
         self.color_images : dict[str, pygame.Surface]
         self.color_image_list : list[pygame.Surface]
+        self.last_mouse_pos : tuple[int, int]
         TestPlayer.inactive_elements.append(self)
 
     @classmethod
@@ -46,6 +52,7 @@ class TestPlayer(Sprite):
 
         element.pivot = Pivot2D(element._position, element.image, (0, 255, 0))
         element.pivot.pivot_offset = pygame.Vector2(-0, 30)
+        element.last_mouse_pos = pygame.mouse.get_pos()
         track = cls.test_anim.load(element, core_object.game.game_timer.get_time)
         track.play()
         cls.unpool(element)
@@ -79,6 +86,31 @@ class TestPlayer(Sprite):
         self.pivot = None
         self._position = pygame.Vector2(0,0)
         self.zindex = None
+    
+    def draw(self, display : pygame.Surface):
+        super().draw(display)
+        display.blit(self.debug_circle, pygame.mouse.get_pos())
+    
+    def handle_mouse_event(self, event : pygame.Event):
+        if event.type == pygame.MOUSEMOTION:
+            self.last_mouse_pos = event.pos
+    
+    @classmethod
+    def receive_event(cls, event : pygame.Event):
+        for element in cls.active_elements:
+            if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
+                element.handle_mouse_event(event)
+        
 
 TestPlayer()
 Sprite.register_class(TestPlayer)
+
+def make_connections():
+    core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, TestPlayer.receive_event)
+    core_object.event_manager.bind(pygame.MOUSEBUTTONUP, TestPlayer.receive_event)
+    core_object.event_manager.bind(pygame.MOUSEMOTION, TestPlayer.receive_event)
+
+def remove_connections():
+    core_object.event_manager.unbind(pygame.MOUSEBUTTONDOWN, TestPlayer.receive_event)
+    core_object.event_manager.unbind(pygame.MOUSEBUTTONUP, TestPlayer.receive_event)
+    core_object.event_manager.unbind(pygame.MOUSEMOTION, TestPlayer.receive_event)

@@ -34,6 +34,9 @@ class GameState:
     def handle_mouse_event(self, event : pygame.Event):
         pass
 
+    def cleanup(self):
+        pass
+
 class NormalGameState(GameState):
     def main_logic(self, delta : float):
         Sprite.update_all_sprites(delta)
@@ -48,7 +51,7 @@ class NormalGameState(GameState):
                                (self.game.font_70, 'White', False), ('Black', 2), colorkey=(0, 255, 0))
         core_object.main_ui.add(pause_ui1)
         core_object.main_ui.add(pause_ui2)
-        self.game.state = PausedGameState(self.game)
+        self.game.state = PausedGameState(self.game, self)
     
     def handle_key_event(self, event : pygame.Event):
         if event.type == pygame.K_p:
@@ -60,9 +63,13 @@ class TestGameState(NormalGameState):
         self.player : TestPlayer = TestPlayer.spawn(pygame.Vector2(random.randint(0, 960),random.randint(0, 540)))
         self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
+        game.test_player.make_connections()
 
     def main_logic(self, delta : float):
         super().main_logic(delta)
+    
+    def cleanup(self):
+        game.test_player.remove_connections()
 
 class PausedGameState(GameState):
     def __init__(self, game_object : 'Game', previous : GameState):
