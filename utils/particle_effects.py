@@ -170,7 +170,7 @@ class Particle(Sprite):
         self.textures = None
         self.kill_offscreen = None
 
-for _ in range(100):
+for _ in range(250):
     Particle()
 
 class ParticleEffect:
