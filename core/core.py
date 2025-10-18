@@ -173,7 +173,7 @@ class Core:
         elif event.type == pygame.MOUSEBUTTONUP:
             self.active_fingers.pop(10, None)
     
-    def process_core_event():
+    def process_core_event(self, event : pygame.Event):
         pass
 
     def handle_window_event(self, event : pygame.Event):

@@ -20,14 +20,14 @@ class BgManager:
        
 
     def play(self, track : pygame.mixer.Sound, volume, loops = -1, maxtime = 0, fade_ms = 0, sound_type : str|None = 'Music'):
-        '''Used for playing music.'''
+        """Used for playing music."""
         channel = track.play(loops, maxtime, fade_ms)
         channel.set_volume(volume * self.global_volume)
         self.current[channel] = TrackInfo(volume, sound_type)
         return channel
     
     def play_sfx(self, sfx : pygame.mixer.Sound, volume, loops = 0, maxtime = 0, fade_ms = 0, sound_type : str|None = 'SFX'):
-        '''Used for playing short sound effects.'''
+        """Used for playing short sound effects."""
         channel = sfx.play(loops, maxtime, fade_ms)
         channel.set_volume(volume * self.global_volume)
         self.current[channel] = TrackInfo(volume, sound_type)
@@ -36,13 +36,13 @@ class BgManager:
 
 
     def stop_channel(self, channel : pygame.mixer.Channel):
-        '''Stop a currently playing channel.'''
+        """Stop a currently playing channel."""
         channel.stop()
         if channel in self.current:
             self.current.pop(channel)
     
     def stop_track(self, track : pygame.mixer.Sound):
-        '''Stop a currently playing track.'''
+        """Stop a currently playing track."""
         to_remove : list[pygame.mixer.Channel] = []
         for channel in self.current:
             if channel.get_sound() == track:
@@ -53,20 +53,20 @@ class BgManager:
         
         track.stop()
     
-    def stop_all_type(self, type : str):
-        'Stop all sounds of a specific type.'
+    def stop_all_type(self, t : str):
+        """Stop all sounds of a specific type."""
         to_remove : list[pygame.mixer.Channel] = []
         for channel in self.current:
             info = self.current[channel]
-            if info.type == type:
+            if info.type == t:
                 to_remove.append(channel)
         
         for channel in to_remove:
             self.stop_channel(channel)
     
     def stop_all_music(self):
-        '''Stop all sounds of type "Music".
-        Equivalent to stop_all_type("Music").'''
+        """Stop all sounds of type "Music".
+        Equivalent to stop_all_type("Music")."""
         self.stop_all_type(self.sound_types.music)
 
     def stop_all(self):
@@ -79,7 +79,7 @@ class BgManager:
     def update(self):
         to_remove : list[pygame.mixer.Channel] = []
         for channel in self.current:
-            if channel.get_busy() == False:
+            if not channel.get_busy():
                 to_remove.append(channel)
         for channel in to_remove:
             self.current.pop(channel)   

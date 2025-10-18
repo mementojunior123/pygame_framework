@@ -82,7 +82,7 @@ class Settings:
         self.set_web('SettingsData', json.dumps(data))
 
     def get_web(self, key : str) -> str:
-        window.localStorage.getItem(key)
+        return window.localStorage.getItem(key)
 
     def set_web(self, key : str, value : Any):
         window.localStorage.setItem(key, str(value))

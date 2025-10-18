@@ -19,6 +19,7 @@ class Ui:
             if tag is not None:
                 if element.tag == tag:
                     return element
+        return None
     
     def get_sprites(self, name : str|None = None, tag : int|None = None) -> list[UiSprite]:
         return_list = []
@@ -49,7 +50,7 @@ class Ui:
             self.add(element, duplicate=duplicate)
 
     def remove(self, element : UiSprite, remove_all_instances = False):
-        if remove_all_instances == False:
+        if not remove_all_instances:
             if element in self.elements: 
                 self.elements.remove(element)
                 if element in self.temp_elements: self.temp_elements.pop(element)

@@ -11,14 +11,14 @@ class GameData(TypedDict):
     high_score : int
 
 class GameStorage:
-    '''Most of these functions are incomplete and need implementing.\nThis module is made to handle file I/O and saving on multiple platforms.'''
+    """Most of these functions are incomplete and need implementing.\nThis module is made to handle file I/O and saving on multiple platforms."""
     def __init__(self) -> None:
         self.high_score : int = 0
 
     def reset(self):
         self.high_score = 0
     
-    def validate_data(self, data : dict) -> bool:
+    def validate_data(self, data : GameData) -> bool:
         if data is None: return False
         if 'high_score' not in data: return False
         return True
@@ -44,6 +44,7 @@ class GameStorage:
             data = json.load(file)
         if data:
             return self._load_data(data)
+        return False
 
     def _save_to_file(self, file_path : str = 'assets/data/game_info.json') -> None:
         data = self._get_data()
@@ -55,14 +56,15 @@ class GameStorage:
         if web_data is not None:
             data = json.loads(web_data)
             if data is not None:
-                self._load_data(data)
+                return self._load_data(data)
+        return False
 
     def _save_to_web(self) -> None:
         data = self._get_data()
         self.set_web('GameData', json.dumps(data))
 
     def get_web(self, key : str) -> str:
-        window.localStorage.getItem(key)
+        return window.localStorage.getItem(key)
 
     def set_web(self, key : str, value : Any):
         window.localStorage.setItem(key, str(value))

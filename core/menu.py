@@ -24,7 +24,7 @@ class BaseMenu:
 
     def __init__(self) -> None:
         self.stage : int
-        self.stages : list[list[UiSprite|UiSpriteGroup]]
+        self.stages : list[list[UiSprite|UiSpriteGroup]|None]
         self.bg_color : ColorType|str
         self.temp : dict[UiSprite|UiSpriteGroup, Timer] = {}
         
@@ -161,10 +161,10 @@ class BaseMenu:
         return None
     
     def find_and_replace(self, new_sprite : UiSprite|UiSpriteGroup, stage : int, name : str|None = None, 
-                         tag : int|None = None, sprite : UiSprite|UiSpriteGroup|None = None) -> bool:
+                         tag : int|None = None, old_sprite : UiSprite|UiSpriteGroup|None = None) -> bool:
         found : bool = False
         for index, sprite in enumerate(self.stages[stage]):
-            if sprite == new_sprite and sprite is not None:
+            if sprite == old_sprite and old_sprite is not None:
                 found = True
                 break
             if sprite.tag == tag and tag is not None:

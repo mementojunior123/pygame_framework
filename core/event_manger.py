@@ -1,15 +1,18 @@
 import pygame
 from sys import exit
+from typing import Callable, TypeAlias
+
+EventCallback : TypeAlias = Callable[[pygame.event.Event], None]
 
 class EventManger:
     def __init__(self) -> None:
-        self.bound_actions : dict[int, list['function']] = {pygame.QUIT : [self.close_game]}
+        self.bound_actions : dict[int, list[EventCallback]] = {pygame.QUIT : [self.close_game]}
     
     def close_game(self, event):
         pygame.quit()
         exit()
     
-    def bind(self, event_type : int, actions : list['function'], duplicate = False):
+    def bind(self, event_type : int, actions : list[EventCallback]|EventCallback, duplicate = False):
         '''The action parameter must be a function or list of functions that accepts exactly one pygame.Event argument. 
         Returns False if the action fails to bind.'''
         try:
@@ -29,7 +32,7 @@ class EventManger:
         
         return True
 
-    def unbind(self, event_type : int, target_actions : list['function']):
+    def unbind(self, event_type : int, target_actions : list[EventCallback]|EventCallback):
         '''Returns False if event_type or target_actions is not found.'''
         try:
             target_actions[0]
