@@ -16,6 +16,7 @@ def noop():
     pass
 
 class BaseMenu:
+    """Base class for the menu."""
     font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
     font_50 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 50)
     font_60 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 60)
@@ -24,16 +25,19 @@ class BaseMenu:
 
     @staticmethod
     def _get_core_object():
+        """Function that imports the core object at runtime."""
         global core_object
         from framework.core.core import core_object
 
     def __init__(self) -> None:
+        """Constructor for the menu object that runs before runtime imports."""
         self.stage : int
         self.stages : list[list[UiSprite|UiSpriteGroup]|None]
         self.bg_color : ColorType|str
         self.temp : dict[UiSprite|UiSpriteGroup, Timer] = {}
         
     def init(self):
+        """Initialises a menu object. Must be ran after runtime imports."""
         self.bg_color = (94, 129, 162)
         self.stage = 1
         self.stage_data : list[dict] = [None, {}]
@@ -41,11 +45,24 @@ class BaseMenu:
     
     def add_temp(self, element : UiSprite|UiSpriteGroup, time : float|Timer, 
                  override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
+        """
+        Function that adds an element to the menu temporarily.
+            element: The ui element to add.
+            time: The amount of time to add it for. Can also be a timer.
+            override: If True and the element is already present temporarily, the timer for that element is overriden.
+            time_source: The timestamp function to be used for this element's timer. Is optional.
+            time_scale: The multiplicative factor that gets applied to the timestamp function of the element's timer. Is optional.
+        """
         if element not in self.temp or override == True:
             timer = time if type(time) == Timer else Timer(time, time_source, time_scale)
             self.temp[element] = timer
     
     def alert_player(self, text : str, alert_speed : float = 1):
+        """
+        Function that shows a default alert message to the player.
+            text: The text that will be shown by the alert.
+            alert_speed: Applies a speedup (or slowdown) factor to the alert animation.
+        """
         text_sprite = TextSprite(pygame.Vector2(core_object.main_display.get_width() // 2, 90), 'midtop', 0, text, 
                         text_settings=(core_object.menu.font_60, 'White', False), text_stroke_settings=('Black', 2), colorkey=(0,255,0))
         
@@ -68,16 +85,26 @@ class BaseMenu:
         chain.play()
 
     def add_connections(self):
+        """
+        Function that binds relevant events to their menu object callbacks.
+        """
         core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
         core_object.event_manager.bind(UiSprite.TAG_EVENT, self.handle_tag_event)
     
     def remove_connections(self):
+        """
+        Function that unbinds relevant events from their menu object callbacks.
+        """
         core_object.event_manager.unbind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
         core_object.event_manager.unbind(UiSprite.TAG_EVENT, self.handle_tag_event)
     
     
 
     def render(self, display : pygame.Surface):
+        """
+        Function that renders the menu object.
+            display: The surface where the menu gets rendered.
+        """
         sprite_list : list[UiSprite] = []
         for sprite in (self.stages[self.stage] + list(self.temp.keys())):
             if isinstance(sprite, UiSpriteGroup):
@@ -90,46 +117,63 @@ class BaseMenu:
         
     
     def update(self, delta : float):
+        """
+        Function that runs every frame, allowing frame-based updates to happen.
+            delta: The current delta factor. See core.py for more details on delta's functionement.
+        """
         to_del = []
         for item in self.temp:
             if self.temp[item].isover(): to_del.append(item)
         for item in to_del:
             self.temp.pop(item)
-
-        stage_data = self.stage_data[self.stage]
-        match self.stage:
-            case 1:
-                pass
     
     def prepare_entry(self, stage : int = 1):
+        """
+        Function that runs right before the menu is entered (but not on startup).
+            stage: The stage that will be entered.
+        """
         self.add_connections()
         self.stage = stage
     
     def prepare_exit(self):
+        """
+        Function that runs right before the menu is exited.
+        """
         self.stage = 0
         self.remove_connections()
         self.temp.clear()
     
     def goto_stage(self, new_stage : int):
+        """
+        Function that exits the current stage then enters a stage.
+            new_stage: The stage to enter.
+        """
         self.exit_stage()
         self.enter_stage(new_stage)
 
     def enter_stage(self, new_stage : int):
+        """
+        Function that enters a new stage. Automatically uses enter_stage_[stage_number] if it exists. Otherwise, it does nothing.
+            new_stage: The stage to enter.
+        """
         entry_funcion = getattr(self, f'enter_stage{new_stage}', noop)
         entry_funcion()
         self.stage = new_stage
     
     def exit_stage(self):
-        entry_funcion = getattr(self, f'exit_stage{self.stage}', noop)
-        entry_funcion()
-
-    def launch_game(self):
-        new_event = pygame.event.Event(core_object.START_GAME, {})
-        pygame.event.post(new_event)
+        """
+        Function that exits the current stage. Automatically uses exit_stage_[stage_number] if it exists. Otherwise, it does nothing.
+        """
+        exit_funcion = getattr(self, f'exit_stage{self.stage}', noop)
+        exit_funcion()
 
     def get_sprite(self, stage : int, tag : int) -> UiSprite|None:
-        """Returns the 1st sprite with a corresponding tag.
-        None is returned if it was not found in the stage."""
+        """
+        Function that searches a stage for a sprite with a given tag, and returns the first sprite found.
+            stage: The stage to search.
+            tag: The sprite's tag attribute to look for.
+        Returns --> A sprite if it was found, otherwise None.
+        """
         if tag is None or stage is None: return None
 
         the_list : list[UiSprite|UiSpriteGroup] = self.stages[stage]
@@ -138,9 +182,13 @@ class BaseMenu:
                 return sprite
         return None
     
-    def get_sprite_by_name(self, stage, name) -> UiSprite|UiSpriteGroup|None:
-        """Returns the 1st sprite with a corresponding name.
-        None is returned if it was not found in the stage."""
+    def get_sprite_by_name(self, stage : int, name : str) -> UiSprite|UiSpriteGroup|None:
+        """
+        Function that searches a stage for a sprite with a given name, and returns the first sprite found.
+            stage: The stage to search.
+            name: The sprite's name attribute to look for.
+        Returns --> A sprite or sprite group if it was found, otherwise None.
+        """
         if name is None or stage is None: return None
 
         the_list = self.stages[stage]
@@ -150,10 +198,17 @@ class BaseMenu:
                 return sprite
         return None
 
-    def get_sprite_index(self, stage, name = None, tag = None) -> int|None:
-        '''Returns the index of the 1st occurence of sprite with a corresponding name or tag.
-        None is returned if the sprite is not found'''
-        if name is None and tag is None: return None
+    def get_sprite_index(self, stage : int, name : str|None = None, tag : int|None = None) -> int|None:
+        """
+        Function that searches a stage for a sprite with a given name or tag, and returns the index of the first sprite that matches any condition.
+            stage: The stage to search.
+            tag: The sprite's tag attribute to look for.
+            name: The sprite's name attribute to look for.
+        Returns --> The index of the sprite if it was found, otherwise None.
+        ***
+        No search criteria (name or tag) is obligatory, but alteast one must be given.
+        """
+        if (name is None and tag is None) or stage is None: return None
         the_list = self.stages[stage]
         sprite : UiSprite|UiSpriteGroup
         for i, sprite in enumerate(the_list):
@@ -165,6 +220,18 @@ class BaseMenu:
     
     def find_and_replace(self, new_sprite : UiSprite|UiSpriteGroup, stage : int, name : str|None = None, 
                          tag : int|None = None, old_sprite : UiSprite|UiSpriteGroup|None = None) -> bool:
+        """
+        Function that looks for a given sprite, name or tag and replaces the first occurence with a new sprite.
+            new_sprite: The new sprite or sprite group.
+            stage: The stage index to search.
+            name: The name of the sprite or sprite group to look for.
+            tag: The tag to look for.
+            old_sprite: The sprite or sprite group to look for.
+        Returns --> A boolean that represents the success of the operation.
+        ***
+        Only one of the 3 criteria (old_sprite, tag, name) has to match.
+        No search criteria is obligatory, but alteast one must be given.
+        """
         found : bool = False
         for index, sprite in enumerate(self.stages[stage]):
             if sprite == old_sprite and old_sprite is not None:
@@ -185,6 +252,17 @@ class BaseMenu:
     
     def remove_sprite(self, stage : int, sprite : UiSprite|UiSpriteGroup|None = None, 
                       name : str|None = None, tag : int|None = None) -> None|UiSpriteGroup|UiSpriteGroup:
+        """
+        Function that looks for a given sprite, name or tag and removes the first occurence.
+            stage: The stage index to search.
+            name: The name of the sprite or sprite group to look for.
+            tag: The tag to look for.
+            old_sprite: The sprite or sprite group to look for.
+        Returns --> The removed sprite or sprite group.
+        ***
+        Only one of the 3 criteria (old_sprite, tag, name) has to match.
+        No search criteria is obligatory, but alteast one must be given.
+        """
         if sprite is None and name is None and tag is None: return None
         found : UiSprite|UiSpriteGroup|None = None
         for index, element in enumerate(self.stages[stage]):
@@ -206,6 +284,10 @@ class BaseMenu:
         return found
 
     def handle_tag_event(self, event : pygame.Event):
+        """
+        Default event handler for tag events. See UiSprite for more details on tag events.
+            event: The event to handle.
+        """
         if event.type != UiSprite.TAG_EVENT:
             return
         tag : int = event.tag
@@ -218,6 +300,10 @@ class BaseMenu:
                    
     
     def handle_mouse_event(self, event : pygame.Event):
+        """
+        Default event handler for mouse events.
+            event: The event to handle.
+        """
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos : tuple = event.pos
             sprite : UiSprite|UiSpriteGroup
@@ -229,28 +315,3 @@ class BaseMenu:
                     for real_sprite in sprite.elements:
                         if real_sprite.rect.collidepoint(mouse_pos):
                             real_sprite.on_click()
-
-test_list : list[str] = ['up', 'right', 'showdown', 'critical', 'double-up', 'switch', 'fake-run', 'remontada']
-class TestUiGroup(UiSpriteGroup):
-    base_name = 'TestGroup'
-    def __init__(self, *args : tuple[UiSprite], serial : str = '', center : pygame.Vector2 = pygame.Vector2(480, 270)):
-        super().__init__(*args, serial=serial)
-        self.center = center
-    
-    @staticmethod
-    def new_group(page : int, sep : int = 4, center = pygame.Vector2(480, 270)) -> 'TestUiGroup':
-        start_index : int = sep * page
-        end_index : int = sep * (page + 1)
-        name_amount : int = len(test_list)
-        if start_index >= name_amount:
-            raise ValueError('Page does not exist')
-        if end_index > name_amount: end_index = name_amount
-        name_list : list[str] = test_list[start_index: end_index]
-        elements : list[TextSprite] = []
-        aligments = [(pygame.Vector2(-200, -200), 'topleft'), (pygame.Vector2(200, -200), 'topright'), 
-                     (pygame.Vector2(-200, 200), 'bottomleft'),(pygame.Vector2(200, 200), 'bottomright')]
-        for text, aligment in zip(name_list, aligments):
-            new_sprite = TextSprite(center + aligment[0], aligment[1], 0, text, None, text_settings=(BaseMenu.font_50, 'White', False),
-                                    text_stroke_settings=('Black', 2), colorkey=(0, 255, 0))
-            elements.append(new_sprite)
-        return TestUiGroup(*elements, serial=f'')

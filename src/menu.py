@@ -18,6 +18,7 @@ def noop():
 
 test_list : list[str] = ['up', 'right', 'showdown', 'critical', 'double-up', 'switch', 'fake-run', 'remontada']
 class TestUiGroup(UiSpriteGroup):
+    """A demonstration of UiSpriteGroup."""
     base_name = 'TestGroup'
     def __init__(self, *args : tuple[UiSprite], serial : str = '', center : pygame.Vector2 = pygame.Vector2(480, 270)):
         super().__init__(*args, serial=serial)
@@ -25,6 +26,7 @@ class TestUiGroup(UiSpriteGroup):
     
     @staticmethod
     def new_group(page : int, sep : int = 4, center = pygame.Vector2(480, 270)) -> 'TestUiGroup':
+        """Constructor for UiSpriteGroup."""
         start_index : int = sep * page
         end_index : int = sep * (page + 1)
         name_amount : int = len(test_list)
@@ -36,7 +38,7 @@ class TestUiGroup(UiSpriteGroup):
         aligments = [(pygame.Vector2(-200, -200), 'topleft'), (pygame.Vector2(200, -200), 'topright'), 
                      (pygame.Vector2(-200, 200), 'bottomleft'),(pygame.Vector2(200, 200), 'bottomright')]
         for text, aligment in zip(name_list, aligments):
-            new_sprite = TextSprite(center + aligment[0], aligment[1], 0, text, None, text_settings=(Menu.font_50, 'White', False),
+            new_sprite = TextSprite(center + aligment[0], aligment[1], 0, text, None, text_settings=(BaseMenu.font_50, 'White', False),
                                     text_stroke_settings=('Black', 2), colorkey=(0, 255, 0))
             elements.append(new_sprite)
         return TestUiGroup(*elements, serial=f'')
@@ -44,6 +46,7 @@ class TestUiGroup(UiSpriteGroup):
             
 
 class Menu(BaseMenu):
+    """Implementation of the menu class."""
     font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
     font_50 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 50)
     font_60 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 60)
@@ -52,11 +55,13 @@ class Menu(BaseMenu):
 
     @staticmethod
     def _get_core_object():
+        """Function that imports the core object at runtime."""
         global core_object
         from framework.core.core import core_object
         BaseMenu._get_core_object()
     
     def init(self):
+        """Initialises a menu object. Must be ran after runtime imports."""
         self._get_core_object()
         window_size = core_object.main_display.get_size()
         centerx = window_size[0] // 2
@@ -107,12 +112,21 @@ class Menu(BaseMenu):
         self.remove_sprite(2, name='TestGroup')
     
     def update(self, delta : float):
+        """
+        Function that runs every frame, allowing frame-based updates to happen.
+            delta: The current delta factor. See core.py for more details on delta's functionement.
+        """
+        super().update(delta)
         stage_data = self.stage_data[self.stage]
         match self.stage:
             case 1:
                 pass
     
     def handle_tag_event(self, event : pygame.Event):
+        """
+        Event handler for tag events.
+            event: The event to handle.
+        """
         if event.type != UiSprite.TAG_EVENT:
             return
         tag : int = event.tag
@@ -132,3 +146,5 @@ class Menu(BaseMenu):
                     self.decrement_page_stage2()
                 elif name == 'next_button':
                     self.increment_page_stage2()
+
+# TODO : Document the menu API (general workflow, interactivity, etc.)
