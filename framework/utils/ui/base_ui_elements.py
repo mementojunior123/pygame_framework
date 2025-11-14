@@ -1,6 +1,6 @@
 import pygame
-from utils.ui.ui_sprite import UiSprite
-import utils.ui.button_templates as button_templates
+from framework.utils.ui.ui_sprite import UiSprite
+import framework.utils.ui.button_templates as button_templates
 
 class BaseUiElements:
     font_40 = pygame.font.Font("assets/fonts/Pixeltype.ttf", 40)

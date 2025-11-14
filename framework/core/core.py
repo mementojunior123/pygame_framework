@@ -1,21 +1,21 @@
 import pygame
 from time import perf_counter
 from collections import deque
-from utils.my_timer import Timer
-from core.event_manger import EventManger
-import game.game_module
-from game.sprite import Sprite
-from core.settings import Settings
-from core.bg_manager import BgManager
-from core.ui import Ui
-from core.menu import Menu
-from utils.ui.textsprite import TextSprite
-from core.game_storage import GameStorage
-import core.menu
-from game.game_module import Game
-from core.task_scheduler import TaskScheduler
-from utils.tween_module import TweenTrack, TweenChain
-from utils.animation import AnimationTrack
+from framework.utils.my_timer import Timer
+from framework.core.event_manger import EventManger
+import framework.game.game_module
+from framework.game.sprite import Sprite
+from src.settings import Settings
+from framework.core.bg_manager import BgManager
+from framework.core.ui import Ui
+from src.menu import Menu
+from framework.utils.ui.textsprite import TextSprite
+from src.game_storage import GameStorage
+import src.menu
+from framework.game.game_module import Game
+from framework.core.task_scheduler import TaskScheduler
+from framework.utils.tween_module import TweenTrack, TweenChain
+from framework.utils.animation import AnimationTrack
 import sys
 import platform
 from typing import Any
@@ -253,7 +253,7 @@ class Core:
     
     def __hints(self):
         global TextSprite
-        from utils.ui.textsprite import TextSprite
+        from framework.utils.ui.textsprite import TextSprite
 
 core_object = Core()
-setattr(core.menu, 'core_object', core_object)
+setattr(src.menu, 'core_object', core_object)

@@ -1,9 +1,9 @@
 import pygame
-from game.sprite import Sprite
-from core.core import core_object
+from framework.game.sprite import Sprite
+from framework.core.core import core_object
 
-from utils.animation import Animation
-from utils.pivot_2d import Pivot2D
+from framework.utils.animation import Animation
+from framework.utils.pivot_2d import Pivot2D
 
 
 class TestPlayer(Sprite):

@@ -1,11 +1,11 @@
 import pygame
-from utils.my_timer import Timer, TimeSource
-from utils.animation import Animation
-import utils.interpolation as interpolation
+from framework.utils.my_timer import Timer, TimeSource
+from framework.utils.animation import Animation
+import framework.utils.interpolation as interpolation
 from random import random
 from math import sin, radians, cos, atan2
-from game.sprite import Sprite
-from utils.pivot_2d import Pivot2D
+from framework.game.sprite import Sprite
+from framework.utils.pivot_2d import Pivot2D
 from typing import TypedDict, Literal, Union, TypeAlias
 
 def __random_float(a, b):
@@ -354,5 +354,5 @@ ParticleEffect.effects_data = {'test' : test_effect, 'test2' : test_effect2}
 
 def runtime_imports():
     global core_object
-    from core.core import core_object
+    from framework.core.core import core_object
     Particle.bounding_box = pygame.Rect(0, 0, *core_object.main_display.get_size())

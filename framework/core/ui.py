@@ -1,7 +1,7 @@
 import pygame
-from utils.ui.ui_sprite import UiSprite
-from utils.ui.base_ui_elements import BaseUiElements
-from utils.my_timer import Timer
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.ui.base_ui_elements import BaseUiElements
+from framework.utils.my_timer import Timer
 from typing import Callable
 
 class Ui:

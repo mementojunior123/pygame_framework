@@ -4,18 +4,18 @@ from math import floor
 from random import shuffle, choice
 import random
 import os
-import utils.tween_module as TweenModule
-from utils.ui.ui_sprite import UiSprite
-from utils.ui.textbox import TextBox
-from utils.ui.textsprite import TextSprite
-from utils.ui.base_ui_elements import BaseUiElements
-import utils.interpolation as interpolation
-from utils.my_timer import Timer
-from game.sprite import Sprite
-from utils.helpers import average, random_float
-from utils.ui.brightness_overlay import BrightnessOverlay
-from game.game_states import GameState, GameStates
-import utils.particle_effects
+import framework.utils.tween_module as TweenModule
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.ui.textbox import TextBox
+from framework.utils.ui.textsprite import TextSprite
+from framework.utils.ui.base_ui_elements import BaseUiElements
+import framework.utils.interpolation as interpolation
+from framework.utils.my_timer import Timer
+from framework.game.sprite import Sprite
+from framework.utils.helpers import average, random_float
+from framework.utils.ui.brightness_overlay import BrightnessOverlay
+from src.game_states import GameState, GameStates, initialise_game
+import framework.utils.particle_effects
 
 class Game:
     font_40 = pygame.Font('assets/fonts/Pixeltype.ttf', 40)
@@ -38,10 +38,7 @@ class Game:
         self.game_timer = Timer(-1)
         self.game_data = {}
         self.make_connections()
-        if event.mode == 'test':
-            self.state = self.STATES.TestGameState(self)
-        else:
-            self.state = self.STATES.TestGameState(self)
+        initialise_game(self, event)
 
         
     def alert_player(self, text : str, alert_speed : float = 1):
@@ -124,7 +121,7 @@ class Game:
 
         #Cleanup ingame object
         Sprite.kill_all_sprites()
-        utils.particle_effects.ParticleEffect.elements.clear()
+        framework.utils.particle_effects.ParticleEffect.elements.clear()
         core_object.main_ui.clear_all()
 
         #Clear game varaibles
@@ -133,9 +130,9 @@ class Game:
    
     def init(self):
         global core_object
-        from core.core import core_object
+        from framework.core.core import core_object
 
         #runtime imports for game classes
         global game, TestPlayer      
-        import game.test_player
-        from game.test_player import TestPlayer
+        import src.test_player
+        from src.test_player import TestPlayer

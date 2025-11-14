@@ -1,7 +1,7 @@
 import json
 from typing import TypedDict, Any
 from sys import platform as PLATFORM
-from utils.helpers import AnyJson
+from framework.utils.helpers import AnyJson
 
 if PLATFORM == 'emscripten':
     from platform import window
@@ -16,15 +16,15 @@ class MissingKeyClass:
 _missing = MissingKeyClass()
 
 
-class SettingsDict(TypedDict):
+class BaseSettingsDict(TypedDict):
     Brightness : int
 
-DEFAULT_SETTINGS : SettingsDict = {
+DEFAULT_SETTINGS : BaseSettingsDict = {
     "Brightness" : 0
 }
 
-class Settings:
-    default : SettingsDict = DEFAULT_SETTINGS
+class BaseSettings:
+    default : BaseSettingsDict = DEFAULT_SETTINGS
 
     def __init__(self) -> None:
         self.brightness : int = self.default['Brightness']
@@ -35,10 +35,10 @@ class Settings:
     def apply(self):
         core_object.set_brightness(self.brightness)
     
-    def _get_data(self) -> SettingsDict:
+    def _get_data(self) -> BaseSettingsDict:
         return {'Brightness' : self.brightness}
 
-    def _load_data(self, data : SettingsDict) -> bool:
+    def _load_data(self, data : BaseSettingsDict) -> bool:
         if not self.validate_data(data):
             print('Data is invalid!')
             return False
@@ -46,7 +46,7 @@ class Settings:
         return True
 
     @staticmethod
-    def validate_data(data : SettingsDict) -> bool:
+    def validate_data(data : BaseSettingsDict) -> bool:
         if data is None: return False
         if data.get('Brightness', _missing) is _missing: return False
         return True
@@ -88,11 +88,11 @@ class Settings:
         window.localStorage.setItem(key, str(value))
 
     @classmethod
-    def set_default(cls, new_default : SettingsDict) -> bool:
+    def set_default(cls, new_default : BaseSettingsDict) -> bool:
         if not cls.validate_data(new_default): return False
         cls.default = new_default
         return True
     
 def runtime_imports():
     global core_object
-    from core.core import core_object
+    from framework.core.core import core_object

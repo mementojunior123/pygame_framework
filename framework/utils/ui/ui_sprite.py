@@ -1,6 +1,6 @@
 import pygame
-from utils.helpers import rotate_around_pivot_accurate, ColorType
-from utils.pivot_2d import Pivot2D
+from framework.utils.helpers import rotate_around_pivot_accurate, ColorType
+from framework.utils.pivot_2d import Pivot2D
 
 
 

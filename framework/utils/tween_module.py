@@ -1,8 +1,8 @@
 "I just copied roblox's homework on this one. For the better or the worse."
 
 import pygame
-import utils.interpolation as interpolation
-from utils.my_timer import Timer
+import framework.utils.interpolation as interpolation
+from framework.utils.my_timer import Timer
 from typing import Callable, Any
 from time import perf_counter
 

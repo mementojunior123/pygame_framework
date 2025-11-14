@@ -1,7 +1,7 @@
 import pygame
 from math import floor
-from utils.ui.ui_sprite import UiSprite
-from utils.helpers import rotate_around_pivot_accurate
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.helpers import rotate_around_pivot_accurate
 class TextBox(UiSprite):
     main_image = pygame.image.load('assets/graphics/button_templates/textbox_green_colorkey.png').convert()
     main_image.set_colorkey((0, 255, 0))

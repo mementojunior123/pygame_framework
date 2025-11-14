@@ -1,7 +1,7 @@
 import pygame
 from math import floor
-from utils.ui.ui_sprite import UiSprite
-from utils.helpers import rotate_around_pivot_accurate
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.helpers import rotate_around_pivot_accurate
 import button_templates
 
 class TextButton(UiSprite):

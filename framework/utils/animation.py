@@ -1,9 +1,9 @@
 import json
 import pygame
-from utils.helpers import Task
-from utils.my_timer import Timer
-import utils.interpolation as interpolation
-import utils.tween_module as TweenModule
+from framework.utils.helpers import Task
+from framework.utils.my_timer import Timer
+import framework.utils.interpolation as interpolation
+import framework.utils.tween_module as TweenModule
 from typing import Any, Callable, Union
 
 ColorType = Union[list[int], tuple[int, int, int], pygame.Color]
@@ -677,4 +677,4 @@ class Animation:
 
 def _sprite_hint():
     global Sprite
-    from game.sprite import Sprite
+    from framework.game.sprite import Sprite

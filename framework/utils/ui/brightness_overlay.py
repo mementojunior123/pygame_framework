@@ -1,6 +1,6 @@
 import pygame
-from utils.ui.ui_sprite import UiSprite
-from utils.helpers import rotate_around_pivot_accurate
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.helpers import rotate_around_pivot_accurate
 
 class BrightnessOverlay(UiSprite):
     def __init__(self, brightness : int, rect: pygame.Rect, tag: int, name: str | None = None, attributes: dict = None, data: dict = None, zindex: int = 0):

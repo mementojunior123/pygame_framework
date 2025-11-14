@@ -3,17 +3,17 @@ from typing import Any
 from math import floor
 from random import shuffle, choice
 import random
-import utils.tween_module as TweenModule
-from utils.ui.ui_sprite import UiSprite
-from utils.ui.textbox import TextBox
-from utils.ui.textsprite import TextSprite
-from utils.ui.base_ui_elements import BaseUiElements
-import utils.interpolation as interpolation
-from utils.my_timer import Timer
-from game.sprite import Sprite
-from utils.helpers import average, random_float
-from utils.ui.brightness_overlay import BrightnessOverlay
-from utils.particle_effects import ParticleEffect
+import framework.utils.tween_module as TweenModule
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.ui.textbox import TextBox
+from framework.utils.ui.textsprite import TextSprite
+from framework.utils.ui.base_ui_elements import BaseUiElements
+import framework.utils.interpolation as interpolation
+from framework.utils.my_timer import Timer
+from framework.game.sprite import Sprite
+from framework.utils.helpers import average, random_float
+from framework.utils.ui.brightness_overlay import BrightnessOverlay
+from framework.utils.particle_effects import ParticleEffect
 
 class GameState:
     def __init__(self, game_object : 'Game'):
@@ -63,13 +63,13 @@ class TestGameState(NormalGameState):
         self.player : TestPlayer = TestPlayer.spawn(pygame.Vector2(random.randint(0, 960),random.randint(0, 540)))
         self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
-        game.test_player.make_connections()
+        src.test_player.make_connections()
 
     def main_logic(self, delta : float):
         super().main_logic(delta)
     
     def cleanup(self):
-        game.test_player.remove_connections()
+        src.test_player.remove_connections()
 
 class PausedGameState(GameState):
     def __init__(self, game_object : 'Game', previous : GameState):
@@ -91,17 +91,24 @@ class PausedGameState(GameState):
 
 def runtime_imports():
     global Game
-    from game.game_module import Game
+    from framework.game.game_module import Game
     global core_object
-    from core.core import core_object
+    from framework.core.core import core_object
 
     #runtime imports for game classes
-    global game, TestPlayer      
-    import game.test_player
-    from game.test_player import TestPlayer
+    global src, TestPlayer      
+    import src.test_player
+    from src.test_player import TestPlayer
 
 
 class GameStates:
     NormalGameState = NormalGameState
     TestGameState = TestGameState
     PausedGameState = PausedGameState
+
+
+def initialise_game(game_object : 'Game', event : pygame.Event):
+    if event.mode == 'test':
+        game_object.state = game_object.STATES.TestGameState(game_object)
+    else:
+        game_object.state = game_object.STATES.TestGameState(game_object)

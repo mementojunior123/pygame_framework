@@ -12,8 +12,8 @@ window = pygame.display.set_mode(window_size)
 
 pygame.mixer.set_num_channels(32)
 
-from core.core import Core, core_object
-import core.settings as settings_module
+from framework.core.core import Core, core_object
+import src.settings as settings_module
 core = core_object
 core.init(window)
 core.FPS = 120
@@ -22,28 +22,28 @@ if core.is_web(): core.setup_web(1)
 
 pygame.display.set_caption(GAME_TITLE)
 
-from game.sprite import Sprite
+from framework.game.sprite import Sprite
 Sprite._core_hint()
 
-from utils.animation import Animation, AnimationTrack, _sprite_hint
+from framework.utils.animation import Animation, AnimationTrack, _sprite_hint
 _sprite_hint()
 
-from utils.ui.base_ui_elements import BaseUiElements, UiSprite
-from utils.ui.textsprite import TextSprite
-from utils.helpers import rotate_around_pivot_accurate, copysign
-from utils.particle_effects import ParticleEffect, Particle
-import utils.particle_effects
-utils.particle_effects.runtime_imports()
-from utils.my_timer import Timer
-import utils.interpolation as interpolation
-import utils.tween_module as TweenModule
+from framework.utils.ui.base_ui_elements import BaseUiElements, UiSprite
+from framework.utils.ui.textsprite import TextSprite
+from framework.utils.helpers import rotate_around_pivot_accurate, copysign
+from framework.utils.particle_effects import ParticleEffect, Particle
+import framework.utils.particle_effects
+framework.utils.particle_effects.runtime_imports()
+from framework.utils.my_timer import Timer
+import framework.utils.interpolation as interpolation
+import framework.utils.tween_module as TweenModule
 
-import game.game_states as game_states
-from game.test_player import TestPlayer
+import src.game_states as game_states
+from src.test_player import TestPlayer
 
 core.storage.load(is_web=core.is_web())
 core.settings.load(is_web=core.is_web())
-settings_module.runtime_imports()
+settings_module.the_runtime_imports()
 core.settings.apply()
 
 core.menu.init()

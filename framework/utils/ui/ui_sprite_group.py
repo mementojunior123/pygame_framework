@@ -1,7 +1,7 @@
 import pygame
-from utils.ui.ui_sprite import UiSprite
-from utils.helpers import rotate_around_pivot_accurate, ColorType
-from utils.pivot_2d import Pivot2D
+from framework.utils.ui.ui_sprite import UiSprite
+from framework.utils.helpers import rotate_around_pivot_accurate, ColorType
+from framework.utils.pivot_2d import Pivot2D
 from typing import Literal
 
 class UiSpriteGroup:

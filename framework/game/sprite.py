@@ -1,8 +1,8 @@
 import pygame
-from utils.animation import AnimationTrack, Animation
+from framework.utils.animation import AnimationTrack, Animation
 from typing import Any
-from utils.helpers import is_sorted
-from utils.pivot_2d import Pivot2D
+from framework.utils.helpers import is_sorted
+from framework.utils.pivot_2d import Pivot2D
 from inspect import isclass
 
 class Sprite:
@@ -375,5 +375,5 @@ class Sprite:
     @classmethod
     def _core_hint(cls):
         global core_object
-        from core.core import core_object
+        from framework.core.core import core_object
             

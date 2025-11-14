@@ -2,35 +2,33 @@ from sys import platform as PLATFORM
 import json
 import os
 from typing import Any, TypedDict
-from utils.helpers import AnyJson
+from framework.utils.helpers import AnyJson
 
 if PLATFORM == 'emscripten':
     from platform import window
 
-class GameData(TypedDict):
-    high_score : int
+class MockGameData(TypedDict):
+    pass
 
-class GameStorage:
+class BaseGameStorage:
     """Most of these functions are incomplete and need implementing.\nThis module is made to handle file I/O and saving on multiple platforms."""
     def __init__(self) -> None:
-        self.high_score : int = 0
+        pass
 
     def reset(self):
-        self.high_score = 0
+        pass
     
-    def validate_data(self, data : GameData) -> bool:
+    def validate_data(self, data : MockGameData) -> bool:
         if data is None: return False
-        if 'high_score' not in data: return False
         return True
 
-    def _get_data(self) -> GameData:
-        return {'high_score' : self.high_score}
+    def _get_data(self) -> MockGameData:
+        return {}
 
-    def _load_data(self, data : GameData) -> bool:
+    def _load_data(self, data : MockGameData) -> bool:
         if not self.validate_data(data):
             print('Data is invalid!')
             return False
-        self.high_score = data['high_score']
         return True
 
     def load(self, is_web : bool = False) -> bool:
