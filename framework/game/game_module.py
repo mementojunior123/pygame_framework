@@ -132,7 +132,4 @@ class Game:
         global core_object
         from framework.core.core import core_object
 
-        #runtime imports for game classes
-        global game, TestPlayer      
-        import src.test_player
-        from src.test_player import TestPlayer
+        #runtime imports for game classes go here
