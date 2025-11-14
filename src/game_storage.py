@@ -21,7 +21,7 @@ class GameStorage(BaseGameStorage):
     Implementation of BaseGameStorage.
     """
     def __init__(self) -> None:
-        """Initialises all of the data."""
+        """Constructor that initialises all of the data."""
         self.high_score : int = 0
 
     def reset(self):
