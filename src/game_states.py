@@ -1,15 +1,17 @@
 import pygame
-from typing import Any
+from typing import Any, Generator
 from math import floor
 from random import shuffle, choice
 import random
+import framework.game.coroutine_scripts
+from framework.game.coroutine_scripts import CoroutineScript
 import framework.utils.tween_module as TweenModule
 from framework.utils.ui.ui_sprite import UiSprite
 from framework.utils.ui.textbox import TextBox
 from framework.utils.ui.textsprite import TextSprite
 from framework.utils.ui.base_ui_elements import BaseUiElements
 import framework.utils.interpolation as interpolation
-from framework.utils.my_timer import Timer
+from framework.utils.my_timer import Timer, TimeSource
 from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
 from framework.utils.ui.brightness_overlay import BrightnessOverlay
@@ -64,13 +66,50 @@ class TestGameState(NormalGameState):
         self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
         src.test_player.make_connections()
+        self.test_pattern : TestPattern = TestPattern()
+        self.test_pattern.initialize(self.game.game_timer.get_time)
 
     def main_logic(self, delta : float):
         super().main_logic(delta)
+        self.test_pattern.process_frame()
     
     def cleanup(self):
         src.test_player.remove_connections()
 
+class TestPattern(CoroutineScript):
+    def initialize(self, time_source : TimeSource):
+        return super().initialize(time_source)
+    
+    def type_hints(self):
+        self.coro_attributes = ['timer', 'cooldown', 'curr_angle']
+        self.timer : Timer
+        self.cooldown : Timer
+        self.curr_angle : float
+    
+    @staticmethod
+    def corou(time_source : TimeSource) -> Generator[None, None, str]:
+        textsprite_font : pygame.Font = core_object.menu.font_50
+
+        new_textsprite : TextSprite = TextSprite((480, 10), "midtop", None, "Waiting...", "Progress",
+        text_settings=(textsprite_font, "White", False), text_stroke_settings=("Black", 2))
+        core_object.main_ui.add(new_textsprite)
+        timer : Timer = Timer(0.5, time_source)
+        percentage : float = 0
+        yield
+        while not timer.isover():
+            yield
+        timer.set_duration(3, restart=True)
+        while not timer.isover():
+            percentage = pygame.math.lerp(0, 100, timer.get_time() / timer.duration)
+            new_textsprite.text = f"{percentage:.2f}%"
+            yield
+        new_textsprite.text = f"{100}% - Done!"
+        timer.set_duration(1, restart=True)
+        while not timer.isover():
+            yield
+        core_object.main_ui.remove(new_textsprite)
+        return 'Done'
+    
 class PausedGameState(GameState):
     def __init__(self, game_object : 'Game', previous : GameState):
         super().__init__(game_object)
