@@ -19,6 +19,7 @@ class CoroutineScript:
         self.initialized = True
 
     def process_frame(self, values = None):
+        if self.is_over : return
         if not self.initialized: self.initialize()
         try:
             return self.coroutine.send(values)
