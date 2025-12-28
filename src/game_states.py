@@ -1,6 +1,6 @@
 import pygame
 from typing import Any, Generator
-from math import floor
+from math import floor, sin, pi
 from random import shuffle, choice
 import random
 import framework.game.coroutine_scripts
@@ -101,6 +101,10 @@ class TestPattern(CoroutineScript):
         timer.set_duration(3, restart=True)
         while not timer.isover():
             percentage = pygame.math.lerp(0, 100, timer.get_time() / timer.duration)
+            zoom : float = pygame.math.lerp(1, 0.25, interpolation.quad_ease_out(timer.get_time() / timer.duration))
+            angle : float = pygame.math.lerp(0, 25, sin(timer.get_time() / timer.duration * 2 * pi * 10), False)
+            core_object.game.main_camera.zoom = zoom
+            #core_object.game.main_camera.rotation = angle
             new_textsprite.text = f"{percentage:.2f}%"
             yield
         new_textsprite.text = f"{100}% - Done!"

@@ -55,6 +55,7 @@ class TestPlayer(Sprite):
         element.last_mouse_pos = pygame.mouse.get_pos()
         track = cls.test_anim.load(element, core_object.game.game_timer.get_time)
         track.play()
+        element.current_camera = core_object.game.main_camera
         cls.unpool(element)
         return element
     

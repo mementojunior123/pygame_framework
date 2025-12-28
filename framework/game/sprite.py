@@ -3,6 +3,7 @@ from framework.utils.animation import AnimationTrack, Animation
 from typing import Any
 from framework.utils.helpers import is_sorted
 from framework.utils.pivot_2d import Pivot2D
+from framework.game.sprite_renderer import SpriteCamera
 from inspect import isclass
 
 class Sprite:
@@ -18,6 +19,7 @@ class Sprite:
     def __init__(self) -> None:
         self._position : pygame.Vector2
         self.pivot : Pivot2D|None = None
+        self.current_camera : bool|SpriteCamera = False
         self._image : pygame.Surface
         self.rect : pygame.Rect
         self.mask : pygame.Mask
@@ -212,7 +214,7 @@ class Sprite:
 
     @classmethod
     def update_all(cls, delta : float):
-        element : cls
+        element : Sprite
         for element in cls.active_elements:
             element.update(delta)
         Sprite.clear_zombies(cls.active_elements)
@@ -244,11 +246,16 @@ class Sprite:
             val.update()
     
     def draw(self, display : pygame.Surface):
-        display.blit(self.image, self.rect)
+        if self.current_camera is True:
+            pass
+        elif not self.current_camera:
+            display.blit(self.image, self.rect)
+        else:
+            self.current_camera.render_sprite(self, display)
     
     @classmethod
     def draw_all(cls, display):
-        element : cls
+        element : Sprite
         for element in cls.active_elements:
             element.draw(display)
 
