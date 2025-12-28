@@ -65,7 +65,7 @@ class TestGameState(NormalGameState):
         self.player : TestPlayer = TestPlayer.spawn(pygame.Vector2(random.randint(0, 960),random.randint(0, 540)))
         self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
-        src.test_player.make_connections()
+        src.sprites.test_player.make_connections()
         self.test_pattern : TestPattern = TestPattern()
         self.test_pattern.initialize(self.game.game_timer.get_time)
 
@@ -74,7 +74,7 @@ class TestGameState(NormalGameState):
         self.test_pattern.process_frame()
     
     def cleanup(self):
-        src.test_player.remove_connections()
+        src.sprites.test_player.remove_connections()
 
 class TestPattern(CoroutineScript):
     def initialize(self, time_source : TimeSource):
@@ -136,8 +136,8 @@ def runtime_imports():
 
     #runtime imports for game classes
     global src, TestPlayer      
-    import src.test_player
-    from src.test_player import TestPlayer
+    import src.sprites.test_player
+    from src.sprites.test_player import TestPlayer
 
 
 class GameStates:
