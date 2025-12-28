@@ -98,7 +98,7 @@ class Particle(Sprite):
         
         self.velocity = velocity or pygame.Vector2(0,0)
         if self.update_method == 'spiral':
-            self.pivot = Pivot2D(self._position)
+            self.pivot = Pivot2D(self._position, self.image)
             self.pivot.pivot_offset = pygame.Vector2((mag or 1),0).rotate(-angle)
         elif angle is not None:
             if mag is None: mag = 1
@@ -115,6 +115,7 @@ class Particle(Sprite):
         
         Particle.unpool(self)
         self.rect.center = self.pivot.position
+        self.current_camera = core_object.game.main_camera
     
     def update(self, delta : float):
         if self.lifetime_timer.isover():
@@ -150,9 +151,6 @@ class Particle(Sprite):
         
         elif self.update_method == 'animated':
             self.anim_track.update()
-    
-    def draw(self, display : pygame.Surface):
-        display.blit(self.image, self.rect)
 
     def clean_instance(self):
         self._position = None

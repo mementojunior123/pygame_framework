@@ -14,6 +14,7 @@ from framework.utils.my_timer import Timer
 from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
 from framework.utils.ui.brightness_overlay import BrightnessOverlay
+from framework.game.sprite_renderer import SpriteCamera
 from src.game_states import GameState, GameStates, initialise_game
 import framework.utils.particle_effects
 
@@ -37,6 +38,7 @@ class Game:
         self.active = True
         self.game_timer = Timer(-1)
         self.game_data = {}
+        self.main_camera : SpriteCamera = SpriteCamera()
         self.make_connections()
         initialise_game(self, event)
 
@@ -117,6 +119,7 @@ class Game:
         self.active = False
         self.state = None
         self.game_timer = None
+        self.main_camera = None
         self.game_data.clear()
 
         #Cleanup ingame object
