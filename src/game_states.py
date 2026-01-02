@@ -56,8 +56,9 @@ class NormalGameState(GameState):
         self.game.state = PausedGameState(self.game, self)
     
     def handle_key_event(self, event : pygame.Event):
-        if event.type == pygame.K_p:
-            self.pause()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                self.pause()
 
 class TestGameState(NormalGameState):
     def __init__(self, game_object : 'Game'):
@@ -129,8 +130,9 @@ class PausedGameState(GameState):
         self.game.state = self.previous_state
 
     def handle_key_event(self, event : pygame.Event):
-        if event.type == pygame.K_p:
-            self.unpause()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                self.unpause()
 
 def runtime_imports():
     global Game
