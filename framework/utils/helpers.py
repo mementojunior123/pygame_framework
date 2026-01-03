@@ -5,6 +5,7 @@ from random import random
 from collections import OrderedDict
 
 AnyJson : TypeAlias = Union[int, float, str, None, bool, list["AnyJson"], dict[str, "AnyJson"]]
+EasingFunc : TypeAlias = Callable[[float], float]
 
 def to_roman(num : int) -> str:
 
@@ -33,7 +34,7 @@ def to_roman(num : int) -> str:
 
     return "".join([a for a in roman_num(num)])
 
-ColorType = Union[list[int], tuple[int, int, int], pygame.Color]
+ColorType = Union[list[int], tuple[int, int, int], pygame.Color, str]
 
 class Task:
     def __init__(self, callback : Callable, *args, **kwargs) -> None:
@@ -166,3 +167,12 @@ def tuple_vec_average(l : list[tuple[float, float]]) -> float:
     x_sum /= count
     y_sum /= count
     return (x_sum, y_sum)
+
+def vector_sum(l : list[pygame.Vector2]) -> pygame.Vector2:
+    total : pygame.Vector2 = pygame.Vector2(0, 0)
+    for val in l:
+        total += val
+    return total
+
+def vector_xmax_ysum(l : list[pygame.Vector2]) -> pygame.Vector2:
+    return pygame.Vector2(max([val[0] for val in l]), sum([val[1] for val in l]))

@@ -1,7 +1,7 @@
 import pygame
 from math import floor
 from framework.utils.ui.ui_sprite import UiSprite
-from framework.utils.helpers import rotate_around_pivot_accurate
+from framework.utils.helpers import rotate_around_pivot_accurate, vector_xmax_ysum
 class TextSprite(UiSprite):
     main_font = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
     def __init__(self, position : pygame.Vector2|tuple, rect_alignment : str|None, tag: int, text : str, name: str | None = None, attributes: dict = None, 
@@ -65,7 +65,13 @@ class TextSprite(UiSprite):
         AA_enabled : bool
         font, color, AA_enabled = self.text_settings
         if self._text_stroke_color and self._text_stroke_width:
-            final_surf_size = (pygame.Vector2(self._text_stroke_width, self._text_stroke_width) * 2) + (1,1) + font.size(self._true_text)
+            stroke_x : int = self._text_stroke_width * 2
+            stroke_y : int = self._text_stroke_width * 2 * (self._true_text.count("\n") + 1)
+            final_surf_size = (
+            pygame.Vector2(stroke_x, stroke_y) 
+            + vector_xmax_ysum([font.size(chunk) for chunk in self._true_text.split("\n")])
+            + (1,1)
+            )
             if self.colorkey:
                 final_surf = pygame.Surface(final_surf_size)
                 final_surf.fill(self.colorkey)
