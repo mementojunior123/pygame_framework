@@ -66,9 +66,15 @@ async def main():
             core.game.state.main_logic(core.dt)
             ParticleEffect.update_all()
             window.fill((94,129,162))    
-            Sprite.draw_all_sprites(window)
             core.main_ui.update()
-            core.main_ui.render(window)
+            if core.MIX_UI_AND_SPRITES:
+                element_list : list[Sprite|UiSprite] = Sprite.active_elements + core.main_ui.complete_list
+                element_list.sort(key = lambda sprite : sprite.zindex)
+                for element in element_list:
+                    element.draw(window)
+            else:
+                Sprite.draw_all_sprites(window)
+                core.main_ui.render(window)
 
         core.update()
         if core.settings.brightness != 0:

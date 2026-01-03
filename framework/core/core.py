@@ -32,6 +32,7 @@ class Core:
         self.PERFORMANCE_MODE = False
         self.WEBPLATFORM = 'emscripten'
         self.CURRENT_PLATFORM = sys.platform
+        self.MIX_UI_AND_SPRITES : bool = False
         self.main_display : pygame.Surface
         self.brightness_map = pygame.Surface((2000, 2000), pygame.SRCALPHA)
         pygame.draw.rect(self.brightness_map, (255, 255, 255, 0), (0,0, 2000, 2000))
