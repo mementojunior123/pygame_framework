@@ -252,6 +252,24 @@ class Core:
     def update_fps_sprite(self):
         self.fps_sprite.text = f'FPS : {self.get_fps():0.0f}'
     
+    def run_js_code(self, code : str) -> Any:
+        if not self.is_web():
+            print("Warning : Shouldn't use Core.run_js_code in a non web context")
+            return None
+        return platform.eval(code)
+    
+    def get_platform_attribute(self, attr : str, default : Any = None) -> Any:
+        if not self.is_web():
+            print("Warning : Shouldn't use Core.get_platform_attribute in a non web context")
+            return default
+        return getattr(platform, attr, default)
+
+    def dump_platform_vars(self) -> None|dict[str, Any]:
+        if not self.is_web():
+            print("Warning : Shouldn't use Core.dump_platform_vars in a non web context")
+            return None
+        return platform.__dict__
+    
     def __hints(self):
         global TextSprite
         from framework.utils.ui.textsprite import TextSprite
