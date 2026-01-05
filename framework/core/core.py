@@ -18,7 +18,7 @@ from framework.utils.tween_module import TweenTrack, TweenChain
 from framework.utils.animation import AnimationTrack
 import sys
 import platform
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Callable
 from types import SimpleNamespace
 
 class JsSource(TypedDict):
@@ -163,10 +163,19 @@ class Core:
         self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
     
     def update_network_recv(self):
-        curr_recv : str|None = self.storage.get_web(self.NETWORK_LOCALSTORAGE_KEY)
-        if curr_recv:
-            self.on_data_received(SimpleNamespace(detail=curr_recv))
-            self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
+        mods : dict[str, Callable[[SimpleNamespace], None]] = {
+            "" : self.on_data_received,
+            "err" : self.on_network_error,
+            "conn" : self.on_network_connection,
+            "close" : self.on_network_close,
+            "dc" : self.on_network_disconnect
+        }
+        for mod in mods:
+            curr_recv : str|None = self.storage.get_web(self.NETWORK_LOCALSTORAGE_KEY + mod)
+            if curr_recv:
+                callback = mods[mod]
+                callback(SimpleNamespace(detail=curr_recv))
+                self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY + mod, "")
     
     def set_network_key(self, new_key : str):
         if not self.is_web(): return
@@ -176,7 +185,20 @@ class Core:
     
     def on_data_received(self, event : SimpleNamespace):
         #print(event.detail)
-        pass
+        pygame.event.post(pygame.Event(self.NETWORK_RECEIVE_EVENT, {'data' : event.detail}))
+
+    def on_network_error(self, event : SimpleNamespace):
+        #print(event.detail)
+        pygame.event.post(pygame.Event(self.NETWORK_ERROR_EVENT, {'info' : event.detail}))
+
+    def on_network_connection(self, event : SimpleNamespace):
+        pygame.event.post(pygame.Event(self.NETWORK_CONNECTION_EVENT, {}))
+
+    def on_network_close(self, event : SimpleNamespace):
+        pygame.event.post(pygame.Event(self.NETWORK_CLOSE_EVENT, {}))
+
+    def on_network_disconnect(self, event : SimpleNamespace):
+        pygame.event.post(pygame.Event(self.NETWORK_DISCONNECT_EVENT, {}))
 
     def send_network_message(self, data : str) -> bool:
         return self.run_js_source_file("sendnetmessage", {"DATA" : data})
@@ -339,13 +361,17 @@ class Core:
         if not self.is_web():
             print("Warning : Shouldn't use Core.log_to_js_console in a non web context")
             return
-        platform.eval(f"console.log('{info}')")
+        lines = info.split("\n")
+        code = ''.join([f"console.log(String.raw`{line.replace("`", "'")}`);" for line in lines])
+        platform.eval(code)
     
     def alert_js(self, info : str):
         if not self.is_web():
             print("Warning : Shouldn't use Core.log_to_js_console in a non web context")
             return
-        platform.eval(f"alert('{info}')")
+        lines = info.split("\n")
+        code = ''.join([f"alert(String.raw`{line.replace("`", "'")}`);" for line in lines])
+        platform.eval(code)
     
     def get_platform_attribute(self, attr : str, default : Any = None) -> Any:
         if not self.is_web():

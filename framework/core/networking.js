@@ -76,7 +76,7 @@ mod.then((module) => {
         console.log(`Received ${data}`);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
-        localStorage.setItem(network_key, curr + data);
+        localStorage.setItem(actual_key, curr + data);
     }
 
     function error_handler(error) {
@@ -86,7 +86,7 @@ mod.then((module) => {
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
-        localStorage.setItem(network_key, curr + data);
+        localStorage.setItem(actual_key, curr + data);
     }
 
     function on_connection() {
@@ -96,7 +96,7 @@ mod.then((module) => {
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
-        localStorage.setItem(network_key, curr + data);
+        localStorage.setItem(actual_key, curr + data);
     }
 
     function on_close() {
@@ -106,7 +106,7 @@ mod.then((module) => {
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
-        localStorage.setItem(network_key, curr + data);
+        localStorage.setItem(actual_key, curr + data);
     }
 
     function on_dc() {
@@ -116,7 +116,7 @@ mod.then((module) => {
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
-        localStorage.setItem(network_key, curr + data);
+        localStorage.setItem(actual_key, curr + data);
     }
 
     let network_client = new NetworkClient(is_host, peerId, on_data_received, error_handler, on_close, on_dc, on_connection);

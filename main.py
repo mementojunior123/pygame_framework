@@ -88,8 +88,10 @@ async def main():
             await asyncio.sleep(0)
     except BaseException as e:
         if core_object.is_web():
+            print(str(e).capitalize())
+            print(''.join(traceback.format_exception(e)))
             core_object.alert_js(f"Error in the pygame runtime : {str(e).capitalize()}")
-            core_object.log_to_js_console(''.join(traceback.format_exception(e)).replace("\n", "\\n"))
+            core_object.log_to_js_console(''.join(traceback.format_exception(e)))
         raise e
 
 asyncio.run(main())
