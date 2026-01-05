@@ -70,7 +70,8 @@ class NetworkTestGameState(NormalGameState):
         self.test_pattern : NetworkTestPattern = NetworkTestPattern()
         self.test_pattern.initialize(self.game.game_timer.get_time)
         host_arg : str = "true" if pygame.key.get_pressed()[pygame.K_f] else "false"
-        print("Hosting :", host_arg.capitalize())
+        print("Hosting : " + host_arg.capitalize())
+        core_object.log("Hosting :", host_arg.capitalize())
         peer_id : int = "fsafgasg12345abcsss5"
         network_key : str = "tmp_recv" + peer_id + host_arg
         core_object.set_network_key(network_key)
@@ -237,7 +238,7 @@ class GameStates:
 
 
 def initialise_game(game_object : 'Game', event : pygame.Event):
-    if event.mode == 'network_test' and pygame.key.get_pressed()[pygame.K_g]:
+    if event.mode == 'test' and (not pygame.key.get_pressed()[pygame.K_g]):
         game_object.state = game_object.STATES.NetworkTestGameState(game_object)
     else:
         game_object.state = game_object.STATES.TestGameState(game_object)
