@@ -69,6 +69,14 @@ class TestGameState(NormalGameState):
         src.sprites.test_player.make_connections()
         self.test_pattern : TestPattern = TestPattern()
         self.test_pattern.initialize(self.game.game_timer.get_time)
+        host_arg : str = "true" if pygame.key.get_pressed()[pygame.K_f] else "false"
+        print("Hosting :", host_arg.capitalize())
+        peer_id : int = "fsafgasg12345abcsss5"
+        network_key : str = "tmp_recv" + peer_id + host_arg
+        core_object.set_network_key(network_key)
+        core_object.run_js_source_file("networking", {"PEERID" : "fsafgasg12345abcsss5", "IS_HOST" : host_arg,
+                                                      "NETWORK_KEY" : core_object.NETWORK_LOCALSTORAGE_KEY})
+        
 
     def main_logic(self, delta : float):
         super().main_logic(delta)
@@ -110,6 +118,7 @@ class TestPattern(CoroutineScript):
             yield
         new_textsprite.text = f"{100}% - Done!"
         timer.set_duration(1, restart=True)
+        core_object.send_network_message("DONE!!!")
         while not timer.isover():
             yield
         core_object.main_ui.remove(new_textsprite)

@@ -18,7 +18,13 @@ from framework.utils.tween_module import TweenTrack, TweenChain
 from framework.utils.animation import AnimationTrack
 import sys
 import platform
-from typing import Any
+from typing import Any, TypedDict
+from types import SimpleNamespace
+
+class JsSource(TypedDict):
+    source : str
+    args : dict[str, str|None]
+    allow_default : bool
 
 WEBPLATFORM = 'emscripten'
 
@@ -26,6 +32,13 @@ class Core:
     CORE_EVENT = pygame.event.custom_type()
     START_GAME = pygame.event.custom_type()
     END_GAME = pygame.event.custom_type()
+
+    NETWORK_RECEIVE_EVENT = pygame.event.custom_type()
+    NETWORK_ERROR_EVENT = pygame.event.custom_type()
+    NETWORK_CONNECTION_EVENT = pygame.event.custom_type()
+    NETWORK_DISCONNECT_EVENT = pygame.event.custom_type()
+    NETWORK_CLOSE_EVENT = pygame.event.custom_type()
+
     IS_DEBUG : bool = False
     def __init__(self) -> None:
         self.FPS = 60
@@ -68,6 +81,47 @@ class Core:
                             text_alingment=(9999, 5), colorkey=(255, 0,0), zindex=999)
         self.event_manager.bind(self.START_GAME, self.start_game)
         self.event_manager.bind(self.END_GAME, self.end_game)
+        self.js_source : dict[str, JsSource] = {}
+        self.NETWORK_LOCALSTORAGE_KEY : str = "tmp_recv"
+    
+    def load_js_source_file(self, file_path : str, script_name : str, args : dict[str, str|None]|None = None, allow_default : bool = True) -> bool:
+        if args is None: args = {}
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                source_dict : JsSource = {}
+                source_dict['source'] = file.read()
+                source_dict['allow_default'] = allow_default
+                source_dict['args'] = args
+                self.js_source[script_name] = source_dict
+        except FileNotFoundError:
+            return False
+        return True
+    
+    def run_js_source_file(self, script_name : str, args : dict[str, str]|None = None) -> bool:
+        if not core_object.is_web():
+            print("Cannot run js file in a non-web context!")
+            return False
+        if args is None: args = {}
+        if script_name not in self.js_source:
+            return False
+        script : JsSource = self.js_source[script_name]
+        current_source : str = script['source']
+        used_args : dict[str, str] = script['args'].copy()
+        if not script['allow_default']:
+            for arg_name in used_args:
+                if arg_name not in args:
+                    return False
+        for arg_name in args:
+            if arg_name in used_args:
+                used_args[arg_name] = args[arg_name]
+        for arg_name in used_args:
+            if used_args[arg_name] is None:
+                return False
+        for arg_name in used_args:
+            current_source = current_source.replace(f"`{{{arg_name}}}`", used_args[arg_name])
+
+        self.run_js_code(current_source)
+        return True
     
     def start_game(self, event : pygame.Event):
         if event.type != self.START_GAME: return
@@ -98,14 +152,35 @@ class Core:
     def is_web(self) -> bool:
         return self.CURRENT_PLATFORM == WEBPLATFORM
     
-    def setup_web(self, method : int = 1):
+    def setup_web(self, method : int = 2):
         if not self.is_web(): return
         if method == 1:
             platform.window.onfocus = self.continue_things
             platform.window.onblur = self.stop_things
-        else:
+        elif method == 2:
             platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
             platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
+        self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
+    
+    def update_network_recv(self):
+        curr_recv : str|None = self.storage.get_web(self.NETWORK_LOCALSTORAGE_KEY)
+        if curr_recv:
+            self.on_data_received(SimpleNamespace(detail=curr_recv))
+            self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
+    
+    def set_network_key(self, new_key : str):
+        if not self.is_web(): return
+        self.NETWORK_LOCALSTORAGE_KEY = new_key
+        self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
+        
+    
+    def on_data_received(self, event : SimpleNamespace):
+        #print(event.detail)
+        pass
+
+    def send_network_message(self, data : str) -> bool:
+        return self.run_js_source_file("sendnetmessage", {"DATA" : data})
+
 
     def init(self, main_display : pygame.Surface):
         self.main_display = main_display
@@ -230,6 +305,8 @@ class Core:
         if self.show_fps_timer.isover():
             self.update_fps_sprite()
             self.show_fps_timer.restart()
+        if self.is_web():
+            self.update_network_recv()
     
     def update_delta_stream(self):
         target_lentgh = round(30 / self.dt)
@@ -257,6 +334,18 @@ class Core:
             print("Warning : Shouldn't use Core.run_js_code in a non web context")
             return None
         return platform.eval(code)
+    
+    def log_to_js_console(self, info : str):
+        if not self.is_web():
+            print("Warning : Shouldn't use Core.log_to_js_console in a non web context")
+            return
+        platform.eval(f"console.log('{info}')")
+    
+    def alert_js(self, info : str):
+        if not self.is_web():
+            print("Warning : Shouldn't use Core.log_to_js_console in a non web context")
+            return
+        platform.eval(f"alert('{info}')")
     
     def get_platform_attribute(self, attr : str, default : Any = None) -> Any:
         if not self.is_web():
