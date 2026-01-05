@@ -1,6 +1,6 @@
 import pygame
 import asyncio
-
+import traceback
 pygame.init()
 
 GAME_ICON = pygame.image.load('template_icon.png')
@@ -17,8 +17,9 @@ import src.settings as settings_module
 core = core_object
 core.init(window)
 core.FPS = 120
-if core.is_web(): core.setup_web(1)
-
+if core.is_web(): core.setup_web(method=2)
+core_object.load_js_source_file("framework/core/networking.js", "networking", {"PEERID" : None, "IS_HOST" : None, "NETWORK_KEY" : None})
+core_object.load_js_source_file("framework/core/network_send_event_dispatcher.js", "sendnetmessage", {"DATA" : None})
 
 pygame.display.set_caption(GAME_TITLE)
 
@@ -53,37 +54,45 @@ game_states.runtime_imports()
 clock = pygame.Clock()
 
 async def main():
-    while 1:
-        core.update_dt(60)
-        for event in pygame.event.get():
-            core.event_manager.process_event(event)
+    try:
+        while 1:
+            core.update_dt(60)
+            for event in pygame.event.get():
+                core.event_manager.process_event(event)
 
-        if core.game.active == False:
-            window.fill(core.menu.bg_color)
-            core.menu.update(core.dt)
-            core.menu.render(window)
-        else:
-            core.game.state.main_logic(core.dt)
-            ParticleEffect.update_all()
-            window.fill((94,129,162))    
-            core.main_ui.update()
-            if core.MIX_UI_AND_SPRITES:
-                element_list : list[Sprite|UiSprite] = Sprite.active_elements + core.main_ui.complete_list
-                element_list.sort(key = lambda sprite : sprite.zindex)
-                for element in element_list:
-                    element.draw(window)
+            if core.game.active == False:
+                window.fill(core.menu.bg_color)
+                core.menu.update(core.dt)
+                core.menu.render(window)
             else:
-                Sprite.draw_all_sprites(window)
-                core.main_ui.render(window)
+                core.game.state.main_logic(core.dt)
+                ParticleEffect.update_all()
+                window.fill((94,129,162))    
+                core.main_ui.update()
+                if core.MIX_UI_AND_SPRITES:
+                    element_list : list[Sprite|UiSprite] = Sprite.active_elements + core.main_ui.complete_list
+                    element_list.sort(key = lambda sprite : sprite.zindex)
+                    for element in element_list:
+                        element.draw(window)
+                else:
+                    Sprite.draw_all_sprites(window)
+                    core.main_ui.render(window)
 
-        core.update()
-        if core.settings.brightness != 0:
-            window.blit(core.brightness_map, (0,0), special_flags=core.brightness_map_blend_mode)
-            
-        pygame.display.update()
-        core.frame_counter += 1
-        clock.tick(core.FPS)
-        await asyncio.sleep(0)
+            core.update()
+            if core.settings.brightness != 0:
+                window.blit(core.brightness_map, (0,0), special_flags=core.brightness_map_blend_mode)
+                
+            pygame.display.update()
+            core.frame_counter += 1
+            clock.tick(core.FPS)
+            await asyncio.sleep(0)
+    except BaseException as e:
+        if core_object.is_web():
+            print(str(e).capitalize())
+            print(''.join(traceback.format_exception(e)))
+            core_object.alert_js(f"Error in the pygame runtime : {str(e).capitalize()}")
+            core_object.log_to_js_console(''.join(traceback.format_exception(e)))
+        raise e
 
 asyncio.run(main())
 
