@@ -18,8 +18,8 @@ core = core_object
 core.init(window)
 core.FPS = 120
 if core.is_web(): core.setup_web(method=2)
-core_object.load_js_source_file("framework/core/networking.js", "networking", {"PEERID" : None, "IS_HOST" : None, "NETWORK_KEY" : None})
-core_object.load_js_source_file("framework/core/network_send_event_dispatcher.js", "sendnetmessage", {"DATA" : None})
+core_object.load_js_source_file("framework/networking/networking.js", "networking", {"PEERID" : None, "IS_HOST" : None, "NETWORK_KEY" : None})
+core_object.load_js_source_file("framework/networking/network_send_event_dispatcher.js", "sendnetmessage", {"DATA" : None})
 
 pygame.display.set_caption(GAME_TITLE)
 
