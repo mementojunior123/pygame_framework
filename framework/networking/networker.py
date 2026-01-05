@@ -38,7 +38,7 @@ class Networker:
                 self.core.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY + mod, "")
     
     def set_network_key(self, new_key : str):
-        if not self.is_web(): return
+        if not self.core.is_web(): return
         self.NETWORK_LOCALSTORAGE_KEY = new_key
         self.core.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
         

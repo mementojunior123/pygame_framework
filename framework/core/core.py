@@ -34,12 +34,6 @@ class Core:
     START_GAME = pygame.event.custom_type()
     END_GAME = pygame.event.custom_type()
 
-    NETWORK_RECEIVE_EVENT = pygame.event.custom_type()
-    NETWORK_ERROR_EVENT = pygame.event.custom_type()
-    NETWORK_CONNECTION_EVENT = pygame.event.custom_type()
-    NETWORK_DISCONNECT_EVENT = pygame.event.custom_type()
-    NETWORK_CLOSE_EVENT = pygame.event.custom_type()
-
     IS_DEBUG : bool = False
     def __init__(self) -> None:
         self.FPS = 60
@@ -84,7 +78,6 @@ class Core:
         self.event_manager.bind(self.END_GAME, self.end_game)
         self.js_source : dict[str, JsSource] = {}
         self.networker : Networker = Networker(self)
-        self.NETWORK_LOCALSTORAGE_KEY : str = "tmp_recv"
     
     def load_js_source_file(self, file_path : str, script_name : str, args : dict[str, str|None]|None = None, allow_default : bool = True) -> bool:
         if args is None: args = {}
@@ -163,12 +156,6 @@ class Core:
             platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
             platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
         self.storage.set_web(self.networker.NETWORK_LOCALSTORAGE_KEY, "")
-
-    
-    def set_network_key(self, new_key : str):
-        if not self.is_web(): return
-        self.NETWORK_LOCALSTORAGE_KEY = new_key
-        self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
 
 
     def init(self, main_display : pygame.Surface):
@@ -324,10 +311,10 @@ class Core:
             return None
         return platform.eval(code)
     
-    def log(self, info : str):
-        print(info)
+    def log(self, *args : list[str], sep=' '):
+        print(sep.join(args))
         if self.is_web():
-            self.log_to_js_console(info)
+            self.log_to_js_console(sep.join(args))
     
     def log_to_js_console(self, info : str):
         if not self.is_web():

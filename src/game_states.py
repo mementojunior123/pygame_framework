@@ -71,14 +71,14 @@ class NetworkTestGameState(NormalGameState):
         self.test_pattern.initialize(self.game.game_timer.get_time)
         host_arg : str = "true" if pygame.key.get_pressed()[pygame.K_f] else "false"
         print("Hosting : " + host_arg.capitalize())
-        core_object.log("Hosting :", host_arg.capitalize())
+        core_object.log("Hosting : ", host_arg.capitalize())
         peer_id : int = "fsafgasg12345abcsss5"
         network_key : str = "tmp_recv" + peer_id + host_arg
-        core_object.set_network_key(network_key)
+        core_object.networker.set_network_key(network_key)
         core_object.run_js_source_file("networking", {"PEERID" : "fsafgasg12345abcsss5", "IS_HOST" : host_arg,
-                                                      "NETWORK_KEY" : core_object.NETWORK_LOCALSTORAGE_KEY})
-        for event_type in [core_object.NETWORK_CLOSE_EVENT, core_object.NETWORK_CONNECTION_EVENT, core_object.NETWORK_DISCONNECT_EVENT,
-                           core_object.NETWORK_ERROR_EVENT, core_object.NETWORK_RECEIVE_EVENT]:
+                                                      "NETWORK_KEY" : core_object.networker.NETWORK_LOCALSTORAGE_KEY})
+        for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
+                           core_object.networker.NETWORK_ERROR_EVENT, core_object.networker.NETWORK_RECEIVE_EVENT]:
             core_object.event_manager.bind(event_type, self.network_event_handler)
         
 
@@ -88,21 +88,21 @@ class NetworkTestGameState(NormalGameState):
     
     def cleanup(self):
         src.sprites.test_player.remove_connections()
-        for event_type in [core_object.NETWORK_CLOSE_EVENT, core_object.NETWORK_CONNECTION_EVENT, core_object.NETWORK_DISCONNECT_EVENT,
-                           core_object.NETWORK_ERROR_EVENT, core_object.NETWORK_RECEIVE_EVENT]:
+        for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
+                           core_object.networker.NETWORK_ERROR_EVENT, core_object.networker.NETWORK_RECEIVE_EVENT]:
             core_object.event_manager.unbind(event_type, self.network_event_handler)
         
     
     def network_event_handler(self, event : pygame.Event):
-        if event.type == core_object.NETWORK_RECEIVE_EVENT:
+        if event.type == core_object.networker.NETWORK_RECEIVE_EVENT:
             self.game.alert_player(f"Received data {event.data}")
-        elif event.type == core_object.NETWORK_ERROR_EVENT:
+        elif event.type == core_object.networker.NETWORK_ERROR_EVENT:
             self.game.alert_player(f"Network error occured : {event.info}")
-        elif event.type == core_object.NETWORK_CLOSE_EVENT:
+        elif event.type == core_object.networker.NETWORK_CLOSE_EVENT:
             self.game.alert_player("Network connection closed")
-        elif event.type == core_object.NETWORK_DISCONNECT_EVENT:
+        elif event.type == core_object.networker.NETWORK_DISCONNECT_EVENT:
             self.game.alert_player("Network disconnected")
-        elif event.type == core_object.NETWORK_CONNECTION_EVENT:
+        elif event.type == core_object.networker.NETWORK_CONNECTION_EVENT:
             self.game.alert_player("Network connected")
 
 class NetworkTestPattern(CoroutineScript):
@@ -138,7 +138,7 @@ class NetworkTestPattern(CoroutineScript):
             yield
         new_textsprite.text = f"{100}% - Done!"
         timer.set_duration(1, restart=True)
-        core_object.send_network_message("DONE!!!")
+        core_object.networker.send_network_message("DONE!!!")
         while not timer.isover():
             yield
         core_object.main_ui.remove(new_textsprite)
