@@ -136,7 +136,7 @@ class Menu(BaseMenu):
         match self.stage:
             case 1:
                 if name == "play_button":
-                    pygame.event.post(pygame.Event(core_object.START_GAME, {'mode' : 'network_test'}))
+                    pygame.event.post(pygame.Event(core_object.START_GAME, {'mode' : 'test'}))
                 if name == 'test_button':
                     self.goto_stage(2)
             case 2:

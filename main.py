@@ -18,8 +18,6 @@ core = core_object
 core.init(window)
 core.FPS = 120
 if core.is_web(): core.setup_web(method=2)
-core_object.load_js_source_file("framework/networking/networking.js", "networking", {"PEERID" : None, "IS_HOST" : None, "NETWORK_KEY" : None})
-core_object.load_js_source_file("framework/networking/network_send_event_dispatcher.js", "sendnetmessage", {"DATA" : None})
 
 pygame.display.set_caption(GAME_TITLE)
 
@@ -88,8 +86,6 @@ async def main():
             await asyncio.sleep(0)
     except BaseException as e:
         if core_object.is_web():
-            print(str(e).capitalize())
-            print(''.join(traceback.format_exception(e)))
             core_object.alert_js(f"Error in the pygame runtime : {str(e).capitalize()}")
             core_object.log_to_js_console(''.join(traceback.format_exception(e)))
         raise e

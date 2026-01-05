@@ -3,6 +3,7 @@ from time import perf_counter
 from collections import deque
 from framework.utils.my_timer import Timer
 from framework.core.event_manger import EventManger
+from framework.networking.networker import Networker
 import framework.game.game_module
 from framework.game.sprite import Sprite
 from src.settings import Settings
@@ -82,6 +83,7 @@ class Core:
         self.event_manager.bind(self.START_GAME, self.start_game)
         self.event_manager.bind(self.END_GAME, self.end_game)
         self.js_source : dict[str, JsSource] = {}
+        self.networker : Networker = Networker(self)
         self.NETWORK_LOCALSTORAGE_KEY : str = "tmp_recv"
     
     def load_js_source_file(self, file_path : str, script_name : str, args : dict[str, str|None]|None = None, allow_default : bool = True) -> bool:
@@ -98,7 +100,7 @@ class Core:
         return True
     
     def run_js_source_file(self, script_name : str, args : dict[str, str]|None = None) -> bool:
-        if not core_object.is_web():
+        if not self.is_web():
             print("Cannot run js file in a non-web context!")
             return False
         if args is None: args = {}
@@ -129,9 +131,9 @@ class Core:
         self.menu.prepare_exit()
         self.game.start_game(event)
 
-        core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
-        core_object.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event)
-        core_object.event_manager.bind(pygame.KEYDOWN, self.detect_game_over)
+        self.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
+        self.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        self.event_manager.bind(pygame.KEYDOWN, self.detect_game_over)
 
         
         self.main_ui.add(self.fps_sprite)
@@ -160,48 +162,13 @@ class Core:
         elif method == 2:
             platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
             platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
-        self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
-    
-    def update_network_recv(self):
-        mods : dict[str, Callable[[SimpleNamespace], None]] = {
-            "" : self.on_data_received,
-            "err" : self.on_network_error,
-            "conn" : self.on_network_connection,
-            "close" : self.on_network_close,
-            "dc" : self.on_network_disconnect
-        }
-        for mod in mods:
-            curr_recv : str|None = self.storage.get_web(self.NETWORK_LOCALSTORAGE_KEY + mod)
-            if curr_recv:
-                callback = mods[mod]
-                callback(SimpleNamespace(detail=curr_recv))
-                self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY + mod, "")
+        self.storage.set_web(self.networker.NETWORK_LOCALSTORAGE_KEY, "")
+
     
     def set_network_key(self, new_key : str):
         if not self.is_web(): return
         self.NETWORK_LOCALSTORAGE_KEY = new_key
         self.storage.set_web(self.NETWORK_LOCALSTORAGE_KEY, "")
-        
-    
-    def on_data_received(self, event : SimpleNamespace):
-        #print(event.detail)
-        pygame.event.post(pygame.Event(self.NETWORK_RECEIVE_EVENT, {'data' : event.detail}))
-
-    def on_network_error(self, event : SimpleNamespace):
-        #print(event.detail)
-        pygame.event.post(pygame.Event(self.NETWORK_ERROR_EVENT, {'info' : event.detail}))
-
-    def on_network_connection(self, event : SimpleNamespace):
-        pygame.event.post(pygame.Event(self.NETWORK_CONNECTION_EVENT, {}))
-
-    def on_network_close(self, event : SimpleNamespace):
-        pygame.event.post(pygame.Event(self.NETWORK_CLOSE_EVENT, {}))
-
-    def on_network_disconnect(self, event : SimpleNamespace):
-        pygame.event.post(pygame.Event(self.NETWORK_DISCONNECT_EVENT, {}))
-
-    def send_network_message(self, data : str) -> bool:
-        return self.run_js_source_file("sendnetmessage", {"DATA" : data})
 
 
     def init(self, main_display : pygame.Surface):
@@ -222,7 +189,7 @@ class Core:
             self.last_dt_measurment = mark
     
     def set_debug_message(self, text : str):
-        debug_textsprite : TextSprite = core_object.main_ui.get_sprite('debug_sprite')
+        debug_textsprite : TextSprite = self.main_ui.get_sprite('debug_sprite')
         if not debug_textsprite: return
         debug_textsprite.text = text
     
@@ -328,7 +295,7 @@ class Core:
             self.update_fps_sprite()
             self.show_fps_timer.restart()
         if self.is_web():
-            self.update_network_recv()
+            self.networker.update()
     
     def update_delta_stream(self):
         target_lentgh = round(30 / self.dt)
@@ -356,6 +323,11 @@ class Core:
             print("Warning : Shouldn't use Core.run_js_code in a non web context")
             return None
         return platform.eval(code)
+    
+    def log(self, info : str):
+        print(info)
+        if self.is_web():
+            self.log_to_js_console(info)
     
     def log_to_js_console(self, info : str):
         if not self.is_web():
