@@ -177,6 +177,16 @@ def vector_sum(l : list[pygame.Vector2]) -> pygame.Vector2:
 def vector_xmax_ysum(l : list[pygame.Vector2]) -> pygame.Vector2:
     return pygame.Vector2(max([val[0] for val in l]), sum([val[1] for val in l]))
 
+def recolor_image(img : pygame.Surface, new_color : ColorType) -> pygame.Surface:
+    working_copy : pygame.Surface = img.copy()
+    img_mask : pygame.Mask = pygame.mask.from_surface(working_copy)
+    working_copy.blit(img_mask.to_surface(setcolor=new_color, unsetcolor=img.get_colorkey()), (0, 0))
+    return working_copy
+
+def recolor_image_ip(img : pygame.Surface, new_color : ColorType) -> None:
+    img_mask : pygame.Mask = pygame.mask.from_surface(img)
+    img.blit(img_mask.to_surface(setcolor=new_color, unsetcolor=img.get_colorkey()))
+
 def remove_image_empty(img : pygame.Surface) -> pygame.Surface:
     bounding_box : pygame.Rect = img.get_bounding_rect()
     new_surf : pygame.Surface = pygame.Surface(bounding_box.size)
