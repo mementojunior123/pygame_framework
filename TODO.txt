@@ -1,2 +1,3 @@
 -Improve networking (cleaner networking, multiple connections, etc.)
 -Use __init_subclass__ to remove boilerplate related to linked_classes and Sprite.register_class
+-Log things when the bg manager doesn't find a channel?
