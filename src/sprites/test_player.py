@@ -6,7 +6,7 @@ from framework.utils.animation import Animation
 from framework.utils.pivot_2d import Pivot2D
 
 
-class TestPlayer(Sprite):
+class TestPlayer(Sprite, sprite_count = 1):
     debug_circle_size : int = 10
     debug_circle = pygame.Surface((debug_circle_size, debug_circle_size))
     debug_circle.set_colorkey((0, 255, 0))
@@ -14,9 +14,6 @@ class TestPlayer(Sprite):
     pygame.draw.circle(debug_circle, 'Red', (debug_circle_size // 2, debug_circle_size // 2), debug_circle_size // 2)
     IMAGE_SIZE : tuple[int, int]|list[int] = (20, 60)
     test_anim : Animation = Animation.get_animation("test")
-    active_elements : list['TestPlayer'] = []
-    inactive_elements : list['TestPlayer'] = []
-    linked_classes : list['Sprite'] = [Sprite]
     #load assets
     test_image : pygame.Surface = pygame.surface.Surface(IMAGE_SIZE)
     pygame.draw.rect(test_image, "Red", (0,0, *IMAGE_SIZE))
@@ -35,7 +32,6 @@ class TestPlayer(Sprite):
         self.color_images : dict[str, pygame.Surface]
         self.color_image_list : list[pygame.Surface]
         self.last_mouse_pos : tuple[int, int]
-        TestPlayer.inactive_elements.append(self)
 
     @classmethod
     def spawn(cls, new_pos : pygame.Vector2):
@@ -101,10 +97,6 @@ class TestPlayer(Sprite):
         for element in cls.active_elements:
             if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
                 element.handle_mouse_event(event)
-        
-
-TestPlayer()
-Sprite.register_class(TestPlayer)
 
 def make_connections():
     core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, TestPlayer.receive_event)

@@ -1,20 +1,33 @@
 import pygame
 from framework.utils.animation import AnimationTrack, Animation
-from typing import Any
+from typing import Any, Self, Type, TypeAlias
 from framework.utils.helpers import is_sorted
 from framework.utils.pivot_2d import Pivot2D
 from framework.game.sprite_renderer import SpriteCamera
 from inspect import isclass
 
+CollisionGroup : TypeAlias = list['Sprite']|Type['Sprite']
+
 class Sprite:
     '''Base class for all game objects.'''
-    active_elements : list['Sprite'] = []
-    inactive_elements : list['Sprite']  = []
-    linked_classes : list['Sprite'] = []
+    active_elements : list[Self] = []
+    inactive_elements : list[Self]  = []
+    linked_classes : set[Type['Sprite']] = set()
 
     ordered_sprites : list['Sprite'] = []
-    registered_classes : list['Sprite'] = []
+    registered_classes : list[Type['Sprite']] = []
     SPRITE_CLICKED : int = pygame.event.custom_type()
+
+    def __init_subclass__(cls : Type['Sprite'], do_register : bool = True, sprite_count : int = 0):
+        parents : list[Type[Sprite]] = list(cls.__bases__)
+        cls.active_elements : list[Self] = []
+        cls.inactive_elements : list[Self] = []
+        cls.linked_classes : set[Type['Sprite']] = set()
+        for parent in parents:
+            cls.linked_classes.update([parent.linked_classes])
+            cls.linked_classes.add(parent)
+        if do_register: Sprite.register_class(cls)
+        for _ in range(sprite_count): cls()
     
     def __init__(self) -> None:
         self._position : pygame.Vector2
@@ -25,9 +38,10 @@ class Sprite:
         self.mask : pygame.Mask
         self.dynamic_mask : bool = False
         self.zindex : int
-        self.animation_tracks : dict[str, AnimationTrack]
-        Sprite.inactive_elements.append(self)
         self._zombie : bool = False
+        for linked_class in self.linked_classes:
+            linked_class.inactive_elements.append(self)
+        self.inactive_elements.append(self)
     
     @property
     def image(self) -> pygame.Surface:
@@ -116,7 +130,7 @@ class Sprite:
     def pool(cls, element):
         '''Transfers an element from active to inactive state. Nothing changes if the element is already inactive.'''
 
-        for linked_class in cls.linked_classes + [cls]:
+        for linked_class in cls.linked_classes.union(cls):
             if element in linked_class.active_elements:
                 linked_class.active_elements.remove(element)         
             
@@ -126,15 +140,13 @@ class Sprite:
     @classmethod
     def unpool(cls, element):
         '''Transfers an element from inactive to active state. Nothing changes if the element is already active.'''
-        for linked_class in cls.linked_classes + [cls]:
+        for linked_class in cls.linked_classes.union(cls):
             if element not in linked_class.active_elements:
                 linked_class.active_elements.append(element)
 
             if element in linked_class.inactive_elements:
                 linked_class.inactive_elements.remove(element)
 
-
-    
     @classmethod
     def pool_elements(cls):
         '''Pools every element of the class'''
@@ -148,10 +160,9 @@ class Sprite:
             cls = element.__class__
             cls.pool(element)
 
-
     @classmethod
     def spawn(cls):
-        pass
+        raise NotImplementedError('Sub-class must implement the spawn method; Base-classes cannot be instanciated')
 
     def clean_instance(self):
         self.image = None
@@ -228,22 +239,9 @@ class Sprite:
     
     @classmethod
     def update_all_registered_classes(cls, delta : float):
-        sprite_subclass : Sprite
+        sprite_subclass : Type[Sprite]
         for sprite_subclass in Sprite.registered_classes:
             sprite_subclass.update_class(delta)
-    
-    def play_animation(self, animation : Animation, time_scale = 1):
-        track = animation.load(self)
-        track.play()
-        if time_scale != 1:
-            track.set_time_scale(time_scale)
-        
-        self.animation_tracks[animation.name] = track
-
-    def animate(self):
-        for name in self.animation_tracks:
-            val = self.animation_tracks[name]
-            val.update()
     
     def draw(self, display : pygame.Surface):
         if self.current_camera is True:
@@ -283,7 +281,7 @@ class Sprite:
     def is_collding_rect(self, other : 'Sprite'):
         return self.rect.colliderect(other.rect)
 
-    def get_colliding(self, collision_groups : list[list['Sprite']]):
+    def get_colliding(self, collision_groups : list[CollisionGroup]|CollisionGroup):
         '''Returns the first sprite colliding this sprite within collision_group or None if there arent any. Uses mask collision.'''
         try:
             collision_groups[0]
@@ -295,7 +293,7 @@ class Sprite:
                 if self.is_colliding(element) and not element._zombie: return element     
         return None
     
-    def get_rect_colliding(self, collision_groups : list[list['Sprite']]):
+    def get_rect_colliding(self, collision_groups : list[CollisionGroup]|CollisionGroup):
         '''Returns the first sprite colliding this sprite within collision_group or None if there arent any. Uses a bounding box check.'''
         try:
             collision_groups[0]
@@ -307,7 +305,7 @@ class Sprite:
                 if self.is_collding_rect(element) and not element._zombie: return element
         return None
     
-    def get_all_colliding(self, collision_groups : list[list['Sprite']]) -> list['Sprite']:
+    def get_all_colliding(self, collision_groups : list[CollisionGroup]|CollisionGroup) -> list['Sprite']:
         '''Returns all entities colliding this sprite within collision_group. Uses mask collision.'''
         try:
             collision_groups[0]
@@ -321,7 +319,7 @@ class Sprite:
                     return_val.append(element)
         return return_val
 
-    def get_all_rect_colliding(self, collision_groups : list[list['Sprite']]):
+    def get_all_rect_colliding(self, collision_groups : list[CollisionGroup]|CollisionGroup):
         '''Returns all entities colliding this sprite within collision_group. Uses a bounding box check.'''
         try:
             collision_groups[0]
@@ -350,7 +348,7 @@ class Sprite:
 
     
     @classmethod
-    def get_sprite_class_by_name(cls, name : str) -> 'Sprite':
+    def get_sprite_class_by_name(cls, name : str) -> Type['Sprite']:
         for sprite_class in cls.registered_classes:
             if sprite_class.__name__ == name:
                 return sprite_class
