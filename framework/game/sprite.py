@@ -12,7 +12,7 @@ class Sprite:
     '''Base class for all game objects.'''
     active_elements : list[Self] = []
     inactive_elements : list[Self]  = []
-    linked_classes : set[Type['Sprite']] = set()
+    linked_classes : list[Type['Sprite']] = []
 
     ordered_sprites : list['Sprite'] = []
     registered_classes : list[Type['Sprite']] = []
@@ -22,10 +22,13 @@ class Sprite:
         parents : list[Type[Sprite]] = list(cls.__bases__)
         cls.active_elements : list[Self] = []
         cls.inactive_elements : list[Self] = []
-        cls.linked_classes : set[Type['Sprite']] = set()
+        cls.linked_classes : list[Type['Sprite']] = []
         for parent in parents:
-            cls.linked_classes.update([parent.linked_classes])
-            cls.linked_classes.add(parent)
+            for linked in (parent.linked_classes):
+                if linked not in cls.linked_classes:
+                    cls.linked_classes.append(linked)
+                if parent not in cls.linked_classes:
+                    cls.linked_classes.append(parent)
         if do_register: Sprite.register_class(cls)
         for _ in range(sprite_count): cls()
     
@@ -118,7 +121,7 @@ class Sprite:
         self.align_rect()
 
     @classmethod
-    def register_class(cls, class_to_register : 'Sprite'):
+    def register_class(cls : Type['Sprite'], class_to_register : Type['Sprite']):
         if class_to_register not in cls.registered_classes:
             cls.registered_classes.append(class_to_register)
     
@@ -127,10 +130,9 @@ class Sprite:
         return (self in self.__class__.active_elements) or (self in Sprite.active_elements)
 
     @classmethod
-    def pool(cls, element):
+    def pool(cls : Type[Self], element : Self):
         '''Transfers an element from active to inactive state. Nothing changes if the element is already inactive.'''
-
-        for linked_class in cls.linked_classes.union(cls):
+        for linked_class in cls.linked_classes + [cls]:
             if element in linked_class.active_elements:
                 linked_class.active_elements.remove(element)         
             
@@ -138,9 +140,9 @@ class Sprite:
                 linked_class.inactive_elements.append(element)
     
     @classmethod
-    def unpool(cls, element):
+    def unpool(cls : Type[Self], element : Self):
         '''Transfers an element from inactive to active state. Nothing changes if the element is already active.'''
-        for linked_class in cls.linked_classes.union(cls):
+        for linked_class in cls.linked_classes + [cls]:
             if element not in linked_class.active_elements:
                 linked_class.active_elements.append(element)
 
@@ -148,7 +150,7 @@ class Sprite:
                 linked_class.inactive_elements.remove(element)
 
     @classmethod
-    def pool_elements(cls):
+    def pool_elements(cls : Type['Self']):
         '''Pools every element of the class'''
         while len(cls.active_elements) > 0:
             cls.pool(cls.active_elements[0])
@@ -181,23 +183,23 @@ class Sprite:
         self._zombie = True
     
     @classmethod
-    def clean_all_instances(cls):
+    def clean_all_instances(cls : Type[Self]):
         for element in cls.active_elements:
             element.clean_instance()
     
     @classmethod
-    def kill_all_instances(cls):
+    def kill_all_instances(cls : Type[Self]):
         for element in cls.active_elements:
             element.clean_instance()
         cls.pool_elements()
     
-    @classmethod
-    def clean_all_sprites(cls):
+    @staticmethod
+    def clean_all_sprites():
         for element in Sprite.active_elements:
             element.clean_instance()
     
-    @classmethod
-    def kill_all_sprites(cls):
+    @staticmethod
+    def kill_all_sprites():
         for element in Sprite.active_elements:
             element.clean_instance()
         Sprite.pool_all_sprites()
@@ -206,7 +208,7 @@ class Sprite:
         pass
     
     @classmethod
-    def update_class(cls, delta : float):
+    def update_class(cls : Type[Self], delta : float):
         pass
 
     def self_destruct(self):
@@ -224,22 +226,20 @@ class Sprite:
             element.kill_instance()
 
     @classmethod
-    def update_all(cls, delta : float):
+    def update_all(cls : Type[Self], delta : float):
         element : Sprite
         for element in cls.active_elements:
             element.update(delta)
         Sprite.clear_zombies(cls.active_elements)
     
-    @classmethod
-    def update_all_sprites(cls, delta : float):
-        element : Sprite
+    @staticmethod
+    def update_all_sprites(delta : float):
         for element in Sprite.active_elements:
             element.update(delta)
         Sprite.clear_zombies(Sprite.active_elements)
     
     @classmethod
-    def update_all_registered_classes(cls, delta : float):
-        sprite_subclass : Type[Sprite]
+    def update_all_registered_classes(delta : float):
         for sprite_subclass in Sprite.registered_classes:
             sprite_subclass.update_class(delta)
     
@@ -252,8 +252,7 @@ class Sprite:
             self.current_camera.render_sprite(self, display)
     
     @classmethod
-    def draw_all(cls, display):
-        element : Sprite
+    def draw_all(cls : Type[Self], display):
         for element in cls.active_elements:
             element.draw(display)
 
@@ -338,18 +337,17 @@ class Sprite:
     def is_active(self):
         return self in self.__class__.active_elements
     
-    @classmethod
-    def draw_all_sprites(cls, display):
+    @staticmethod
+    def draw_all_sprites(display : pygame.Surface):
         #if not is_sorted(cls.active_elements, key=lambda sprite : sprite.zindex):
-        cls.active_elements.sort(key=lambda sprite : sprite.zindex)
-        element : Sprite
-        for element in cls.active_elements:
+        Sprite.active_elements.sort(key=lambda sprite : sprite.zindex)
+        for element in Sprite.active_elements:
             element.draw(display)
 
     
-    @classmethod
-    def get_sprite_class_by_name(cls, name : str) -> Type['Sprite']:
-        for sprite_class in cls.registered_classes:
+    @staticmethod
+    def get_sprite_class_by_name(name : str) -> Type['Sprite']:
+        for sprite_class in Sprite.registered_classes:
             if sprite_class.__name__ == name:
                 return sprite_class
         return None
