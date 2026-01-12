@@ -54,6 +54,7 @@ class TextSprite(UiSprite):
             self.surf.set_alpha(self._opacity * 255)        
         for filter in self.filters:
             filter.apply(self.surf)
+        self.rect.size = self.surf.get_size()
         if self.rect_alignment:
             self.rect.__setattr__(self.rect_alignment, prev_mesure)
             self._position = pygame.Vector2(self.rect.center)
