@@ -176,3 +176,13 @@ def vector_sum(l : list[pygame.Vector2]) -> pygame.Vector2:
 
 def vector_xmax_ysum(l : list[pygame.Vector2]) -> pygame.Vector2:
     return pygame.Vector2(max([val[0] for val in l]), sum([val[1] for val in l]))
+
+def remove_image_empty(img : pygame.Surface) -> pygame.Surface:
+    bounding_box : pygame.Rect = img.get_bounding_rect()
+    new_surf : pygame.Surface = pygame.Surface(bounding_box.size)
+    colorkey = img.get_colorkey()
+    if colorkey:
+        new_surf.set_colorkey(colorkey)
+        new_surf.fill(colorkey)
+    new_surf.blit(img, (0, 0), area = bounding_box)
+    return new_surf
