@@ -161,12 +161,12 @@ class Core:
     def save_game(self):
         self.storage.save(self.is_web())
         self.settings.save(self.is_web())
-        
+
     def init(self, main_display : pygame.Surface):
         self.main_display = main_display
     
     def close_game(self, event : pygame.Event):
-        self.settings.save()
+        self.save_game()
         pygame.quit()
         exit()
     
