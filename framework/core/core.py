@@ -155,9 +155,13 @@ class Core:
         elif method == 2:
             platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
             platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
+            platform.EventTarget.addEventListener(platform.window, "beforeunload", self.save_game)
         self.storage.set_web(self.networker.NETWORK_LOCALSTORAGE_KEY, "")
-
-
+    
+    def save_game(self):
+        self.storage.save(self.is_web())
+        self.settings.save(self.is_web())
+        
     def init(self, main_display : pygame.Surface):
         self.main_display = main_display
     
