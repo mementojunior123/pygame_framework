@@ -311,10 +311,11 @@ class Core:
             return None
         return platform.eval(code)
     
-    def log(self, *args : list[str], sep=' '):
-        print(sep.join(args))
+    def log(self, *args : list[Any], sep=' '):
+        text = sep.join(str(arg) for arg in args)
+        print(text)
         if self.is_web():
-            self.log_to_js_console(sep.join(args))
+            self.log_to_js_console(text)
     
     def log_to_js_console(self, info : str):
         if not self.is_web():
