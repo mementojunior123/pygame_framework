@@ -27,9 +27,10 @@ class Sprite:
             for linked in (parent.linked_classes):
                 if linked not in cls.linked_classes:
                     cls.linked_classes.append(linked)
-                if parent not in cls.linked_classes:
-                    cls.linked_classes.append(parent)
-        if do_register: Sprite.register_class(cls)
+            if parent not in cls.linked_classes:
+                cls.linked_classes.append(parent)
+        
+        Sprite.register_class(cls)
         for _ in range(sprite_count): cls()
     
     def __init__(self) -> None:
@@ -238,7 +239,7 @@ class Sprite:
             element.update(delta)
         Sprite.clear_zombies(Sprite.active_elements)
     
-    @classmethod
+    @staticmethod
     def update_all_registered_classes(delta : float):
         for sprite_subclass in Sprite.registered_classes:
             sprite_subclass.update_class(delta)
