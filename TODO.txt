@@ -1,4 +1,5 @@
 -Improve networking (cleaner networking, multiple connections, etc.)
 -Log things when the bg manager doesn't find a channel?
+-Add a web audio system
 -Move particle_effects and animation to src/
 -Improve the particle effect and animation system
