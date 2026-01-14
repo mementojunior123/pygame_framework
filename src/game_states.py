@@ -156,6 +156,7 @@ class TestGameState(NormalGameState):
         src.sprites.test_player.make_connections()
         self.test_pattern : TestPattern = TestPattern()
         self.test_pattern.initialize(self.game.game_timer.get_time)
+        core_object.bg_manager.test_play_web('test_music')
 
     def main_logic(self, delta : float):
         super().main_logic(delta)

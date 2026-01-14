@@ -2,4 +2,5 @@
 -Log things when the bg manager doesn't find a channel?
 -Add a web audio system
 -Move particle_effects and animation to src/
+-Move the loading of sound assets to src/
 -Improve the particle effect and animation system
