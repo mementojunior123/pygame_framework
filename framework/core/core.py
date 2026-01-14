@@ -155,7 +155,12 @@ class Core:
         elif method == 2:
             platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
             platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
-            platform.EventTarget.addEventListener(platform.window, "beforeunload", self.save_game)
+            platform.EventTarget.addEventListener(platform.window, "beforeunload", self.close_web)
+    
+    def close_web(self):
+        self.save_game()
+        for k in self.networker.NETWORK_LOCALSTORAGE_KEYS.copy():
+            self.networker.destroy_peer(k)
     
     def save_game(self):
         self.storage.save(self.is_web())

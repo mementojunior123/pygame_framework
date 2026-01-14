@@ -50,6 +50,7 @@ class Networker:
         if network_key in self.NETWORK_LOCALSTORAGE_KEYS:
             self.NETWORK_LOCALSTORAGE_KEYS.remove(network_key)
         core_object.run_js_source_file("destroynet", {"NETWORK_KEY" : network_key})
+        self.core.log('hello')
         
     
     def on_data_received(self, event : SimpleNamespace):

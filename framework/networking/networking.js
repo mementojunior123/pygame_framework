@@ -78,6 +78,8 @@ mod.then((module) => {
 
         destroy() {
             if (this.destroyed) {console.log("Peer has already been destroyed!"); return;}
+            if (this.connection !== undefined && this.is_connected) {this.connection.close();}
+            console.log("Peer destroyed!");
             this.peer.destroy();
             this.is_connected = false;
             this.peer = null;

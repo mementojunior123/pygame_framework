@@ -88,19 +88,25 @@ class NetworkTestGameState(NormalGameState):
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
                            core_object.networker.NETWORK_ERROR_EVENT, core_object.networker.NETWORK_RECEIVE_EVENT]:
             core_object.event_manager.unbind(event_type, self.network_event_handler)
+        core_object.networker.destroy_peer(self.network_key)
         
     
     def network_event_handler(self, event : pygame.Event):
         if event.type == core_object.networker.NETWORK_RECEIVE_EVENT:
             self.game.alert_player(f"Received data {event.data}")
+            core_object.log(f"pygame : Received data {event.data}")
         elif event.type == core_object.networker.NETWORK_ERROR_EVENT:
             self.game.alert_player(f"Network error occured : {event.info}")
+            core_object.log(f"pygame : Network error occured : {event.info}")
         elif event.type == core_object.networker.NETWORK_CLOSE_EVENT:
             self.game.alert_player("Network connection closed")
+            core_object.log(f"pygame : Network connection closed")
         elif event.type == core_object.networker.NETWORK_DISCONNECT_EVENT:
             self.game.alert_player("Network disconnected")
+            core_object.log("pygame : Network disconnected")
         elif event.type == core_object.networker.NETWORK_CONNECTION_EVENT:
             self.game.alert_player("Network connected")
+            core_object.log("pygame : Network connected")
 
 class NetworkTestPattern(CoroutineScript):
     def initialize(self, time_source : TimeSource, net_key : str):
