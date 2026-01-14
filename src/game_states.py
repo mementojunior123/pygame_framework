@@ -68,18 +68,15 @@ class NetworkTestGameState(NormalGameState):
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
         src.sprites.test_player.make_connections()
         self.test_pattern : NetworkTestPattern = NetworkTestPattern()
-        self.test_pattern.initialize(self.game.game_timer.get_time)
         host_arg : str = "true" if pygame.key.get_pressed()[pygame.K_f] else "false"
-        print("Hosting : " + host_arg.capitalize())
         core_object.log("Hosting : ", host_arg.capitalize())
         peer_id : int = "fsafgasg12345abcsss5"
-        network_key : str = "tmp_recv" + peer_id + host_arg
-        core_object.networker.set_network_key(network_key)
-        core_object.run_js_source_file("networking", {"PEERID" : "fsafgasg12345abcsss5", "IS_HOST" : host_arg,
-                                                      "NETWORK_KEY" : core_object.networker.NETWORK_LOCALSTORAGE_KEY})
+        self.network_key : str = "tmp_" + peer_id + host_arg
+        core_object.networker.create_peer(peer_id, host_arg, self.network_key)
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
                            core_object.networker.NETWORK_ERROR_EVENT, core_object.networker.NETWORK_RECEIVE_EVENT]:
             core_object.event_manager.bind(event_type, self.network_event_handler)
+        self.test_pattern.initialize(self.game.game_timer.get_time, self.network_key)
         
 
     def main_logic(self, delta : float):
@@ -106,8 +103,8 @@ class NetworkTestGameState(NormalGameState):
             self.game.alert_player("Network connected")
 
 class NetworkTestPattern(CoroutineScript):
-    def initialize(self, time_source : TimeSource):
-        return super().initialize(time_source)
+    def initialize(self, time_source : TimeSource, net_key : str):
+        return super().initialize(time_source, net_key)
     
     def type_hints(self):
         self.coro_attributes = ['timer', 'cooldown', 'curr_angle']
@@ -116,7 +113,7 @@ class NetworkTestPattern(CoroutineScript):
         self.curr_angle : float
     
     @staticmethod
-    def corou(time_source : TimeSource) -> Generator[None, None, str]:
+    def corou(time_source : TimeSource, net_key : str) -> Generator[None, None, str]:
         textsprite_font : pygame.Font = core_object.menu.font_50
 
         new_textsprite : TextSprite = TextSprite((480, 10), "midtop", None, "Waiting...", "Progress",
@@ -138,7 +135,7 @@ class NetworkTestPattern(CoroutineScript):
             yield
         new_textsprite.text = f"{100}% - Done!"
         timer.set_duration(1, restart=True)
-        core_object.networker.send_network_message("DONE!!!")
+        core_object.networker.send_network_message("DONE!!!", net_key)
         while not timer.isover():
             yield
         core_object.main_ui.remove(new_textsprite)

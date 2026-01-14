@@ -36,12 +36,14 @@ mod.then((module) => {
             if (is_host) {
                 this.peer = NetworkClient.createPeer(the_id, () => {
                     this.peer.on('connection', (connection)=>{
+                        if (this.is_connected) {return;}
+                        this.is_connected = true;
                         this.connection = connection;
                         this.connection.on('data', message_handler);
                         this.peer.on('error', error_handler);
+                        this.connection.on('error', error_handler);
                         this.peer.on('close', on_close);
-                        this.peer.on('disconnected', on_dc);
-                        this.is_connected = true;
+                        this.connection.on('close', on_dc);
                         on_connection();
                     });
                 });
@@ -51,8 +53,9 @@ mod.then((module) => {
                     this.connection.on('open', ()=>{
                         this.connection.on('data', message_handler);
                         this.peer.on('error', error_handler);
+                        this.connection.on('error', error_handler);
                         this.peer.on('close', on_close);
-                        this.peer.on('disconnected', on_dc);
+                        this.connection.on('close', on_dc);
                         this.is_connected = true;
                         on_connection();
                     });
@@ -71,7 +74,7 @@ mod.then((module) => {
     const noop = () => {};
 
     function on_data_received(data) {
-        const actual_key = network_key;
+        const actual_key = network_key + 'recv';
         window.dispatchEvent(new CustomEvent("networkrecvdata", {"detail" : data}));
         console.log(`Received ${data}`);
         const curr = localStorage.getItem(actual_key);
@@ -82,7 +85,7 @@ mod.then((module) => {
     function error_handler(error) {
         const data = error.toString()
         const actual_key = network_key + 'err';
-        window.dispatchEvent(new CustomEvent("networkrecvdata", {"detail" : data}));
+        window.dispatchEvent(new CustomEvent("networkerr", {"detail" : data}));
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
@@ -92,7 +95,7 @@ mod.then((module) => {
     function on_connection() {
         const data = "Connected!";
         const actual_key = network_key + 'conn';
-        window.dispatchEvent(new CustomEvent("networkrecvdata", {"detail" : data}));
+        window.dispatchEvent(new CustomEvent("networkconn", {"detail" : data}));
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
@@ -102,7 +105,7 @@ mod.then((module) => {
     function on_close() {
         const data = "Connection closed";
         const actual_key = network_key + 'close';
-        window.dispatchEvent(new CustomEvent("networkrecvdata", {"detail" : data}));
+        window.dispatchEvent(new CustomEvent("networkclose", {"detail" : data}));
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
@@ -112,7 +115,7 @@ mod.then((module) => {
     function on_dc() {
         const data = "Connection disconnected";
         const actual_key = network_key + 'dc';
-        window.dispatchEvent(new CustomEvent("networkrecvdata", {"detail" : data}));
+        window.dispatchEvent(new CustomEvent("networkdc", {"detail" : data}));
         console.log(data);
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
@@ -122,6 +125,16 @@ mod.then((module) => {
     let network_client = new NetworkClient(is_host, peerId, on_data_received, error_handler, on_close, on_dc, on_connection);
     console.log("Created a client(" + is_host.toString() + ")");
     window.addEventListener('NetworkSendData', (event) => {
-        network_client.sendMessage(event.detail);
+        const data = event.detail.data
+        const net_key = event.detail.net_key
+        if (net_key === network_key) {
+            network_client.sendMessage(data);
+        }
+    });
+    window.addEventListener('NetworkDisconnect', (event) => {
+        const net_key = event.detail.net_key
+        if (net_key === network_key) {
+            network_client.sendMessage(data);
+        }
     });
     })
