@@ -22,7 +22,7 @@ class Networker:
             self.core.load_js_source_file("framework/networking/network_send_event_dispatcher.js", "sendnetmessage", 
                                             {"DATA" : None, "NETWORK_KEY" : None})
         if "destroynet" not in self.core.js_source:
-            self.core.load_js_source_file("framework/networking/network_disconnect_event_dispatcher.js", 'destroynet',
+            self.core.load_js_source_file("framework/networking/network_close_event_dispatcher.js", 'destroynet',
                                           {"NETWORK_KEY" : None})
         
     def update_network_recv(self):

@@ -33,10 +33,15 @@ mod.then((module) => {
             this.is_host = is_host;
             this.connection_id = the_id;
             this.is_connected = false;
+            this.destroyed = false;
             if (is_host) {
                 this.peer = NetworkClient.createPeer(the_id, () => {
                     this.peer.on('connection', (connection)=>{
-                        if (this.is_connected) {return;}
+                        if (this.is_connected) {
+                            connection.send('Peer is already connected!');
+                            connection.close()
+                            return;
+                        }
                         this.is_connected = true;
                         this.connection = connection;
                         this.connection.on('data', message_handler);
@@ -63,11 +68,21 @@ mod.then((module) => {
             }
         }
         sendMessage(data) {
+            if (this.destroyed) {console.log("Peer has already been destroyed!"); return;}
             if (this.connection !== undefined && this.is_connected) {
                 this.connection.send(data);
             } else {
                 console.log(`Attempted to send ${data}, but the connection was not yet established!`)
             }
+        }
+
+        destroy() {
+            if (this.destroyed) {console.log("Peer has already been destroyed!"); return;}
+            this.peer.destroy();
+            this.is_connected = false;
+            this.peer = null;
+            this.connection = undefined;
+            this.destroyed = true;
         }
     }
 
@@ -135,6 +150,12 @@ mod.then((module) => {
         const net_key = event.detail.net_key
         if (net_key === network_key) {
             network_client.sendMessage(data);
+        }
+    });
+    window.addEventListener('NetworkClose', (event) => {
+        const net_key = event.detail.net_key
+        if (net_key === network_key) {
+            network_client.destroy();
         }
     });
     })
