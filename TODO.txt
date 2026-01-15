@@ -3,3 +3,4 @@
 -Add a web audio system
 -Move particle_effects and animation to src/
 -Improve the particle effect and animation system
+-Make some improvements to improve exe builds
