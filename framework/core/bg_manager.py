@@ -39,13 +39,6 @@ class WebChannel:
         self._sound_ref : pygame.mixer.Sound|None = None
         self._sound_path : str|None = None
         self._actual_vol : float = -1
-        core_object.run_js_source_file('make_web_channel', {
-            "AUDIO_PATH" : 'assets/audio/NOTHING.ogg',
-            "PLAY_NOW" : "false",
-            "VOLUME" : "0",
-            "CHANNEL_ID" : str(self._id),
-            "LOOP_COUNT" : "0",
-        })
     
     @property
     def id(self) -> int|None:
@@ -167,11 +160,8 @@ class BgManager:
         self.sound_types = SoundTypes
         if 'make_web_channel' not in self.core.js_source:
             self.core.load_js_source_file('framework/core/web_audio/web_audio.js', 'make_web_channel', {
-                "AUDIO_PATH" : None,
-                "PLAY_NOW" : "true",
-                "VOLUME" : None,
-                "CHANNEL_ID" : None,
-                "LOOP_COUNT" : None,
+                "CHANNEL_COUNT" : None,
+                "PATH_LIST" : None
             })
         self.SOUNDS : dict[str, tuple[pygame.mixer.Sound, str]] = {}
         sound_list : list[tuple[str, str, float]] = [
@@ -179,8 +169,15 @@ class BgManager:
             ('test_sfx', 'assets/audio/sfx/test_sfx.ogg', 1.0),
             ('PLACEHOLDER_DO_NOT_TOUCH', 'assets/audio/NOTHING.ogg', 1.0)
         ]
+        path_list : list[str] = []
         for name, path, vol in sound_list:
             self.load_sound(path, vol, name)
+            path_list.append(path)
+        if self.core.is_web():
+            self.core.run_js_source_file('make_web_channel', {
+                "CHANNEL_COUNT" : str(BgManager.MAX_CHANNEL_COUNT),
+                "PATH_LIST" : str(path_list)
+            })
 
     def find_unused_channel(force : bool = False) -> pygame.mixer.Channel|WebChannel|None:
         WebChannel._get_unused_channel(force) if core_object.is_web() else pygame.mixer.find_channel(force)
