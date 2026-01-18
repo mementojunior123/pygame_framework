@@ -15,6 +15,8 @@ class WebChannel:
         for i in range(core_object.bg_manager.MAX_CHANNEL_COUNT):
             if i not in cls.CHANNELS:
                 return i
+            if not cls.CHANNELS[i].get_busy():
+                return i
         if force:
             return 0
         return None
@@ -161,6 +163,7 @@ class BgManager:
         self.current : dict[AnyChannel, TrackInfo] = {}
         self.global_volume = 1
         self.web_mult : float = 1.0
+        self.USE_WEB_ENGINE : bool = True
         self.sound_types = SoundTypes
         if 'make_web_channel' not in self.core.js_source:
             self.core.load_js_source_file('framework/core/web_audio/web_audio.js', 'make_web_channel', {
@@ -211,7 +214,7 @@ class BgManager:
 
     def play(self, track_name : str, volume, loops = -1, maxtime = 0, fade_ms = 0, sound_type : str|None = 'Music'):
         """Used for playing music."""
-        if core_object.is_web():
+        if core_object.is_web() and self.USE_WEB_ENGINE:
             self._play_web(track_name, volume, loops, maxtime, fade_ms, sound_type)
             return
         else:
@@ -228,11 +231,12 @@ class BgManager:
     
     def play_sfx(self, sfx_name : str, volume, loops = 0, maxtime = 0, fade_ms = 0, sound_type : str|None = 'SFX'):
         """Used for playing short sound effects."""
-        if core_object.is_web():
+        if core_object.is_web() and self.USE_WEB_ENGINE:
             self._play_web(sfx_name, volume, loops, maxtime, fade_ms, sound_type)
             return
         else:
             sfx = self.get_sound_obj(sfx_name)
+        channel = sfx.play(loops, maxtime, fade_ms)
         if not channel:
             core_object.log("Attempted to play sfx, but ran out of audio channels!")
             return
@@ -305,7 +309,7 @@ class BgManager:
         to_remove : list[AnyChannel] = []
         for channel in self.current:
             if isinstance(channel, WebChannel):
-                channel.update()
+                channel._update()
             if not channel.get_busy():
                 to_remove.append(channel)
         for channel in to_remove:

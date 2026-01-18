@@ -11,7 +11,7 @@ audio.onended = when_audio_ends;
 audio.volume = volume;
 if (!path.includes('audio/NOTHING.ogg')) {
     if (active) {
-        audio.play();
+        audio.play().catch((r) => {});
         console.log(`Started audio playback of ${path} on channel ${id}`);
     } else {
         console.log(`Loaded audio ${path} on channel ${id}`);
@@ -33,7 +33,7 @@ window.addEventListener('StartAudio', (event) => {
     target_loop_count = event.detail.target_loop_count;
     
     if ((!event.detail.dont_play) || (event.detail.dont_play === undefined)) {
-        audio.play();
+        audio.play().catch((r) => {});
         console.log(`Started audio playback of ${event.detail.path} on channel ${event.detail.id}`)
     } else {
         console.log(`Loaded audio ${event.detail.path} on channel ${event.detail.id}`)
@@ -51,6 +51,7 @@ window.addEventListener('StopAudio', (event) => {
     if (event.detail.id !== id) {return;}
     audio.pause();
     console.log(`Stopped audio playback of ${path} on channel ${event.detail.id}`);
+    const base_key = 'WebAudioChannel' + id.toString() + "_";
     localStorage.setItem(base_key + "volume", "0");
     localStorage.setItem(base_key + "busy", "false");
     active = false;
@@ -73,7 +74,7 @@ window.addEventListener('ResumeAudio', (event) => {
     //id
     if (event.detail.id !== id || !(active)) {return;}
     if (audio.paused) {
-        audio.play();
+        audio.play().catch((r) => {});
     }
 })
 
@@ -90,7 +91,7 @@ function when_audio_ends(event) {
     if (target_loop_count < 0 || current_loop_count < target_loop_count) {
         current_loop_count += 1;
         audio.currentTime = 0;
-        audio.play();
+        audio.play().catch((r) => {})
     } else {
         active = false;
         const base_key = 'WebAudioChannel' + id.toString() + "_";

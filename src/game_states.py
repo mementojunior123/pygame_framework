@@ -164,6 +164,8 @@ class TestGameState(NormalGameState):
     
     def cleanup(self):
         src.sprites.test_player.remove_connections()
+        core_object.bg_manager.stop_all_music()
+        core_object.bg_manager.play_sfx('test_sfx', 1.0)
 
 class TestPattern(CoroutineScript):
     def initialize(self, time_source : TimeSource):

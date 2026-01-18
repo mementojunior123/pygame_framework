@@ -1,6 +1,5 @@
 -Improve networking (cleaner networking, multiple connections, etc.)
--Log things when the bg manager doesn't find a channel?
--Improve the web audio system
+-Improve latency and memory performance in the web audio engine
 -Move particle_effects and animation to src/
 -Move the loading of sound assets to src/
 -Improve the particle effect and animation system
