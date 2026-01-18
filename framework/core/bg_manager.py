@@ -163,7 +163,7 @@ class BgManager:
         self.current : dict[AnyChannel, TrackInfo] = {}
         self.global_volume = 1
         self.web_mult : float = 1.0
-        self.USE_WEB_ENGINE : bool = True
+        self.USE_WEB_ENGINE : bool = False
         self.sound_types = SoundTypes
         if 'make_web_channel' not in self.core.js_source:
             self.core.load_js_source_file('framework/core/web_audio/web_audio.js', 'make_web_channel', {
