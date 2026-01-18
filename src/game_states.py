@@ -156,6 +156,7 @@ class TestGameState(NormalGameState):
         src.sprites.test_player.make_connections()
         self.test_pattern : TestPattern = TestPattern()
         self.test_pattern.initialize(self.game.game_timer.get_time)
+        core_object.bg_manager.play('test_music', 1.0)
 
     def main_logic(self, delta : float):
         super().main_logic(delta)
@@ -241,7 +242,7 @@ class GameStates:
 
 
 def initialise_game(game_object : 'Game', event : pygame.Event):
-    if event.mode == 'test' and (not pygame.key.get_pressed()[pygame.K_g]):
+    if event.mode == 'test' and (False):
         game_object.state = game_object.STATES.NetworkTestGameState(game_object)
     else:
         game_object.state = game_object.STATES.TestGameState(game_object)

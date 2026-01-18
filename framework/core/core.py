@@ -36,6 +36,7 @@ class Core:
 
     IS_DEBUG : bool = False
     def __init__(self) -> None:
+        self.js_source : dict[str, JsSource] = {}
         self.FPS = 60
         self.PERFORMANCE_MODE = False
         self.WEBPLATFORM = 'emscripten'
@@ -52,7 +53,7 @@ class Core:
         self.last_dt_measurment : float = 0
 
         self.settings = Settings()
-        self.bg_manager = BgManager()
+        self.bg_manager = BgManager(self)
         self.main_ui = Ui()
         self.menu = Menu()
         self.game = Game()
@@ -76,8 +77,12 @@ class Core:
                             text_alingment=(9999, 5), colorkey=(255, 0,0), zindex=999)
         self.event_manager.bind(self.START_GAME, self.start_game)
         self.event_manager.bind(self.END_GAME, self.end_game)
-        self.js_source : dict[str, JsSource] = {}
+
         self.networker : Networker = Networker(self)
+        self.load_js_source_file('framework/event_dispatcher.js', 'dispatch_event', {
+            "EVENT_TYPE" : None,
+            "EVENT_ARGS" : None
+        })
     
     def load_js_source_file(self, file_path : str, script_name : str, args : dict[str, str|None]|None = None, allow_default : bool = True) -> bool:
         if args is None: args = {}
