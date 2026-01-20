@@ -21,6 +21,7 @@ import sys
 import platform
 from typing import Any, TypedDict, Callable
 from types import SimpleNamespace
+from sys import exit
 
 class JsSource(TypedDict):
     source : str
@@ -152,7 +153,7 @@ class Core:
     def is_web(self) -> bool:
         return self.CURRENT_PLATFORM == WEBPLATFORM
     
-    def setup_web(self, method : int = 2):
+    def setup_web(self, method : int = 2, pixelated_canavs : bool = True):
         if not self.is_web(): return
         if method == 1:
             platform.window.onfocus = self.continue_things
@@ -161,11 +162,13 @@ class Core:
             platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
             platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
             platform.EventTarget.addEventListener(platform.window, "beforeunload", self.close_web)
+        if pixelated_canavs: platform.window.canvas.style.imageRendering = "pixelated"
     
     def close_web(self):
         self.save_game()
-        for k in self.networker.NETWORK_LOCALSTORAGE_KEYS.copy():
-            self.networker.destroy_peer(k)
+        if self.is_web():
+            for k in self.networker.NETWORK_LOCALSTORAGE_KEYS.copy():
+                self.networker.destroy_peer(k)
     
     def save_game(self):
         self.storage.save(self.is_web())
