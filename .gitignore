@@ -4,3 +4,4 @@ build.zip
 testin.py
 dist
 *.spec
+build_scripts
