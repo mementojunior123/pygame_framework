@@ -17,7 +17,8 @@ class Networker:
         self.NETWORK_LOCALSTORAGE_KEYS : list[str] = []
         if "networking" not in self.core.js_source:
             self.core.load_js_source_file("framework/networking/networking.js", "networking", 
-                                            {"PEERID" : None, "IS_HOST" : None, "NETWORK_KEY" : None})
+                                            {"PEERID" : None, "IS_HOST" : None, "NETWORK_KEY" : None,
+                                             "DEBUG_LEVEL" : None})
         if "sendnetmessage" not in self.core.js_source:
             self.core.load_js_source_file("framework/networking/network_send_event_dispatcher.js", "sendnetmessage", 
                                             {"DATA" : None, "NETWORK_KEY" : None})
@@ -41,10 +42,11 @@ class Networker:
                     callback(SimpleNamespace(detail={'data' : curr_recv, 'net_key' : net_key}))
                     self.core.storage.set_web(net_key + mod, "")
     
-    def create_peer(self, peer_id : str, is_host : bool, network_key : str):
+    def create_peer(self, peer_id : str, is_host : str, network_key : str, debug_level : int = 2):
         self.NETWORK_LOCALSTORAGE_KEYS.append(network_key)
         core_object.run_js_source_file("networking", {"PEERID" : peer_id, "IS_HOST" : is_host,
-                                                      "NETWORK_KEY" : network_key})
+                                                      "NETWORK_KEY" : network_key,
+                                                      "DEBUG_LEVEL" : str(debug_level)})
     
     def destroy_peer(self, network_key : str):
         if network_key in self.NETWORK_LOCALSTORAGE_KEYS:

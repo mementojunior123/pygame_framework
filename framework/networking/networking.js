@@ -3,6 +3,7 @@
 const peerId = "`{PEERID}`";
 const is_host = `{IS_HOST}`;
 const network_key = "`{NETWORK_KEY}`";
+const debug_level = `{DEBUG_LEVEL}`;
 
 const mod = import("https://esm.sh/peerjs@1.5.5?bundle-deps");
 mod.then((module) => {
@@ -13,7 +14,7 @@ mod.then((module) => {
     class NetworkClient {
         static createPeer(id, callback=()=>{}){
             let peer = new Peer(id, {
-                debug: 3,
+                debug: debug_level,
                 /*
                 port: 5000,
                 path: '/',
@@ -93,7 +94,7 @@ mod.then((module) => {
     function on_data_received(data) {
         const actual_key = network_key + 'recv';
         window.dispatchEvent(new CustomEvent("networkrecvdata", {"detail" : data}));
-        console.log(`Received ${data}`);
+        if (debug_level >= 3) {console.log(`Received ${data}`);}
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
         localStorage.setItem(actual_key, curr + data);
@@ -103,7 +104,7 @@ mod.then((module) => {
         const data = error.toString()
         const actual_key = network_key + 'err';
         window.dispatchEvent(new CustomEvent("networkerr", {"detail" : data}));
-        console.log(data);
+        if (debug_level >= 1) {console.log(data);}
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
         localStorage.setItem(actual_key, curr + data);
@@ -113,7 +114,7 @@ mod.then((module) => {
         const data = "Connected!";
         const actual_key = network_key + 'conn';
         window.dispatchEvent(new CustomEvent("networkconn", {"detail" : data}));
-        console.log(data);
+        if (debug_level >= 1) {console.log(data);}
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
         localStorage.setItem(actual_key, curr + data);
@@ -123,7 +124,7 @@ mod.then((module) => {
         const data = "Connection closed";
         const actual_key = network_key + 'close';
         window.dispatchEvent(new CustomEvent("networkclose", {"detail" : data}));
-        console.log(data);
+        if (debug_level >= 1) {console.log(data);}
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
         localStorage.setItem(actual_key, curr + data);
@@ -133,7 +134,7 @@ mod.then((module) => {
         const data = "Connection disconnected";
         const actual_key = network_key + 'dc';
         window.dispatchEvent(new CustomEvent("networkdc", {"detail" : data}));
-        console.log(data);
+        if (debug_level >= 1) {console.log(data);}
         const curr = localStorage.getItem(actual_key);
         if (curr === undefined) {curr = "";}
         localStorage.setItem(actual_key, curr + data);
