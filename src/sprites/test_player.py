@@ -180,6 +180,8 @@ class NetworkTestPlayer(Sprite, sprite_count = 1):
         if move_vector.magnitude(): move_vector.normalize()
         self.attempted_move = move_vector * speed
         self.attempted_rotate = target_angle_diff
+        self.position += self.attempted_move
+        self.angle += self.attempted_rotate
     
     def clean_instance(self):
         super().clean_instance()

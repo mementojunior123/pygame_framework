@@ -153,7 +153,7 @@ class NetworkWaitingGameState(GameState):
         self.is_host : bool = True if pygame.key.get_pressed()[pygame.K_f] else False
         host_arg : str = "true" if self.is_host else "false"
         core_object.log("Hosting :", host_arg.capitalize())
-        self.peer_id : int = "fsafgas_2players"
+        self.peer_id : int = "fsaffnaf_2players"
         self.network_key : str = "tmp_" + self.peer_id + host_arg
         core_object.networker.create_peer(self.peer_id, host_arg, self.network_key, debug_level=1)
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
@@ -232,7 +232,7 @@ class Network2PlayerTestGameState(NormalGameState):
         if self.ping_timer.isover():
             self.ping_timer.restart()
             core_object.networker.send_network_message("!!!ping!!!", self.network_key)
-            
+
         for message in self.recent_messages:
             if self.is_host:
                 self.parse_and_react_as_host(message)
@@ -265,8 +265,12 @@ class Network2PlayerTestGameState(NormalGameState):
         if not (len(args) == 6):
             return
         self.other_player.sync_other_is_host(pygame.Vector2(float(args[0]), float(args[1])), float(args[2]))
-        self.player.position = pygame.Vector2(float(args[3]), float(args[4]))
-        self.player.angle = float(args[5])
+        sync_position : pygame.Vector2 = pygame.Vector2(float(args[3]), float(args[4]))
+        sync_angle : float = float(args[5])
+        if (self.player.position - sync_position).magnitude() > 2:
+            self.player.position = sync_position
+        if abs(self.player.angle - sync_angle) > 2:
+            self.player.angle = sync_angle
     
     def cleanup(self):
         src.sprites.test_player.remove_connections()
