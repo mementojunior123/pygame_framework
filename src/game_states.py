@@ -155,7 +155,7 @@ class NetworkWaitingGameState(GameState):
         core_object.log("Hosting :", host_arg.capitalize())
         self.peer_id : int = "fsafgas_2players"
         self.network_key : str = "tmp_" + self.peer_id + host_arg
-        core_object.networker.create_peer(self.peer_id, host_arg, self.network_key, debug_level=0)
+        core_object.networker.create_peer(self.peer_id, host_arg, self.network_key, debug_level=1)
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
                            core_object.networker.NETWORK_ERROR_EVENT, core_object.networker.NETWORK_RECEIVE_EVENT]:
             core_object.event_manager.bind(event_type, self.network_event_handler)
@@ -208,6 +208,7 @@ class NetworkWaitingGameState(GameState):
 class Network2PlayerTestGameState(NormalGameState):
     def __init__(self, game_object : 'Game', network_key : str, peer_id : str, is_host : bool):
         self.game = game_object
+        self.ping_timer : Timer = Timer(1, core_object.game.game_timer.get_time)
         host_pos, client_pos = pygame.Vector2(200, 100), pygame.Vector2(760, 440)
         host_color, client_color = "Red", "Blue"
         
@@ -228,6 +229,9 @@ class Network2PlayerTestGameState(NormalGameState):
         
 
     def main_logic(self, delta : float):
+        if self.ping_timer.isover():
+            self.ping_timer.restart()
+            core_object.networker.send_network_message("!!!ping!!!", self.network_key)
         Sprite.update_all_sprites(delta)
         Sprite.update_all_registered_classes(delta)
         if self.is_host:

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import platform
 
 class Networker:
+    MESSAGE_ENDER : str = "~&|^"
     NETWORK_RECEIVE_EVENT = pygame.event.custom_type()
     NETWORK_ERROR_EVENT = pygame.event.custom_type()
     NETWORK_CONNECTION_EVENT = pygame.event.custom_type()
@@ -38,8 +39,11 @@ class Networker:
             for mod in mods:
                 curr_recv : str|None = self.core.storage.get_web(net_key + mod)
                 if curr_recv:
-                    callback = mods[mod]
-                    callback(SimpleNamespace(detail={'data' : curr_recv, 'net_key' : net_key}))
+                    for chunk in curr_recv.split(self.MESSAGE_ENDER):
+                        if not chunk:
+                            continue
+                        callback = mods[mod]
+                        callback(SimpleNamespace(detail={'data' : chunk, 'net_key' : net_key}))
                     self.core.storage.set_web(net_key + mod, "")
     
     def create_peer(self, peer_id : str, is_host : str, network_key : str, debug_level : int = 2):
