@@ -4,3 +4,7 @@
 -Move the loading of sound assets to src/
 -Improve the particle effect and animation system
 -Make some improvements to improve exe builds
+
+---Networking demo improvements---
+-Client side prediction
+-More compact message representation
