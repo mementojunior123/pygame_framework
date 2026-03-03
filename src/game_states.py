@@ -232,6 +232,14 @@ class Network2PlayerTestGameState(NormalGameState):
         if self.ping_timer.isover():
             self.ping_timer.restart()
             core_object.networker.send_network_message("!!!ping!!!", self.network_key)
+            
+        for message in self.recent_messages:
+            if self.is_host:
+                self.parse_and_react_as_host(message)
+            else:
+                self.parse_and_react_as_client(message)
+        self.recent_messages.clear()
+
         Sprite.update_all_sprites(delta)
         Sprite.update_all_registered_classes(delta)
         if self.is_host:
@@ -244,12 +252,7 @@ class Network2PlayerTestGameState(NormalGameState):
                 core_object.networker.send_network_message(
                     f"{self.player.attempted_move.x};{self.player.attempted_move.y};{self.player.attempted_rotate};{delta}", self.network_key
                 )
-        for message in self.recent_messages:
-            if self.is_host:
-                self.parse_and_react_as_host(message)
-            else:
-                self.parse_and_react_as_client(message)
-        self.recent_messages.clear()
+        
     
     def parse_and_react_as_host(self, data : str):
         args = data.split(";")
