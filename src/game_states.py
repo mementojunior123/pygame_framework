@@ -402,7 +402,7 @@ class GameStates:
 
 
 def initialise_game(game_object : 'Game', event : pygame.Event):
-    if event.mode == 'test' or (False):
+    if event.mode == 'test' and (False):
         game_object.state = NetworkWaitingGameState(game_object)
     elif True:
         game_object.state = game_object.STATES.TestGameState(game_object)
