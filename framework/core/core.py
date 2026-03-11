@@ -51,7 +51,9 @@ class Core:
 
         self.active_fingers : dict[int, tuple[float, float]] = {}
         self.dt : float = 1
+        self.MAX_DT : float = 5
         self.last_dt_measurment : float = 0
+        self.frametime : float = 1 / 60
 
         self.settings = Settings()
         self.bg_manager = BgManager(self)
@@ -84,6 +86,7 @@ class Core:
             "EVENT_TYPE" : None,
             "EVENT_ARGS" : None
         })
+        self.used_touch : bool = False
     
     def load_js_source_file(self, file_path : str, script_name : str, args : dict[str, str|None]|None = None, allow_default : bool = True) -> bool:
         if args is None: args = {}
@@ -188,7 +191,8 @@ class Core:
             self.last_dt_measurment = perf_counter()
         else:
             mark = perf_counter()
-            self.dt = (mark - self.last_dt_measurment) * target_fps
+            self.frametime = mark - self.last_dt_measurment
+            self.dt = min(self.frametime * target_fps, self.MAX_DT)
             self.last_dt_measurment = mark
     
     def set_debug_message(self, text : str):
@@ -217,22 +221,31 @@ class Core:
         self.event_manager.bind(pygame.FINGERDOWN, self.process_touch_event)
         self.event_manager.bind(pygame.FINGERMOTION, self.process_touch_event)
         self.event_manager.bind(pygame.FINGERUP, self.process_touch_event)
+
+        self.event_manager.bind(pygame.MOUSEBUTTONDOWN, self.process_touch_event)
+        self.event_manager.bind(pygame.MOUSEMOTION, self.process_touch_event)
+        self.event_manager.bind(pygame.MOUSEBUTTONUP, self.process_touch_event)
     
-    def process_touch_event(self, event : pygame.Event):
+    def process_touch_event(self, event : pygame.Event, emulate_touch : bool = False):
         if event.type == pygame.FINGERDOWN:
             x = event.x * self.main_display.get_width()
             y = event.y * self.main_display.get_height()
             self.active_fingers[event.finger_id] = (x,y)
+            self.used_touch = True
         
         elif event.type == pygame.FINGERUP:
             self.active_fingers.pop(event.finger_id, None)
+            self.used_touch = True
         
         elif event.type == pygame.FINGERMOTION:
             x = event.x * self.main_display.get_width()
             y = event.y * self.main_display.get_height()
             self.active_fingers[event.finger_id] = (x,y)
-        
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+            self.used_touch = True
+
+        if not emulate_touch: return
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
             self.active_fingers[10] = (event.pos)
         
         elif event.type == pygame.MOUSEMOTION:
