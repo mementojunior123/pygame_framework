@@ -101,7 +101,8 @@ def rotate_around_pivot_accurate(image : pygame.Surface, pos : pygame.Vector2, a
         return new_image, new_rect, new_pos
 
 def sign(x):
-    return copysign(1, x)
+    return copysign(1, x) if x != 0 else 0
+
 def is_sorted(iterable : list[object], key : Callable[[object], float|int]):
     current_val = key(iterable[0])
     for obj in iterable:

@@ -36,6 +36,7 @@ class Core:
     END_GAME = pygame.event.custom_type()
 
     IS_DEBUG : bool = False
+    ENABLE_ESC_CLOSE_GAME : bool = True
     def __init__(self) -> None:
         self.js_source : dict[str, JsSource] = {}
         self.FPS = 60
@@ -87,6 +88,18 @@ class Core:
             "EVENT_ARGS" : None
         })
         self.used_touch : bool = False
+
+    @property
+    def game_time(self) -> float|None:
+        if self.game.game_timer:
+            return self.game.game_timer.get_time()
+        return None
+    
+    @property
+    def game_tsource(self) -> Callable[[], float]|None:
+        if self.game.game_timer:
+            return self.game.game_timer.get_time
+        return None
     
     def load_js_source_file(self, file_path : str, script_name : str, args : dict[str, str|None]|None = None, allow_default : bool = True) -> bool:
         if args is None: args = {}
@@ -142,6 +155,8 @@ class Core:
         self.main_ui.add(self.debug_sprite)
     
     def detect_game_over(self, event : pygame.Event):
+        if not self.ENABLE_ESC_CLOSE_GAME:
+            return
         if event.type == pygame.KEYDOWN: 
             if event.key == pygame.K_ESCAPE: 
                 self.end_game(None)

@@ -387,7 +387,8 @@ def runtime_imports():
     from framework.core.core import core_object
 
     #runtime imports for game classes
-    global src, TestPlayer, NetworkTestPlayer, NetworkSyncTestPlayer
+    global src
+    global TestPlayer, NetworkTestPlayer, NetworkSyncTestPlayer
     import src.sprites.test_player
     from src.sprites.test_player import TestPlayer, NetworkTestPlayer, NetworkSyncTestPlayer
 
@@ -405,6 +406,6 @@ def initialise_game(game_object : 'Game', event : pygame.Event):
     if event.mode == 'test' and (False):
         game_object.state = NetworkWaitingGameState(game_object)
     elif True:
-        game_object.state = game_object.STATES.TestGameState(game_object)
+        game_object.state = TestGameState(game_object)
     else:
-        game_object.state = game_object.STATES.NetworkTestGameState(game_object)
+        game_object.state = NetworkTestGameState(game_object)
