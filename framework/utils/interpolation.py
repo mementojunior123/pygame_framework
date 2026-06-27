@@ -1,4 +1,6 @@
 """Module that contains multiple lerp related utility functions."""
+from typing import Callable, TypeAlias
+EasingFunc : TypeAlias = Callable[[float], float]
 def compatibilty_lerp(a, b, t : float):
     try: return a + (b-a) * t 
     except: pass
@@ -24,16 +26,11 @@ def lerp(a, b, t : float):
 
     return [a[i] + (b[i] - a[i]) * t for i in range(2)]
 
-    
-
-
 def flip(t : float) -> float:
     return 1 - t
 
-
 def quad_ease_out(t : float) -> float:
     return 1 - (1 - t) * (1 - t)
-
 
 def quad_ease_in(t : float) -> float:
     return t * t
@@ -44,11 +41,8 @@ def cubic_ease_in(t : float) -> float:
 def cubic_ease_out(t : float) -> float:
     return flip(cubic_ease_in(flip(t)))
 
-
-
 def smoothstep(t : float) -> float:
     return lerp(quad_ease_in(t), quad_ease_out(t), t)
-
 
 def linear(t : float) -> float:
     return t
@@ -57,5 +51,15 @@ def mirror(t : float) -> float:
     if t < 0.5: return t * 2
     else: return flip(t) * 2
 
-
-
+easing_style_dict : dict[str, EasingFunc] = {
+    'flip' : flip,
+    'quad_ease_out' : quad_ease_out,
+    'quad_ease_in' : quad_ease_in,
+    'cubic_ease_in' : cubic_ease_in,
+    'cubic_ease_out' : cubic_ease_out,
+    'smoothstep' : smoothstep,
+    'linear' : linear,
+    'mirror' : mirror
+}
+def get_easing_from_str(val : str) -> EasingFunc|None:
+    return easing_style_dict.get(val.strip().lower(), None)
