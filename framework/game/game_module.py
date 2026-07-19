@@ -5,15 +5,15 @@ from random import shuffle, choice
 import random
 import os
 import framework.utils.tween_module as TweenModule
-from framework.utils.ui.ui_sprite import UiSprite
-from framework.utils.ui.textbox import TextBox
-from framework.utils.ui.textsprite import TextSprite
-from framework.utils.ui.base_ui_elements import BaseUiElements
+from framework.ui.ui_sprite import UiSprite
+from framework.ui.textbox import TextBox
+from framework.ui.textsprite import TextSprite
+from framework.ui.base_ui_elements import BaseUiElements
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer
 from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
-from framework.utils.ui.brightness_overlay import BrightnessOverlay
+from framework.ui.brightness_overlay import BrightnessOverlay
 from framework.game.sprite_renderer import SpriteCamera
 from src.game_states import GameState, GameStates, initialise_game
 import framework.utils.particle_effects

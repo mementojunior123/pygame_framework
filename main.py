@@ -27,8 +27,8 @@ Sprite._core_hint()
 from framework.utils.animation import Animation, AnimationTrack, _sprite_hint
 _sprite_hint()
 
-from framework.utils.ui.base_ui_elements import BaseUiElements, UiSprite
-from framework.utils.ui.textsprite import TextSprite
+from framework.ui.base_ui_elements import BaseUiElements, UiSprite
+from framework.ui.textsprite import TextSprite
 from framework.utils.helpers import rotate_around_pivot_accurate, copysign
 from framework.utils.particle_effects import ParticleEffect, Particle
 import framework.utils.particle_effects

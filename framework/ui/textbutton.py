@@ -1,8 +1,8 @@
 import pygame
 from math import floor
-from framework.utils.ui.ui_sprite import UiSprite
+from framework.ui.ui_sprite import UiSprite
 from framework.utils.helpers import rotate_around_pivot_accurate
-import button_templates
+import framework.ui.button_templates as button_templates
 
 class TextButton(UiSprite):
     main_font = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)

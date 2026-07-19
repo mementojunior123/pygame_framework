@@ -1,6 +1,6 @@
 import pygame
 from math import floor
-from framework.utils.ui.ui_sprite import UiSprite
+from framework.ui.ui_sprite import UiSprite
 from framework.utils.helpers import rotate_around_pivot_accurate, vector_xmax_ysum
 class TextSprite(UiSprite):
     main_font = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)

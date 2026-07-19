@@ -1,5 +1,5 @@
 import pygame
-from framework.utils.ui.ui_sprite import UiSprite
+from framework.ui.ui_sprite import UiSprite
 from framework.utils.helpers import rotate_around_pivot_accurate, ColorType
 from framework.utils.pivot_2d import Pivot2D
 from typing import Literal

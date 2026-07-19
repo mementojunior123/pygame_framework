@@ -1,14 +1,14 @@
 import pygame
 import random
 from framework.core.base_menu import BaseMenu
-from framework.utils.ui.ui_sprite import UiSprite
-from framework.utils.ui.ui_sprite_group import UiSpriteGroup
-from framework.utils.ui.textsprite import TextSprite
-from framework.utils.ui.base_ui_elements import BaseUiElements
+from framework.ui.ui_sprite import UiSprite
+from framework.ui.ui_sprite_group import UiSpriteGroup
+from framework.ui.textsprite import TextSprite
+from framework.ui.base_ui_elements import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer
-from framework.utils.ui.brightness_overlay import BrightnessOverlay
+from framework.ui.brightness_overlay import BrightnessOverlay
 from math import floor, ceil
 from framework.utils.helpers import ColorType
 from typing import Callable

@@ -10,7 +10,7 @@ from src.settings import Settings
 from framework.core.bg_manager import BgManager
 from framework.core.ui import Ui
 from src.menu import Menu
-from framework.utils.ui.textsprite import TextSprite
+from framework.ui.textsprite import TextSprite
 from src.game_storage import GameStorage
 import src.menu
 from framework.game.game_module import Game
@@ -391,7 +391,7 @@ class Core:
     
     def __hints(self):
         global TextSprite
-        from framework.utils.ui.textsprite import TextSprite
+        from framework.ui.textsprite import TextSprite
 
 core_object = Core()
 setattr(src.menu, 'core_object', core_object)

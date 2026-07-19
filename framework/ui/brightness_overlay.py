@@ -1,5 +1,5 @@
 import pygame
-from framework.utils.ui.ui_sprite import UiSprite
+from framework.ui.ui_sprite import UiSprite
 from framework.utils.helpers import rotate_around_pivot_accurate
 
 class BrightnessOverlay(UiSprite):
