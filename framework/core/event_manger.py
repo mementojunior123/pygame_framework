@@ -5,8 +5,9 @@ from typing import Callable, TypeAlias
 EventCallback : TypeAlias = Callable[[pygame.event.Event], None]
 
 class EventManger:
+    ANY_EVENT = pygame.event.custom_type()
     def __init__(self) -> None:
-        self.bound_actions : dict[int, list[EventCallback]] = {pygame.QUIT : [self.close_game]}
+        self.bound_actions : dict[int, list[EventCallback]] = {pygame.QUIT : [self.close_game], self.ANY_EVENT : []}
     
     def close_game(self, event):
         pygame.quit()
@@ -64,4 +65,6 @@ class EventManger:
     def process_event(self, event : pygame.Event):
         if event.type in self.bound_actions:
             for callback in self.bound_actions[event.type]:
+                callback(event)
+            for callback in self.bound_actions[self.ANY_EVENT]:
                 callback(event)

@@ -319,7 +319,7 @@ class Sprite:
                     return_val.append(element)
         return return_val
 
-    def get_all_rect_colliding(self, collision_groups : list[CollisionGroup]|CollisionGroup):
+    def get_all_rect_colliding(self, collision_groups : list[CollisionGroup]|CollisionGroup) -> list['Sprite']:
         '''Returns all entities colliding this sprite within collision_group. Uses a bounding box check.'''
         try:
             collision_groups[0]
@@ -357,6 +357,8 @@ class Sprite:
     def handle_mouse_event(cls, event : pygame.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.touch: return
+            if event.button not in (1, 2, 3):
+                return
             press_pos : tuple = event.pos
             hit = [sprite for sprite in Sprite.active_elements if sprite.rect.collidepoint(press_pos)]
             if len(hit) == 0: return

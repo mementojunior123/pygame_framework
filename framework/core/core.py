@@ -355,7 +355,7 @@ class Core:
             return None
         return platform.eval(code)
     
-    def log(self, *args : list[Any], sep=' '):
+    def log(self, *args : Any, sep=' '):
         text = sep.join(str(arg) for arg in args)
         print(text)
         if self.is_web():
