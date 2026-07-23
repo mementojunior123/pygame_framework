@@ -1,7 +1,7 @@
 import pygame
 import random
 from framework.ui.ui_sprite import UiSprite
-from framework.ui.ui_sprite_group import UiSpriteGroup
+from framework.ui.ui_drawable import UiSpriteGroup, UiDrawable
 from framework.ui.textsprite import TextSprite
 from framework.ui.base_ui_elements import BaseUiElements
 import framework.utils.tween_module as TweenModule
