@@ -1,6 +1,6 @@
 import pygame
 from sys import exit
-from typing import Callable, TypeAlias
+from typing import Callable, TypeAlias, Iterable
 
 EventCallback : TypeAlias = Callable[[pygame.event.Event], None]
 
@@ -13,13 +13,14 @@ class EventManger:
         pygame.quit()
         exit()
     
-    def bind(self, event_type : int, actions : list[EventCallback]|EventCallback, duplicate = False):
+    def bind(self, event_type : int, actions_arg : Iterable[EventCallback]|EventCallback, duplicate = False):
         '''The action parameter must be a function or list of functions that accepts exactly one pygame.Event argument. 
         Returns False if the action fails to bind.'''
-        try:
-            actions[0]
-        except TypeError:
-            actions = [actions]
+        actions : list[EventCallback]
+        if not isinstance(actions_arg, Iterable):
+            actions : list[EventCallback] = [actions_arg]
+        else:
+            actions = list(actions_arg)
 
         if event_type == pygame.QUIT:
             return False
@@ -33,13 +34,14 @@ class EventManger:
         
         return True
 
-    def unbind(self, event_type : int, target_actions : list[EventCallback]|EventCallback):
+    def unbind(self, event_type : int, target_actions_arg : Iterable[EventCallback]|EventCallback):
         '''Returns False if event_type or target_actions is not found.'''
-        try:
-            target_actions[0]
-        except TypeError:
-            target_actions = [target_actions]
-
+        target_actions : list[EventCallback]
+        if not isinstance(target_actions_arg, Iterable):
+            target_actions : list[EventCallback] = [target_actions_arg]
+        else:
+            target_actions = list(target_actions_arg)
+        
         if event_type == pygame.QUIT:
             return False
 

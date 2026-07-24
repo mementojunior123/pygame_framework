@@ -4,7 +4,7 @@ from framework.utils.my_timer import Timer
 from typing import Callable
 
 class Ui:
-    def __init__(self, elements : list[UiDrawable] = None) -> None:
+    def __init__(self, elements : list[UiDrawable]|None = None) -> None:
         if elements is None: elements = []
         self.elements : list[UiDrawable] = elements
         self.temp_elements : dict[UiDrawable, Timer] = {}
@@ -70,7 +70,7 @@ class Ui:
     
     def add_temp(self, element : UiDrawable, time : float|Timer, override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
         if element not in self.temp_elements or override == True:
-            timer = time if type(time) == Timer else Timer(time, time_source, time_scale)
+            timer = time if isinstance(time, Timer) else Timer(time, time_source, time_scale)
             self.temp_elements[element] = timer
             self.complete_list.append(element)
     

@@ -5,7 +5,7 @@ from typing import Any, TypedDict
 from framework.utils.helpers import AnyJson
 
 if PLATFORM == 'emscripten':
-    from platform import window
+    from platform import window # type: ignore
 
 class MockGameData(TypedDict):
     """This is the base class for the game data that needs to be stored."""
@@ -98,7 +98,7 @@ class BaseGameStorage:
             key: The name of the value to access.
         Returns --> The string representing the value if it exists, otherwise None.
         """
-        return window.localStorage.getItem(key)
+        return window.localStorage.getItem(key) # type: ignore
 
     def set_web(self, key : str, value : str):
         """
@@ -106,4 +106,4 @@ class BaseGameStorage:
             key: The name of the value to set.
             value: The value to set.
         """
-        window.localStorage.setItem(key, str(value))
+        window.localStorage.setItem(key, str(value)) # type: ignore

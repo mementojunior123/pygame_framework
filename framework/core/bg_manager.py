@@ -1,7 +1,7 @@
 import pygame
 import json
 import platform
-from typing import Union, TypeAlias
+from typing import Union, TypeAlias, Literal, cast, overload
 
 class SoundTypes:
     music = 'Music'
@@ -9,7 +9,15 @@ class SoundTypes:
 
 class WebChannel:
     CHANNELS : dict[int, 'WebChannel'] = {}
-
+    @classmethod
+    @overload
+    def _get_unused_channel(cls, force : Literal[False]) -> int|None: ...
+    @classmethod
+    @overload
+    def _get_unused_channel(cls) -> int|None: ...
+    @classmethod
+    @overload
+    def _get_unused_channel(cls, force : Literal[True]) -> int: ...
     @classmethod
     def _get_unused_channel(cls, force : bool = False) -> int|None:
         for i in range(core_object.bg_manager.MAX_CHANNEL_COUNT):
@@ -25,7 +33,7 @@ class WebChannel:
         if channel_id in WebChannel.CHANNELS:
             return WebChannel.CHANNELS[channel_id]
         else:
-            new = super(WebChannel, cls).__new__(WebChannel)
+            new = object.__new__(WebChannel)
             WebChannel.CHANNELS[channel_id] = new
 
         return new
@@ -56,9 +64,9 @@ class WebChannel:
         self._volume = volume
         sound_obj, path = self.bg_manager.SOUNDS[sound_name]
         self._sound_name = sound_name
-        self._sound_ref : pygame.mixer.Sound = sound_obj
-        self._sound_path : str = path
-        self._actual_vol : float = sound_obj.get_volume() * self._volume * self.bg_manager.web_mult
+        self._sound_ref = sound_obj
+        self._sound_path = path
+        self._actual_vol = sound_obj.get_volume() * self._volume * self.bg_manager.web_mult
         core_object.run_js_source_file('dispatch_event', {
             "EVENT_TYPE" : "StartAudio",
             "EVENT_ARGS" : json.dumps({'id' : self._id, 'path' : self._sound_path, 'volume' : self._actual_vol, 'target_loop_count' : loops})
@@ -93,7 +101,7 @@ class WebChannel:
     def set_volume(self, new_vol : float, arg2 : float|None=None):
         if arg2 is not None:
             core_object.log("Stereo sound not supported in the browser!")
-        if self._id is None: return
+        if self._id is None or self._sound_ref is None: return
         if new_vol != self._volume:
             self._actual_vol : float = self._sound_ref.get_volume() * self._volume * self.bg_manager.web_mult
             self._volume = new_vol
@@ -103,7 +111,7 @@ class WebChannel:
             })
 
     def _update_volume(self):
-        if self._id is None: return
+        if self._id is None or self._sound_ref is None: return
         new_vol : float = self._sound_ref.get_volume() * self._volume * self.bg_manager.web_mult
         if new_vol != self._actual_vol:
             self._actual_vol = new_vol
@@ -131,18 +139,18 @@ class WebChannel:
     def get_busy(self) -> bool:
         if self._sound_ref is None: return False
         k : str = 'WebAudioChannel' + str(self._id) + "_" + 'busy'
-        return (platform.window.localStorage.getItem(k) == "true")
+        return (platform.window.localStorage.getItem(k) == "true") # type: ignore
     
-    def queue(arg1):
+    def queue(self, arg1):
         core_object.log("Webchannel.queue is not implemented!")
     
-    def get_queue() -> None:
+    def get_queue(self) -> None:
         core_object.log("Webchannel.get_queue is not implemented!")
     
-    def set_endevent(t=None) -> None:
+    def set_endevent(self, t=None) -> None:
         core_object.log("Webchannel.set_endevent is not implemented!")
     
-    def get_endevent() -> None:
+    def get_endevent(self) -> None:
         core_object.log("Webchannel.get_endevent is not implemented!")
     
 AnyChannel : TypeAlias = Union[pygame.mixer.Channel, WebChannel]
@@ -179,7 +187,8 @@ class BgManager:
                 "PATH_LIST" : str(path_list)
             })
 
-    def find_unused_channel(force : bool = False) -> pygame.mixer.Channel|WebChannel|None:
+    @staticmethod
+    def find_unused_channel(force : bool = False) -> AnyChannel|None:
         WebChannel._get_unused_channel(force) if core_object.is_web() else pygame.mixer.find_channel(force)
 
     def load_sound(self, path : str, vol : float, name : str):
@@ -209,13 +218,16 @@ class BgManager:
         channel.set_volume(volume * self.global_volume)
         self.current[channel] = TrackInfo(volume, sound_type)
 
-    def play(self, track_name : str, volume, loops = -1, maxtime = 0, fade_ms = 0, sound_type : str|None = 'Music'):
+    def play(self, track_name : str, volume, loops = -1, maxtime = 0, fade_ms = 0, sound_type : str|None = 'Music') -> AnyChannel|None:
         """Used for playing music."""
         if core_object.is_web() and self.USE_WEB_ENGINE:
             self._play_web(track_name, volume, loops, maxtime, fade_ms, sound_type)
             return
         else:
             track = self.get_sound_obj(track_name)
+            if track is None:
+                self.core.log(f"Attempted to play track {track_name}, but it does not exist!")
+                return None
         channel = track.play(loops, maxtime, fade_ms)
         if not channel:
             core_object.log("Attempted to play track, but ran out of audio channels!")
@@ -226,13 +238,16 @@ class BgManager:
         self.current[channel] = TrackInfo(volume, sound_type)
         return channel
     
-    def play_sfx(self, sfx_name : str, volume, loops = 0, maxtime = 0, fade_ms = 0, sound_type : str|None = 'SFX'):
+    def play_sfx(self, sfx_name : str, volume, loops = 0, maxtime = 0, fade_ms = 0, sound_type : str|None = 'SFX') -> AnyChannel|None:
         """Used for playing short sound effects."""
         if core_object.is_web() and self.USE_WEB_ENGINE:
             self._play_web(sfx_name, volume, loops, maxtime, fade_ms, sound_type)
             return
         else:
             sfx = self.get_sound_obj(sfx_name)
+            if sfx is None:
+                self.core.log(f"Attempted to play SFX {sfx_name}, but it does not exist!")
+                return
         channel = sfx.play(loops, maxtime, fade_ms)
         if not channel:
             core_object.log("Attempted to play sfx, but ran out of audio channels!")
@@ -242,15 +257,15 @@ class BgManager:
         self.current[channel] = TrackInfo(volume, sound_type)
         return channel
         
-    def get_channels(self, sound : pygame.mixer.Sound) -> list[pygame.mixer.Channel]:
+    def get_channels(self, sound : pygame.mixer.Sound) -> list[AnyChannel]:
         """Gets all the channels that are playing a specific sound."""
-        channels : list[pygame.mixer.Channel] = []
+        channels : list[AnyChannel] = []
         for channel in self.current:
             if channel.get_sound() == sound:
                 channels.append(channel)
         return channels
     
-    def get_all_type(self, t : str) -> list[pygame.mixer.Channel]:
+    def get_all_type(self, t : str) -> list[AnyChannel]:
         """Get all channels that are playing a sound of a specific type."""
         channels : list[AnyChannel] = []
         for channel in self.current:
@@ -260,7 +275,7 @@ class BgManager:
         
         return channels
 
-    def stop_channel(self, channel : pygame.mixer.Channel):
+    def stop_channel(self, channel : AnyChannel):
         """Stop a currently playing channel."""
         channel.stop()
         if channel in self.current:
@@ -268,7 +283,7 @@ class BgManager:
     
     def stop_sound(self, sound : pygame.mixer.Sound):
         """Stop a currently playing track."""
-        to_remove : list[pygame.mixer.Channel] = []
+        to_remove : list[AnyChannel] = []
         for channel in self.current:
             if channel.get_sound() == sound:
                 to_remove.append(channel)

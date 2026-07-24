@@ -1,7 +1,7 @@
 import pygame
 from .ui_position import AnyUiPosition, UiPosition
 
-from typing import Literal, TypeAlias
+from typing import Literal, TypeAlias, overload
 from dataclasses import dataclass
 import dataclasses
 
@@ -93,6 +93,11 @@ class UiDrawable:
     
     def get_local_draw_rect(self) -> pygame.Rect:
         raise NotImplementedError
+
+    @overload
+    def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
+    @overload
+    def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
     
     def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         """Note : If frame is given and not an ancestor, None is returned.
@@ -128,7 +133,7 @@ class UiSpriteGroup(UiDrawable):
         super().__init__(base_drawable_info)
         self.elements : list[UiDrawable] = [element for element in elements]
         for element in self.elements:
-            if element.parent != self:
+            if element.parent != self and element.parent:
                 if element in element.parent.elements: element.parent.remove(element)
             element._parent = self
 
@@ -200,11 +205,17 @@ class UiSpriteGroup(UiDrawable):
         if not self.elements:
             return pygame.Rect(0, 0, 0, 0)
         return self.elements[0].get_local_draw_rect().unionall([e.get_local_draw_rect() for e in self.elements if e != self.elements[0]])
-    
-    def get_world_draw_rect(self) -> pygame.Rect:
+
+    @overload
+    def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
+    @overload
+    def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
+    def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         if not self.elements:
             return pygame.Rect(0, 0, 0, 0)
-        return self.elements[0].get_world_draw_rect().unionall([e.get_world_draw_rect() for e in self.elements if e != self.elements[0]])
+        if self.get_frame_ancestors(frame) is None:
+            return None
+        return self.elements[0].get_world_draw_rect(frame).unionall([e.get_world_draw_rect(frame) for e in self.elements if e != self.elements[0]]) # type: ignore
         
     
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None):
