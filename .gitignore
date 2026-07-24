@@ -5,3 +5,4 @@ testin.py
 dist
 *.spec
 build_scripts
+.vscode

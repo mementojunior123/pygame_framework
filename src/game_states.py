@@ -6,15 +6,12 @@ import random
 import framework.game.coroutine_scripts
 from framework.game.coroutine_scripts import CoroutineScript
 import framework.utils.tween_module as TweenModule
-from framework.ui.ui_sprite import UiSprite
-from framework.ui.textbox import TextBox
-from framework.ui.textsprite import TextSprite
-from framework.ui.base_ui_elements import BaseUiElements
+from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer, TimeSource
 from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
-from framework.ui.brightness_overlay import BrightnessOverlay
+from framework.ui import BrightnessOverlay
 from framework.utils.particle_effects import ParticleEffect
 
 class GameState:
@@ -48,9 +45,10 @@ class NormalGameState(GameState):
         if not self.game.active: return
         self.game.game_timer.pause()
         window_size = core_object.main_display.get_size()
-        pause_ui1 = BrightnessOverlay(-60, pygame.Rect(0,0, *window_size), 0, 'pause_overlay', zindex=999)
-        pause_ui2 = TextSprite(pygame.Vector2(window_size[0] // 2, window_size[1] // 2), 'center', 0, 'Paused', 'pause_text', None, None, 1000,
-                               (self.game.font_70, 'White', False), ('Black', 2), colorkey=(0, 255, 0))
+        
+        pause_ui1 = BrightnessOverlay(BaseDrawableInfo(UiPosition((0, 0), 'topleft'), name='pause_overlay', zindex=9999), window_size, -60)
+        pause_ui2 = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(window_size[0] // 2, window_size[1] // 2), 'center'), name='pause_text', zindex=1000),
+                               TextSpriteInfo('Paused', self.game.font_70, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
         core_object.main_ui.add(pause_ui1)
         core_object.main_ui.add(pause_ui2)
         self.game.state = PausedGameState(self.game, self)
@@ -122,8 +120,8 @@ class NetworkTestPattern(CoroutineScript):
     def corou(time_source : TimeSource, net_key : str) -> Generator[None, None, str]:
         textsprite_font : pygame.Font = core_object.menu.font_50
 
-        new_textsprite : TextSprite = TextSprite((480, 10), "midtop", None, "Waiting...", "Progress",
-        text_settings=(textsprite_font, "White", False), text_stroke_settings=("Black", 2))
+        new_textsprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="Progress"),
+                                                  TextSpriteInfo("Waiting...", textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0)))
         core_object.main_ui.add(new_textsprite)
         timer : Timer = Timer(0.5, time_source)
         percentage : float = 0
@@ -159,10 +157,9 @@ class NetworkWaitingGameState(GameState):
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
                            core_object.networker.NETWORK_ERROR_EVENT, core_object.networker.NETWORK_RECEIVE_EVENT]:
             core_object.event_manager.bind(event_type, self.network_event_handler)
-        self.ui_message : TextSprite = TextSprite(pygame.Vector2(480, 10), "midtop", 0, 
-                        f"Waiting for connection...\nHosting: {host_arg.capitalize()}\nPeer id: {self.peer_id}",
-                        "waiting_message", text_settings=(self.game.font_40, "White", False),
-                        text_stroke_settings=("Black", 2), colorkey=(0, 255, 0))
+        self.ui_message : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="waiting_message"),
+                                                    TextSpriteInfo(f"Waiting for connection...\nHosting: {host_arg.capitalize()}\nPeer id: {self.peer_id}", 
+                                                                self.game.font_40, "White", False, "Black", 2, colorkey=(0, 255, 0)))
         core_object.main_ui.add(self.ui_message)
         
 
@@ -336,9 +333,8 @@ class TestPattern(CoroutineScript):
     @staticmethod
     def corou(time_source : TimeSource) -> Generator[None, None, str]:
         textsprite_font : pygame.Font = core_object.menu.font_50
-
-        new_textsprite : TextSprite = TextSprite((480, 10), "midtop", None, "Waiting...", "Progress",
-        text_settings=(textsprite_font, "White", False), text_stroke_settings=("Black", 2))
+        new_textsprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="Progress"),
+                                                  TextSpriteInfo("Waiting...", textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0)))
         core_object.main_ui.add(new_textsprite)
         timer : Timer = Timer(0.5, time_source)
         percentage : float = 0

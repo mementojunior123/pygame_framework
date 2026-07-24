@@ -1,15 +1,17 @@
 import pygame
-from framework.ui.ui_sprite import UiSprite
-import framework.ui.button_templates as button_templates
+from .ui_drawable import BaseDrawableInfo, UiSpriteGroup
+from .ui_sprite import UiSprite
+from . import button_templates
+from .ui_position import UiPosition
+from .ui_frame import UiFrame
 
 class BaseUiElements:
     font_40 = pygame.font.Font("assets/fonts/Pixeltype.ttf", 40)
-    tag_event = pygame.event.custom_type() 
     image_dict : dict[str, pygame.Surface] = button_templates.image_dict
 
     @classmethod
-    def new_button(cls, button_type : str, text, tag, alignment, pos, scale : float|tuple = 1, attributes = None, text_settings : tuple = None, 
-                   name : str|None = None):
+    def new_button(cls, button_type : str, text, tag, alignment, pos, scale : float|tuple = 1, text_settings : tuple = None, 
+                   name : str|None = None, parent : UiSpriteGroup|None = None) -> UiSprite:
         if text_settings is None: text_settings = (cls.font_40, "Black", False)
         font : pygame.Font
         text_color : pygame.Color|str
@@ -36,24 +38,23 @@ class BaseUiElements:
         surface_rect.__setattr__(alignment, pos)
         
         surface.blit(text_surface, text_surface_rect)
+        return UiSprite(BaseDrawableInfo(UiPosition(pos, alignment), parent, name, tag), surface)
         
-        return UiSprite(surface, surface_rect, tag, attributes = attributes, name=name)
-
     @classmethod
-    def new_textless_button(cls, button_type : str, tag, alignment, pos, scale : float|tuple = 1, attributes = None, name : str|None = None):
+    def new_textless_button(cls, button_type : str, tag, alignment, pos, scale : float|tuple = 1, name : str|None = None, 
+                            parent : UiSpriteGroup|None = None) -> UiSprite:
         surface = pygame.transform.scale_by(cls.image_dict[button_type], scale)
         surface_rect = surface.get_bounding_rect()
         surface_rect.__setattr__(alignment, pos)
         
         
         
-        return UiSprite(surface, surface_rect, tag, attributes = attributes, name=name)
+        return UiSprite(BaseDrawableInfo(UiPosition(pos, alignment), parent, name, tag), surface)
 
 
     @classmethod
-    def new_text_sprite(cls, text : str, settings : tuple, tag : int, alignment : str, pos : tuple, 
-                        attributes = None, newline_settings = None, keep_og_surf : bool = False, forced_og_surf : pygame.Surface|None= None,
-                        name : str|None = None, scale : float|tuple = 1):
+    def new_text_sprite(cls, text : str, settings : tuple, tag : int, alignment : str, pos : tuple, newline_settings = None,
+                        name : str|None = None, scale : float|tuple = 1, parent : UiSpriteGroup|None = None) -> UiSprite:
         """
         Returns an UiSprite.
         Settings is a tuple of (font, color, AA).
@@ -71,7 +72,7 @@ class BaseUiElements:
             surf = pygame.transform.scale_by(surf, scale)
             rect = surf.get_bounding_rect()
             rect.__setattr__(alignment, pos)
-            return UiSprite(surf, rect, tag, attributes=attributes, name=name, keep_og_surf=keep_og_surf, forced_og_surf=forced_og_surf)
+            return UiSprite(BaseDrawableInfo(UiPosition(pos, alignment), parent, name, tag), surf)
         else:
             newline_height, text_alignment = newline_settings
             if newline_height is None: newline_height = 5
@@ -105,7 +106,7 @@ class BaseUiElements:
             final_surf = pygame.transform.scale_by(final_surf, scale)
             final_rect = final_surf.get_bounding_rect()
             final_rect.__setattr__(alignment, pos)
-            return UiSprite(final_surf, final_rect, tag, attributes=attributes, name=name, keep_og_surf=keep_og_surf, forced_og_surf=forced_og_surf)
+            return UiSprite(BaseDrawableInfo(UiPosition(pos, alignment), parent, name, tag), final_surf)
 
             
 

@@ -8,3 +8,17 @@
 ---Networking demo improvements---
 -Client side prediction
 -More compact message representation
+
+------Ui rework phase 2-------
+-Finish adding properties in brightness_overlay, ui_sprite and textsprite
+-Implement use_abs_pos(?)
+
+-Handle UiFrame.size in cases where UiFrame has a surf
+-Add ways to make easy UI layouts?
+-Add a UiSprite.base_surf property that automatically calls _render?
+-Descendant search
+-Update docs in base_menu
+-Validation?
+-Implement some sort of event manager
+-Implement rotation, scaling and opacity (not important for now)
+-Implement missing ui sprites

@@ -1,17 +1,16 @@
 import pygame
-from framework.ui.ui_sprite import UiSprite
-from framework.ui.base_ui_elements import BaseUiElements
+from framework.ui import UiDrawable
 from framework.utils.my_timer import Timer
 from typing import Callable
 
 class Ui:
-    def __init__(self, elements : list[UiSprite] = None) -> None:
+    def __init__(self, elements : list[UiDrawable] = None) -> None:
         if elements is None: elements = []
-        self.elements : list[UiSprite] = elements
-        self.temp_elements : dict[UiSprite, Timer] = {}
-        self.complete_list : list[UiSprite] = []
+        self.elements : list[UiDrawable] = elements
+        self.temp_elements : dict[UiDrawable, Timer] = {}
+        self.complete_list : list[UiDrawable] = []
     
-    def get_sprite(self, name : str|None = None, tag : int|None = None) -> UiSprite|None:
+    def get_sprite(self, name : str|None = None, tag : int|None = None) -> UiDrawable|None:
         for element in self.complete_list:
             if name is not None:
                 if element.name == name:
@@ -21,7 +20,7 @@ class Ui:
                     return element
         return None
     
-    def get_sprites(self, name : str|None = None, tag : int|None = None) -> list[UiSprite]:
+    def get_sprites(self, name : str|None = None, tag : int|None = None) -> list[UiDrawable]:
         return_list = []
         for element in self.complete_list:
             if name is not None:
@@ -40,16 +39,16 @@ class Ui:
             element.draw(display)
         #print(self.complete_list, self.elements, self.temp_elements)
     
-    def add(self, element : UiSprite, duplicate = False):
+    def add(self, element : UiDrawable, duplicate = False):
         if element not in self.elements or duplicate == True:
             self.elements.append(element)
             self.complete_list.append(element)
     
-    def add_multiple(self, elements : list[UiSprite], duplicate = False):
+    def add_multiple(self, elements : list[UiDrawable], duplicate = False):
         for element in elements:
             self.add(element, duplicate=duplicate)
 
-    def remove(self, element : UiSprite, remove_all_instances = False):
+    def remove(self, element : UiDrawable, remove_all_instances = False):
         if not remove_all_instances:
             if element in self.elements: 
                 self.elements.remove(element)
@@ -69,7 +68,7 @@ class Ui:
         self.temp_elements.clear()
         self.complete_list.clear()
     
-    def add_temp(self, element : UiSprite, time : float|Timer, override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
+    def add_temp(self, element : UiDrawable, time : float|Timer, override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
         if element not in self.temp_elements or override == True:
             timer = time if type(time) == Timer else Timer(time, time_source, time_scale)
             self.temp_elements[element] = timer

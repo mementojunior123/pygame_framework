@@ -1,6 +1,6 @@
 import pygame
 from math import floor
-from framework.ui.ui_sprite import UiSprite
+from framework.ui.old.ui_sprite_old import UiSprite
 from framework.utils.helpers import rotate_around_pivot_accurate
 from framework.utils.my_timer import Timer, TimeSource
 

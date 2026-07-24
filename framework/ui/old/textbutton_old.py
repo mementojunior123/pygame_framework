@@ -1,29 +1,23 @@
 import pygame
 from math import floor
-from framework.ui.ui_sprite import UiSprite
+from framework.ui.old.ui_sprite_old import UiSprite
 from framework.utils.helpers import rotate_around_pivot_accurate
-class TextBox(UiSprite):
-    main_image = pygame.image.load('assets/graphics/button_templates/textbox_green_colorkey.png').convert()
-    main_image.set_colorkey((0, 255, 0))
+import framework.ui.button_templates as button_templates
+
+class TextButton(UiSprite):
     main_font = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
+    main_image = button_templates.blue_button_surf
     def __init__(self, surf: pygame.Surface, rect: pygame.Rect, tag: int, text : str, name: str | None = None, keep_og_surf=False, 
                  attributes: dict = None, data: dict = None, forced_og_surf: pygame.Surface = None, zindex: int = 0, 
-                 text_settings : tuple[pygame.Font, pygame.Color, bool]|None = None, text_alingment : tuple[pygame.Vector2, int, int]|None = None):
+                 text_settings : tuple[pygame.Font, pygame.Color, bool]|None = None, text_scale : float = 1, max_line_lentgh : int = 0):
         
         super().__init__(surf, rect, tag, name, True, attributes, data, forced_og_surf, zindex)
-        self.text_settings : tuple[pygame.Font, pygame.Color, bool] = text_settings or (TextBox.main_font, 'Black', False)
+        self.text_settings : tuple[pygame.Font, pygame.Color, bool] = text_settings or (TextButton.main_font, 'Black', False)
         self._text : str = text
         self._text_percent : float = 1
         self._true_text : str = text
-        self.text_start_pos : pygame.Vector2
-        self.max_line_lentgh : int
-        self.newline_height : int
-        if text_alingment:
-            self.text_start_pos, self.max_line_lentgh, self.newline_height, = text_alingment
-        else:
-            self.text_start_pos = pygame.Vector2(20, 30)
-            self.max_line_lentgh = 600
-            self.newline_height = 5
+        self._text_scale : float = text_scale
+        self.max_line_lentgh : int = max_line_lentgh
     
         
     def _render(self):
@@ -50,8 +44,12 @@ class TextBox(UiSprite):
     
     def _render_text(self):
         if self._true_text == '': return
+        surf_size = self.surf.get_size()
+        centerx, centery = surf_size[0] //2, surf_size[1] // 2
         text_surf = self.text_settings[0].render(self._true_text, self.text_settings[2], self.text_settings[1], wraplength=self.max_line_lentgh)
-        self.surf.blit(text_surf, self.text_start_pos)
+        if self.text_scale != 1:
+            text_surf = pygame.transform.scale_by(text_surf, self.text_scale)
+        self.surf.blit(text_surf, text_surf.get_rect(center=(centerx, centery)))
     
     @property
     def text(self):
@@ -84,3 +82,12 @@ class TextBox(UiSprite):
         self._true_text = self._text[:text_index]
         if self._true_text != prev_true_text:
             self._render()
+    
+    @property
+    def text_scale(self):
+        return self._text_scale
+    
+    @text_scale.setter
+    def text_scale(self, new_val):
+        self._text_scale = new_val
+        self._render()
