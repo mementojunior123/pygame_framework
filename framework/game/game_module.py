@@ -5,15 +5,11 @@ from random import shuffle, choice
 import random
 import os
 import framework.utils.tween_module as TweenModule
-from framework.ui.ui_sprite import UiSprite
-from framework.ui.textbox import TextBox
-from framework.ui.textsprite import TextSprite
-from framework.ui.base_ui_elements import BaseUiElements
+from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer
 from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
-from framework.ui.brightness_overlay import BrightnessOverlay
 from framework.game.sprite_renderer import SpriteCamera
 from src.game_states import GameState, GameStates, initialise_game
 import framework.utils.particle_effects
@@ -44,17 +40,14 @@ class Game:
 
         
     def alert_player(self, text : str, alert_speed : float = 1):
-        text_sprite = TextSprite(pygame.Vector2(core_object.main_display.get_width() // 2, 90), 'midtop', 0, text, 
-                        text_settings=(core_object.menu.font_60, 'White', False), text_stroke_settings=('Black', 2), colorkey=(0,255,0))
-        
-        text_sprite.rect.bottom = -5
-        text_sprite.position = pygame.Vector2(text_sprite.rect.center)
-        temp_y = text_sprite.rect.centery
-        core_object.main_ui.add_temp(text_sprite, 5)
+        text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
+                                         TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
+        mid_height : int = text_sprite.size.y // 2
+        self.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo
-        goal1 = {'rect.centery' : 50, 'position.y' : 50}
+        goal1 = {'position.value.y' : 50 + mid_height}
         info1 = TInfo(interpolation.quad_ease_out, 0.3 / alert_speed)
-        goal2 = {'rect.centery' : temp_y, 'position.y' : temp_y}
+        goal2 = {'position.value.y' : text_sprite.position.value.y}
         info2 = TInfo(interpolation.quad_ease_in, 0.4 / alert_speed)
         
         on_screen_time = 1 / alert_speed

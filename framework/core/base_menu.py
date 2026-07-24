@@ -1,13 +1,14 @@
 import pygame
 import random
-from framework.ui.ui_sprite import UiSprite
-from framework.ui.ui_drawable import UiSpriteGroup, UiDrawable
-from framework.ui.textsprite import TextSprite
-from framework.ui.base_ui_elements import BaseUiElements
+from framework.ui import UiPosition
+from framework.ui import UiSprite, BaseDrawableInfo
+from framework.ui import UiSpriteGroup, UiDrawable
+from framework.ui import TextSprite, TextSpriteInfo
+from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer
-from framework.ui.brightness_overlay import BrightnessOverlay
+from framework.ui import BrightnessOverlay
 from math import floor, ceil
 from framework.utils.helpers import ColorType
 from typing import Callable
@@ -16,6 +17,7 @@ def noop():
     pass
 
 class BaseMenu:
+    TAG_EVENT = pygame.event.custom_type()
     """Base class for the menu."""
     font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
     font_50 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 50)
@@ -32,9 +34,9 @@ class BaseMenu:
     def __init__(self) -> None:
         """Constructor for the menu object that runs before runtime imports."""
         self.stage : int
-        self.stages : list[list[UiSprite|UiSpriteGroup]|None]
+        self.stages : list[list[UiDrawable]|None]
         self.bg_color : ColorType|str
-        self.temp : dict[UiSprite|UiSpriteGroup, Timer] = {}
+        self.temp : dict[UiDrawable, Timer] = {}
         
     def init(self):
         """Initialises a menu object. Must be ran after runtime imports."""
@@ -43,7 +45,7 @@ class BaseMenu:
         self.stage_data : list[dict] = [None, {}]
         self.stages = [None, []]
     
-    def add_temp(self, element : UiSprite|UiSpriteGroup, time : float|Timer, 
+    def add_temp(self, element : UiDrawable, time : float|Timer, 
                  override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
         """
         Function that adds an element to the menu temporarily.
@@ -63,17 +65,14 @@ class BaseMenu:
             text: The text that will be shown by the alert.
             alert_speed: Applies a speedup (or slowdown) factor to the alert animation.
         """
-        text_sprite = TextSprite(pygame.Vector2(core_object.main_display.get_width() // 2, 90), 'midtop', 0, text, 
-                        text_settings=(core_object.menu.font_60, 'White', False), text_stroke_settings=('Black', 2), colorkey=(0,255,0))
-        
-        text_sprite.rect.bottom = -5
-        text_sprite.position = pygame.Vector2(text_sprite.rect.center)
-        temp_y = text_sprite.rect.centery
+        text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
+                                 TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
+        mid_height : int = text_sprite.size.y // 2
         self.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo
-        goal1 = {'rect.centery' : 50, 'position.y' : 50}
+        goal1 = {'position.value.y' : 50 + mid_height}
         info1 = TInfo(interpolation.quad_ease_out, 0.3 / alert_speed)
-        goal2 = {'rect.centery' : temp_y, 'position.y' : temp_y}
+        goal2 = {'position.value.y' : text_sprite.position.value.y}
         info2 = TInfo(interpolation.quad_ease_in, 0.4 / alert_speed)
         
         on_screen_time = 1 / alert_speed
@@ -89,14 +88,14 @@ class BaseMenu:
         Function that binds relevant events to their menu object callbacks.
         """
         core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
-        core_object.event_manager.bind(UiSprite.TAG_EVENT, self.handle_tag_event)
+        core_object.event_manager.bind(BaseMenu.TAG_EVENT, self.handle_tag_event)
     
     def remove_connections(self):
         """
         Function that unbinds relevant events from their menu object callbacks.
         """
         core_object.event_manager.unbind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
-        core_object.event_manager.unbind(UiSprite.TAG_EVENT, self.handle_tag_event)
+        core_object.event_manager.unbind(BaseMenu.TAG_EVENT, self.handle_tag_event)
     
     
 
@@ -105,12 +104,7 @@ class BaseMenu:
         Function that renders the menu object.
             display: The surface where the menu gets rendered.
         """
-        sprite_list : list[UiSprite] = []
-        for sprite in (self.stages[self.stage] + list(self.temp.keys())):
-            if isinstance(sprite, UiSpriteGroup):
-                sprite_list += sprite.elements
-            else:
-                sprite_list.append(sprite)
+        sprite_list : list[UiDrawable] = UiDrawable.unpack_drawable_list(self.stages[self.stage] + list(self.temp.keys()))
         sprite_list.sort(key = lambda sprite : sprite.zindex)
         for sprite in filter(lambda sprite : sprite.visible, sprite_list):
             sprite.draw(display)
@@ -167,7 +161,7 @@ class BaseMenu:
         exit_funcion = getattr(self, f'exit_stage{self.stage}', noop)
         exit_funcion()
 
-    def get_sprite(self, stage : int, tag : int) -> UiSprite|None:
+    def get_sprite(self, stage : int, tag : int) -> UiDrawable|None:
         """
         Function that searches a stage for a sprite with a given tag, and returns the first sprite found.
             stage: The stage to search.
@@ -176,13 +170,13 @@ class BaseMenu:
         """
         if tag is None or stage is None: return None
 
-        the_list : list[UiSprite|UiSpriteGroup] = self.stages[stage]
+        the_list : list[UiDrawable] = self.stages[stage]
         for sprite in the_list:
             if sprite.tag == tag:
                 return sprite
         return None
     
-    def get_sprite_by_name(self, stage : int, name : str) -> UiSprite|UiSpriteGroup|None:
+    def get_sprite_by_name(self, stage : int, name : str) -> UiDrawable|None:
         """
         Function that searches a stage for a sprite with a given name, and returns the first sprite found.
             stage: The stage to search.
@@ -192,7 +186,7 @@ class BaseMenu:
         if name is None or stage is None: return None
 
         the_list = self.stages[stage]
-        sprite : UiSprite|UiSpriteGroup
+        sprite : UiDrawable
         for sprite in the_list:
             if sprite.name == name:
                 return sprite
@@ -210,7 +204,7 @@ class BaseMenu:
         """
         if (name is None and tag is None) or stage is None: return None
         the_list = self.stages[stage]
-        sprite : UiSprite|UiSpriteGroup
+        sprite : UiDrawable
         for i, sprite in enumerate(the_list):
             if sprite.name == name and name is not None:
                 return i
@@ -218,8 +212,8 @@ class BaseMenu:
                 return i
         return None
     
-    def find_and_replace(self, new_sprite : UiSprite|UiSpriteGroup, stage : int, name : str|None = None, 
-                         tag : int|None = None, old_sprite : UiSprite|UiSpriteGroup|None = None) -> bool:
+    def find_and_replace(self, new_sprite : UiDrawable, stage : int, name : str|None = None, 
+                         tag : int|None = None, old_sprite : UiDrawable|None = None) -> bool:
         """
         Function that looks for a given sprite, name or tag and replaces the first occurence with a new sprite.
             new_sprite: The new sprite or sprite group.
@@ -250,8 +244,8 @@ class BaseMenu:
             print('Find and replace failed')
         return found
     
-    def remove_sprite(self, stage : int, sprite : UiSprite|UiSpriteGroup|None = None, 
-                      name : str|None = None, tag : int|None = None) -> None|UiSpriteGroup|UiSpriteGroup:
+    def remove_sprite(self, stage : int, sprite : UiDrawable|None = None, 
+                      name : str|None = None, tag : int|None = None) -> None|UiDrawable:
         """
         Function that looks for a given sprite, name or tag and removes the first occurence.
             stage: The stage index to search.
@@ -264,7 +258,7 @@ class BaseMenu:
         No search criteria is obligatory, but alteast one must be given.
         """
         if sprite is None and name is None and tag is None: return None
-        found : UiSprite|UiSpriteGroup|None = None
+        found : UiDrawable|None = None
         for index, element in enumerate(self.stages[stage]):
             if element is None: continue
             if element == sprite and sprite is not None:
@@ -288,7 +282,7 @@ class BaseMenu:
         Default event handler for tag events. See UiSprite for more details on tag events.
             event: The event to handle.
         """
-        if event.type != UiSprite.TAG_EVENT:
+        if event.type != BaseMenu.TAG_EVENT:
             return
         tag : int = event.tag
         name : str = event.name
@@ -306,12 +300,7 @@ class BaseMenu:
         """
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos : tuple = event.pos
-            sprite : UiSprite|UiSpriteGroup
+            sprite : UiDrawable
             for sprite in self.stages[self.stage]:
-                if type(sprite) == UiSprite:
-                    if sprite.rect.collidepoint(mouse_pos):
-                        sprite.on_click()
-                elif type(sprite) == UiSpriteGroup:
-                    for real_sprite in sprite.elements:
-                        if real_sprite.rect.collidepoint(mouse_pos):
-                            real_sprite.on_click()
+                if sprite.get_world_draw_rect().collidepoint(mouse_pos):
+                    pygame.event.post(pygame.Event(BaseMenu.TAG_EVENT, {"tag" : sprite.tag, "name" : sprite.name, 'trigger_type' : 'click'}))

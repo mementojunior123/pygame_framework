@@ -1,5 +1,5 @@
 import pygame
-from .ui_position import AnyUiPosition, UiPosition, SpecialUiPosition, AnchorStr
+from .ui_position import AnyUiPosition, UiPosition, AnchorStr
 from .ui_sprite import UiSprite
 from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 
@@ -9,6 +9,10 @@ from dataclasses import dataclass
 class BaseUiFrameInfo:
     size : pygame.typing.IntPoint
     base_surf : pygame.Surface|None = None
+
+    def __post_init__(self):
+        ...
+
 
 
 

@@ -1,5 +1,5 @@
 import pygame
-from .ui_position import AnyUiPosition, UiPosition, SpecialUiPosition
+from .ui_position import AnyUiPosition, UiPosition
 
 from typing import Literal, TypeAlias
 from dataclasses import dataclass
@@ -10,15 +10,15 @@ TransformedRect : TypeAlias = dict[Literal['topleft', 'topright', 'bottomright',
 @dataclass
 class BaseDrawableInfo:
     position : AnyUiPosition
-    parent : "UiSpriteGroup|None"
+    parent : "UiSpriteGroup|None" = None
     name : str|None = None
-    tag : int|None = None
+    tag : int = 0
     start_visible : bool = True
     use_abs_pos : bool = False
     zindex : int = 0
     data : dict = dataclasses.field(default_factory=lambda : {})
 
-    def __post_init__():
+    def __post_init__(self):
         ...
 
 class UiDrawable:
@@ -37,10 +37,10 @@ class UiDrawable:
     def __init__(self, info : BaseDrawableInfo):
         self.position : AnyUiPosition = info.position
         self.name : str|None = info.name
-        self.tag : int|None = info.tag
+        self.tag : int = info.tag
         self.visible : bool = info.start_visible
         self.unpack : bool = False
-        self.parent : "UiSpriteGroup|None" = info.parent
+        self._parent : "UiSpriteGroup|None" = info.parent
         self.use_abs_pos : bool = info.use_abs_pos
         self.zindex : int = info.zindex
         self.data : dict = info.data
@@ -48,6 +48,20 @@ class UiDrawable:
     @property
     def size(self) -> pygame.Vector2:
         raise NotImplementedError
+
+    @property
+    def parent(self) -> "UiSpriteGroup|None":
+        return self._parent
+
+    def delete(self):
+        if self.parent is None:
+            return
+        self.parent.remove(self)
+
+    def change_parent_to(self, parent : "UiSpriteGroup"):
+        if self.parent:
+            self.parent.remove(self)
+        parent.add(self)
 
     def get_frame_parent(self) -> "UiFrame|None":
         current_ancestor : UiSpriteGroup|None = self.parent
@@ -117,6 +131,65 @@ class UiSpriteGroup(UiDrawable):
     @property
     def size(self) -> pygame.Vector2:
         return pygame.Vector2(self.get_local_draw_rect().size)
+
+    @staticmethod
+    def does_match(target : UiDrawable, drawable : UiDrawable|None, name : str|None, tag : int|None,
+                   match_all : bool) -> bool:
+        if drawable is None and name is None and tag is None:
+            return False
+        if not match_all:
+            return target == drawable or target.name == name or target.tag == tag
+        else:
+            if target != drawable and drawable is not None:
+                return False
+            elif target.name != name and name is not None:
+                return False
+            elif target.tag != tag and tag is not None:
+                return False
+            return True
+
+
+    def search_children(self, drawable : UiDrawable|None = None, name : str|None = None, tag : int|None = None,
+                        match_all : bool = False) -> UiDrawable|None:
+        if drawable is None and name is None and tag is None:
+            return None
+        for child in self.elements:
+            if self.does_match(child, drawable, name, tag, match_all):
+                return child
+        return None
+
+    def search_children_multiple(self, drawable : UiDrawable|None = None, name : str|None = None, tag : int|None = None,
+                        match_all : bool = False) -> list[UiDrawable]:
+        result : list[UiDrawable] = []
+        if drawable is None and name is None and tag is None:
+            return result
+        for child in self.elements:
+            if self.does_match(child, drawable, name, tag, match_all):
+                result.append(child)
+        return result
+
+    def search_descendants(self, drawable : UiDrawable|None = None, name : str|None = None, tag : int|None = None,
+                        match_all : bool = False) -> UiDrawable|None:
+        if drawable is None and name is None and tag is None:
+            return None
+        for child in self.elements:
+            if self.does_match(child, drawable, name, tag, match_all):
+                return child
+            elif isinstance(child, UiSpriteGroup) and (child_result := child.search_descendants(drawable, name, tag, match_all)):
+                return child_result
+        return None
+
+    def search_descendants_multiple(self, drawable : UiDrawable|None = None, name : str|None = None, tag : int|None = None,
+                            match_all : bool = False) -> list[UiDrawable]:
+        result : list[UiDrawable] = []
+        if drawable is None and name is None and tag is None:
+            return result
+        for child in self.elements:
+            if self.does_match(child, drawable, name, tag, match_all):
+                result.append(child)
+            if isinstance(child, UiSpriteGroup) and (child_result := child.search_descendants_multiple(drawable, name, tag, match_all)):
+                result.extend(child_result)
+        return result
     
     
     def get_local_draw_rect(self) -> pygame.Rect:
@@ -143,9 +216,23 @@ class UiSpriteGroup(UiDrawable):
     def add(self, new_element : UiDrawable):
         if new_element not in self.elements:
             self.elements.append(new_element)
+            new_element.parent = self
 
-    def __index__(self, index : int):
+    def remove(self, element : UiDrawable):
+        if element not in self.elements:
+            raise ValueError("Element is not a chlid of this sprite group.")
+        self.elements.remove(element)
+        element.parent = None
+
+    def __getitem__(self, index : int):
         return self.elements[index]
+
+    def __delitem__(self, index : int):
+        val = self.elements[index]
+        if isinstance(val, list):
+            for v in val: self.remove(v)
+            return
+        self.remove(val)
 
 def local_imports2():
     global UiFrame

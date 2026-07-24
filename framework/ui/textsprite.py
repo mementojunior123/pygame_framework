@@ -1,86 +1,94 @@
 import pygame
-from math import floor
-from framework.ui.ui_sprite import UiSprite
-from framework.utils.helpers import rotate_around_pivot_accurate, vector_xmax_ysum
-class TextSprite(UiSprite):
-    main_font = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
-    def __init__(self, position : pygame.Vector2|tuple, rect_alignment : str|None, tag: int, text : str, name: str | None = None, attributes: dict = None, 
-                 data: dict = None, zindex: int = 0, text_settings : tuple[pygame.Font, pygame.Color, bool]|None = None, 
-                 text_stroke_settings : tuple[pygame.Color, int]|None = None, text_alingment : tuple[int, int]|None = None,       
-                 colorkey : pygame.Color|tuple[int, int, int]|None = None):
-        '''Text alignment is a tuple of (max_line_lentgh, newline_height). newline_height does nothing for now'''
-        super().__init__(None, None, tag, name, False, attributes, data, None, zindex)
-        self.text_settings : tuple[pygame.Font, pygame.Color, bool] = text_settings or (TextSprite.main_font, 'Black', False)
-        self._text : str = text
-        self._text_percent : float = 1
-        self._true_text : str = text
-        self.max_line_lentgh : int
-        self.newline_height : int
-        self.colorkey : pygame.Color|tuple[int, int, int]|None = colorkey
-        if text_alingment:
-            self.max_line_lentgh, self.newline_height, = text_alingment
-        else:
-            self.max_line_lentgh = 0
-            self.newline_height = 5
-        self._text_stroke_color : pygame.Color|str|None = None
-        self._text_stroke_width : int|None = None
-        if text_stroke_settings:
-            self._text_stroke_color, self._text_stroke_width = text_stroke_settings
-        self.rect_alignment = rect_alignment
-        self._render_text(force_surf = True)
-        self.rect = self.surf.get_rect()
-        self.rect.__setattr__(self.rect_alignment, position) if self.rect_alignment is not None else self.rect.__setattr__('center', position)
-        self.position = pygame.Vector2(self.rect.center)
-        self._opacity = 1
-    
-        
-    def _render(self):
-        if self.rect_alignment:
-            prev_rect = self.rect.copy()
-            prev_mesure = prev_rect.__getattribute__(self.rect_alignment)
-        self._render_text()
-        scalex_offset, scaley_offset = self._scale.x - 1, self._scale.y - 1
-        if abs(scalex_offset) > 0.001 or abs(scaley_offset) > 0.001:
-            self.surf = pygame.transform.scale_by(self.surf, self.scale)
-        opacity_offset =  1- self._opacity
-        
-        if abs(self._angle) > 0.001:
-            if not self.use_pivot:
-                self.surf, self.rect, self.position = rotate_around_pivot_accurate(self.surf, self.position, self._angle, self.position, pygame.Vector2(0,0))
-            else:
-                self.surf, self.rect, self._position = self._pivot.rotate_image(self.surf)
+from .ui_position import AnyUiPosition, UiPosition, AnchorStr
+from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from .ui_sprite import UiSprite
+from .ui_frame import UiFrame
 
-        if abs(opacity_offset) > 0.002:
-            self.surf.set_alpha(self._opacity * 255)        
-        for filter in self.filters:
-            filter.apply(self.surf)
-        self.rect.size = self.surf.get_size()
-        if self.rect_alignment:
-            self.rect.__setattr__(self.rect_alignment, prev_mesure)
-            self._position = pygame.Vector2(self.rect.center)
+from framework.utils.helpers import vector_xmax_ysum
+from math import floor
+from dataclasses import dataclass
+
+@dataclass
+class TextSpriteInfo:
+    text : str
+    font : pygame.Font
+    text_color : pygame.typing.ColorLike
+    anti_aliasing : bool
+    text_stroke_color : pygame.typing.ColorLike|None = None
+    text_stroke_size : int|None = None
+    max_line_length : int = 0
+    newline_height : int = 5
+    colorkey : pygame.typing.ColorLike|None = None
+    text_percent : float = 1
+
+    def __post_init__(self):
+        ...
     
-    def _render_text(self, force_surf= False):
-        if self._true_text == '' and force_surf == False: return
-        font : pygame.Font
-        color : pygame.Color|str
-        AA_enabled : bool
-        font, color, AA_enabled = self.text_settings
+
+class TextSprite(UiSprite):
+    def __init__(self, info : BaseDrawableInfo, text_sprite_info : TextSpriteInfo):
+        self._text : str = text_sprite_info.text
+        self._font : pygame.Font = text_sprite_info.font
+        self._text_color : pygame.typing.ColorLike = text_sprite_info.text_color
+        self._anti_aliasing : bool = text_sprite_info.anti_aliasing
+        self._text_stroke_color : pygame.typing.ColorLike|None = text_sprite_info.text_stroke_color
+        self._text_stroke_width : int|None = text_sprite_info.text_stroke_size
+        self._max_line_length : int = text_sprite_info.max_line_length
+        self._newline_height : int = text_sprite_info.newline_height
+        self._colorkey : pygame.typing.ColorLike|None = text_sprite_info.colorkey
+
+        self._text_percent : float = text_sprite_info.text_percent
+
+        self._render_base(True)
+        super().__init__(info, self.base_surf)
+        self._render()
+
+    def get_shown_text(self) -> str:
+        text_index = floor(self._text_percent * len(self._text))
+        return self._text[:text_index + 1]
+
+    @property
+    def text(self) -> str:
+        return self._text
+
+    @text.setter
+    def text(self, new_value : str):
+        prev_shown_text : str = self.get_shown_text()
+        self._text = new_value
+        new_shown_text : str = self.get_shown_text()
+        if new_shown_text != prev_shown_text:
+            self._render_base()
+
+    @property
+    def text_percent(self) -> float:
+        return self._text_percent
+
+    @text_percent.setter
+    def text_percent(self, new_value : float):
+        prev_shown_text : str = self.get_shown_text()
+        self._text_percent = new_value
+        new_shown_text : str = self.get_shown_text()
+        if new_shown_text != prev_shown_text:
+            self._render_base()
+
+    def _render_base(self, init : bool = False):
+        true_text : str = self.get_shown_text()
         if self._text_stroke_color and self._text_stroke_width:
             stroke_x : int = self._text_stroke_width * 2
-            stroke_y : int = self._text_stroke_width * 2 * (self._true_text.count("\n") + 1)
+            stroke_y : int = self._text_stroke_width * 2 * (true_text.count("\n") + 1)
             final_surf_size = (
             pygame.Vector2(stroke_x, stroke_y) 
-            + vector_xmax_ysum([font.size(chunk) for chunk in self._true_text.split("\n")])
+            + vector_xmax_ysum([self._font.size(chunk) for chunk in true_text.split("\n")])
             + (1,1)
             )
-            if self.colorkey:
+            if self._colorkey:
                 final_surf = pygame.Surface(final_surf_size)
-                final_surf.fill(self.colorkey)
+                final_surf.fill(self._colorkey)
             else:
                 final_surf = pygame.Surface(final_surf_size, pygame.SRCALPHA)
 
-            first_text_sprite = font.render(self._true_text, AA_enabled, color, wraplength=self.max_line_lentgh)
-            outline = font.render(self._true_text, AA_enabled, self._text_stroke_color, wraplength=self.max_line_lentgh)
+            first_text_sprite = self._font.render(true_text, self._anti_aliasing, self._text_color, wraplength=self._max_line_length)
+            outline = self._font.render(true_text, self._anti_aliasing, self._text_stroke_color, wraplength=self._max_line_length)
             
 
             
@@ -96,62 +104,12 @@ class TextSprite(UiSprite):
 
 
             final_surf.blit(first_text_sprite, (self._text_stroke_width, self._text_stroke_width))            
-            self.surf = final_surf
-            if self.colorkey:
-                self.surf.set_colorkey(self.colorkey)
+            self.base_surf = final_surf
+            if self._colorkey:
+                self.base_surf.set_colorkey(self._colorkey)
         else:
-            self.surf = font.render(self._true_text, AA_enabled, color, wraplength=self.max_line_lentgh, bgcolor=self.colorkey)
-            if self.colorkey:
-                self.surf.set_colorkey(self.colorkey)
-    
-    @property
-    def text(self):
-        return self._text
-    
-    @text.setter
-    def text(self, new_val : str):
-        prev_true_text = self._true_text
-        self._text = new_val
-        if self._text == '':
-            self._true_text = ''
-            if prev_true_text != '':
-                self._render()
-            return
-
-        text_index = floor(self._text_percent * len(self._text))
-        self._true_text = self._text[:text_index + 1]
-        if self._true_text != prev_true_text:
-            self._render()
-    
-    @property
-    def text_progress(self):
-        return self._text_percent
-    
-    @text_progress.setter
-    def text_progress(self, new_val : float):
-        prev_true_text = self._true_text
-        self._text_percent = pygame.math.clamp(new_val, 0, 1)
-        text_index = floor(self._text_percent * len(self._text))
-        self._true_text = self._text[:text_index]
-        if self._true_text != prev_true_text:
-            self._render()
-    
-    @property
-    def text_stroke_width(self):
-        return self._text_stroke_width
-    
-    @text_stroke_width.setter
-    def text_stroke_width(self, new_val : int|None):
-        if new_val != self._text_stroke_width:
-            self._text_stroke_width = new_val
-            self._render()
-
-    @property
-    def text_stroke_color(self):
-        return self._text_stroke_color
-    
-    @text_stroke_color.setter
-    def text_stroke_color(self, new_val : pygame.Color|str|None):
-        if new_val != self._text_stroke_color:
-            self._text_stroke_color = new_val
+            self.base_surf = self._font.render(true_text, self._anti_aliasing, self._text_color, wraplength=self._max_line_length, bgcolor=self._colorkey)
+            if self._colorkey:
+                self.base_surf.set_colorkey(self._colorkey)
+        if not init:
             self._render()

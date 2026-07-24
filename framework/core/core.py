@@ -10,7 +10,7 @@ from src.settings import Settings
 from framework.core.bg_manager import BgManager
 from framework.core.ui import Ui
 from src.menu import Menu
-from framework.ui.textsprite import TextSprite
+from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition
 from src.game_storage import GameStorage
 import src.menu
 from framework.game.game_module import Game
@@ -73,12 +73,11 @@ class Core:
         self.window_bools : dict = {'Shown' : True, 'input_focused' : True}
         self.frame_counter : int = 0
         self.show_fps_timer : Timer = Timer(0.1, self.global_timer.get_time)
-        self.fps_sprite : TextSprite = TextSprite(pygame.Vector2(15 + 63 - 63, 10), 'topleft', 0, 'FPS : 0', 'fps_sprite', 
-                            text_settings=(Menu.font_40, 'White', False), text_stroke_settings=('Black', 2),
-                            text_alingment=(9999, 5), colorkey=(255, 0,0))
-        self.debug_sprite : TextSprite = TextSprite(pygame.Vector2(15, 200), 'midright', 0, '', 'debug_sprite', 
-                            text_settings=(Menu.font_40, 'White', False), text_stroke_settings=('Black', 2),
-                            text_alingment=(9999, 5), colorkey=(255, 0,0), zindex=999)
+        self.fps_sprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(15 + 63 - 63, 10), 'topleft'), name='fps_sprite'),
+                                                    TextSpriteInfo('FPS : 0', Menu.font_40, 'White', False, 'Black', 2, colorkey=(255, 0, 0)))
+        
+        self.debug_sprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(15, 200), 'midright'), name='debug_sprite', zindex=9999),
+                                                    TextSpriteInfo('', Menu.font_40, 'White', False, 'Black', 2, colorkey=(255, 0, 0)))
         self.event_manager.bind(self.START_GAME, self.start_game)
         self.event_manager.bind(self.END_GAME, self.end_game)
 
@@ -388,10 +387,6 @@ class Core:
             print("Warning : Shouldn't use Core.dump_platform_vars in a non web context")
             return None
         return platform.__dict__
-    
-    def __hints(self):
-        global TextSprite
-        from framework.ui.textsprite import TextSprite
 
 core_object = Core()
 setattr(src.menu, 'core_object', core_object)

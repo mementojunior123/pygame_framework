@@ -1,13 +1,12 @@
 import pygame
 from .ui_drawable import BaseDrawableInfo, UiSpriteGroup
-from .ui_sprite_rework import UiSprite
+from .ui_sprite import UiSprite
 from . import button_templates
 from .ui_position import UiPosition
 from .ui_frame import UiFrame
 
 class BaseUiElements:
     font_40 = pygame.font.Font("assets/fonts/Pixeltype.ttf", 40)
-    tag_event = pygame.event.custom_type() 
     image_dict : dict[str, pygame.Surface] = button_templates.image_dict
 
     @classmethod

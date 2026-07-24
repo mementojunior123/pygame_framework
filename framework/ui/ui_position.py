@@ -48,11 +48,11 @@ class UiPosition:
         self._position.y = val
     
     @property
-    def position(self):
+    def value(self):
         return self._position
     
-    @position.setter
-    def position(self, new_val : pygame.Vector2):
+    @value.setter
+    def value(self, new_val : pygame.Vector2):
         self._position = new_val
     
     def calculate_anchor(self, size : pygame.typing.IntPoint, anchor : pygame.typing.Point|AnchorStr) -> pygame.Vector2:
@@ -60,41 +60,11 @@ class UiPosition:
             anchor = ANCHOR_DICT[anchor]
         anchor_offset = pygame.Vector2(anchor) - self._anchor
         pos_offset = pygame.Vector2(anchor_offset.x * size[0], anchor_offset.y * size[1])
-        return self.position + pos_offset
+        return self.value + pos_offset
 
 
-class SpecialUiPosition:
-    def __init__(self, x : int|float, y : int|float):
-        self._x : int|float = x
-        self._y : int|float = y
+AnyUiPosition : TypeAlias = UiPosition
 
-    @property
-    def x(self) -> int|float:
-        return self._x
-    
-    @x.setter
-    def x(self, val : int|float):
-        self._x = val
-    
-    @property
-    def y(self) -> int|float:
-        return self._y
-    
-    @y.setter
-    def y(self, val : int|float):
-        self._y = val
-    
-    @property
-    def position(self) -> pygame.Vector2:
-        return pygame.Vector2(self._x, self._y)
-    
-    @position.setter
-    def position(self, new_val : pygame.Vector2|tuple[int, int]):
-        self._x = new_val[0]
-        self._y = new_val[1]
-
-AnyUiPosition : TypeAlias = UiPosition|SpecialUiPosition
-
-def runtime_imports():
+def local_imports3():
     global UiFrame
-    from framework.ui.ui_frame import UiFrame
+    from .ui_frame import UiFrame

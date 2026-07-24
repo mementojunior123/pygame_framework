@@ -27,8 +27,7 @@ Sprite._core_hint()
 from framework.utils.animation import Animation, AnimationTrack, _sprite_hint
 _sprite_hint()
 
-from framework.ui.base_ui_elements import BaseUiElements, UiSprite
-from framework.ui.textsprite import TextSprite
+from framework.ui import UiDrawable
 from framework.utils.helpers import rotate_around_pivot_accurate, copysign
 from framework.utils.particle_effects import ParticleEffect, Particle
 import framework.utils.particle_effects
@@ -68,7 +67,7 @@ async def main():
                 window.fill((94,129,162))    
                 core.main_ui.update()
                 if core.MIX_UI_AND_SPRITES:
-                    element_list : list[Sprite|UiSprite] = Sprite.active_elements + core.main_ui.complete_list
+                    element_list : list[Sprite|UiDrawable] = Sprite.active_elements + core.main_ui.complete_list
                     element_list.sort(key = lambda sprite : sprite.zindex)
                     for element in element_list:
                         element.draw(window)

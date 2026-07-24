@@ -1,13 +1,13 @@
 import pygame
 import random
 from framework.core.base_menu import BaseMenu
-from framework.ui.ui_sprite import UiSprite
-from framework.ui.textsprite import TextSprite
-from framework.ui.base_ui_elements import BaseUiElements
+from framework.ui import UiSprite
+from framework.ui import TextSprite
+from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer
-from framework.ui.brightness_overlay import BrightnessOverlay
+from framework.ui import BrightnessOverlay
 from math import floor, ceil
 from framework.utils.helpers import ColorType
 from typing import Callable
@@ -44,16 +44,16 @@ class Menu(BaseMenu):
         self.stages = [None, 
         [BaseUiElements.new_text_sprite('Game Title', (Menu.font_60, 'Black', False), 0, 'midtop', (centerx, 50)),
         BaseUiElements.new_button('BlueButton', 'Play', 1, 'midbottom', (centerx, window_size[1] - 15), (0.5, 1.4), 
-        {'name' : 'play_button'}, (Menu.font_40, 'Black', False)),
+        (Menu.font_40, 'Black', False), name='play_button'),
         BaseUiElements.new_button('BlueButton', 'Test', 1, 'bottomright', (wx - 15, window_size[1] - 15), (0.5, 1.4), 
-        {'name' : 'test_button'}, (Menu.font_40, 'Black', False))], #stage 1
+        (Menu.font_40, 'Black', False), name='test_button')], #stage 1
 
         [BaseUiElements.new_button('BlueButton', 'Prev', 1, 'bottomleft', (20, window_size[1] - 25), (0.4, 1.0), 
-        {'name' : 'prev_button'}, (Menu.font_40, 'Black', False)),
+        (Menu.font_40, 'Black', False), name='prev_button'),
         BaseUiElements.new_button('BlueButton', 'Next', 2, 'bottomright', (wx - 20, window_size[1] - 25), (0.4, 1.0), 
-        {'name' : 'next_button'}, (Menu.font_40, 'Black', False)),
+        (Menu.font_40, 'Black', False), name='next_button'),
         BaseUiElements.new_button('BlueButton', 'Back', 3, 'topleft', (15, 15), (0.4, 1.0), 
-        {'name' : 'back_button'}, (Menu.font_40, 'Black', False)),]
+        (Menu.font_40, 'Black', False), name='back_button'),]
         ]
         self.bg_color = (94, 129, 162)
         self.add_connections()   
@@ -74,7 +74,7 @@ class Menu(BaseMenu):
         Event handler for tag events.
             event: The event to handle.
         """
-        if event.type != UiSprite.TAG_EVENT:
+        if event.type != BaseMenu.TAG_EVENT:
             return
         tag : int = event.tag
         name : str = event.name
