@@ -53,6 +53,6 @@ class UiSprite(UiDrawable):
         display.blit(self.surf, draw_rect)
 
 
-def runtime_imports():
+def local_imports():
     global UiFrame
     from .ui_frame import UiFrame

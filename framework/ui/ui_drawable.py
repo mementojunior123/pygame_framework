@@ -147,6 +147,6 @@ class UiSpriteGroup(UiDrawable):
     def __index__(self, index : int):
         return self.elements[index]
 
-def runtime_imports2():
+def local_imports2():
     global UiFrame
     from .ui_frame import UiFrame
