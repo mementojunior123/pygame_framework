@@ -332,7 +332,7 @@ class TestPattern(CoroutineScript):
     
     @staticmethod
     def corou(time_source : TimeSource) -> Generator[None, None, str]:
-        textsprite_font : pygame.Font = core_object.menu.font_50s
+        textsprite_font : pygame.Font = core_object.menu.font_50
         new_textsprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="Progress"),
                                                   TextSpriteInfo("Waiting...", textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0)))
         core_object.main_ui.add(new_textsprite)

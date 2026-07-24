@@ -1,8 +1,10 @@
 import pygame
 import random
 from framework.core.base_menu import BaseMenu
-from framework.ui import UiSprite
-from framework.ui import TextSprite
+from framework.ui import UiPosition, BaseDrawableInfo
+from framework.ui import UiSprite, UiDrawable, UiSpriteGroup
+from framework.ui import UiFrame, BaseUiFrameInfo
+from framework.ui import TextSprite, TextSpriteInfo
 from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
@@ -56,7 +58,60 @@ class Menu(BaseMenu):
         (Menu.font_40, 'Black', False), name='back_button'),]
         ]
         self.bg_color = (94, 129, 162)
-        self.add_connections()   
+        self.add_connections()
+
+    def enter_stage_2(self):
+        self.stage_data[2] = {'page_index' : 0, 'page_count' : 3, 'page_len' : 4}
+        self.stages[2].append(self.get_stage_2_frame(0))
+
+    class CustomFrameStage2(UiFrame):
+        def __init__(self, text_list : list[str]):
+            size = (480, 540)
+            base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), name="test_frame",)
+            ui_frame_info = BaseUiFrameInfo(size)
+            self.elements : list[UiDrawable] = []
+            super().__init__(base_drawable_info, self.elements, ui_frame_info)
+
+            for text, pos, anchor in zip(text_list, ((0, 0), (1, 0), (0, 1), (1, 1)), ((0, 0), (1, 0), (0, 1), (1, 1))):
+                new_element = TextSprite(BaseDrawableInfo(UiPosition.from_normal_coords(pos, anchor, size), self),
+                                         TextSpriteInfo(text, Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0)))
+                self.add(new_element)
+
+        def switch_text_list(self, new_text_list : list[str]):
+            for element, text in zip(self.elements, new_text_list):
+                if isinstance(element, TextSprite):
+                    element.text = text
+
+    def get_shown_text(self, page_index : int) -> list[str]:
+        long_list : list[str] = ["Arsenal", "Manchester City", "Manchester United", "Aston Villa", 
+                                         "Liverpool", "Brighton", "Brentford", "Sunderland",
+                                         "Tottenham", "West Ham", "Wolves", "Burnley"]
+        shown_text = long_list[self.stage_data[2]['page_len'] * page_index: self.stage_data[2]['page_len'] * (page_index + 1)]
+        return shown_text
+
+
+    def get_stage_2_frame(self, page_index : int) -> list[UiDrawable]:
+        new_frame = self.CustomFrameStage2(self.get_shown_text(page_index))
+        return new_frame
+        
+    def increment_stage2(self):
+        new_index = (self.stage_data[2]['page_index'] + 1) % (self.stage_data[2]['page_count'])
+        test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame")
+        test_frame.switch_text_list(self.get_shown_text(new_index))
+        self.stage_data[2]['page_index'] = new_index
+
+    def decrement_stage2(self):
+        new_index = (self.stage_data[2]['page_index'] - 1) % (self.stage_data[2]['page_count'])
+        test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame")
+        test_frame.switch_text_list(self.get_shown_text(new_index))
+        self.stage_data[2]['page_index'] = new_index
+
+    def exit_stage_2(self):
+        frame_index = self.get_sprite_index(2, "test_frame")
+        if frame_index is not None:
+            self.stages[2].pop(frame_index)
+        self.stage_data[2].clear()
+
     
     def update(self, delta : float):
         """
@@ -89,4 +144,8 @@ class Menu(BaseMenu):
             case 2:
                 if name == 'back_button':
                     self.goto_stage(1)
+                elif name == 'prev_button':
+                    self.decrement_stage2()
+                elif name == 'next_button':
+                    self.increment_stage2()
 # TODO : Document the menu API (general workflow, interactivity, etc.)

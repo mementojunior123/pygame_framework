@@ -150,7 +150,7 @@ class BaseMenu:
         Function that enters a new stage. Automatically uses enter_stage_[stage_number] if it exists. Otherwise, it does nothing.
             new_stage: The stage to enter.
         """
-        entry_funcion = getattr(self, f'enter_stage{new_stage}', noop)
+        entry_funcion = getattr(self, f'enter_stage{new_stage}', None) or getattr(self, f'enter_stage_{new_stage}', noop)
         entry_funcion()
         self.stage = new_stage
     
@@ -158,7 +158,7 @@ class BaseMenu:
         """
         Function that exits the current stage. Automatically uses exit_stage_[stage_number] if it exists. Otherwise, it does nothing.
         """
-        exit_funcion = getattr(self, f'exit_stage{self.stage}', noop)
+        exit_funcion = getattr(self, f'exit_stage{self.stage}', None) or getattr(self, f'exit_stage_{self.stage}', noop)
         exit_funcion()
 
     def get_sprite(self, stage : int, tag : int) -> UiDrawable|None:

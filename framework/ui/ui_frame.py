@@ -94,4 +94,4 @@ class UiFrame(UiSpriteGroup):
             display.blit(self.surf, draw_rect)
         else:
             for element in self.elements:
-                element.draw(self.surf, self)
+                element.draw(display, self)

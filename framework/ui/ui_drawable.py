@@ -127,6 +127,10 @@ class UiSpriteGroup(UiDrawable):
     def __init__(self, base_drawable_info : BaseDrawableInfo, elements : list[UiDrawable]):
         super().__init__(base_drawable_info)
         self.elements : list[UiDrawable] = [element for element in elements]
+        for element in self.elements:
+            if element.parent != self:
+                if element in element.parent.elements: element.parent.remove(element)
+            element._parent = self
 
     @property
     def size(self) -> pygame.Vector2:
@@ -216,13 +220,16 @@ class UiSpriteGroup(UiDrawable):
     def add(self, new_element : UiDrawable):
         if new_element not in self.elements:
             self.elements.append(new_element)
-            new_element.parent = self
+            new_element._parent = self
 
     def remove(self, element : UiDrawable):
         if element not in self.elements:
             raise ValueError("Element is not a chlid of this sprite group.")
         self.elements.remove(element)
-        element.parent = None
+        element._parent = None
+
+    def __contains__(self, item):
+        return item in self.elements
 
     def __getitem__(self, index : int):
         return self.elements[index]
