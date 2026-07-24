@@ -1,5 +1,5 @@
 import pygame
-from framework.utils.ui_position import AnyUiPosition, UiPosition, SpecialUiPosition, AnchorStr
+from .ui_position import AnyUiPosition, UiPosition, SpecialUiPosition, AnchorStr
 from .ui_sprite import UiSprite
 from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 
@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 @dataclass
 class BaseUiFrameInfo:
-    size : tuple[int, int]|pygame.Vector2
+    size : pygame.typing.IntPoint
     base_surf : pygame.Surface|None = None
 
 
@@ -61,7 +61,7 @@ class UiFrame(UiSpriteGroup):
         max_x = max(val.x for val in local_trs_rect.values())
         min_y = min(val.y for val in local_trs_rect.values())
         max_y = max(val.y for val in local_trs_rect.values())
-        return pygame.Rect((min_x, min_y), (max_x - min_x, max_y - min_y))
+        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
     
     def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame)
@@ -70,7 +70,13 @@ class UiFrame(UiSpriteGroup):
         max_x = max(val.x for val in world_trs_rect.values())
         min_y = min(val.y for val in world_trs_rect.values())
         max_y = max(val.y for val in world_trs_rect.values())
-        return pygame.Rect((min_x, min_y), (max_x - min_x, max_y - min_y))
+        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+
+    def _render(self):
+        super()._render()
+        if not self.surf:
+            return
+        ...
 
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None):

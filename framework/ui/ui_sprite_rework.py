@@ -1,11 +1,13 @@
 import pygame
-from framework.utils.ui_position import AnyUiPosition, UiPosition, SpecialUiPosition, AnchorStr
-from framework.ui.ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from .ui_position import AnyUiPosition, UiPosition, SpecialUiPosition, AnchorStr
+from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 
-class UiSprite_exp(UiDrawable):
+class UiSprite(UiDrawable):
     def __init__(self, info : BaseDrawableInfo, base_surf : pygame.Surface):
         super().__init__(info)
         self.base_surf : pygame.Surface = base_surf
+        self.surf : pygame.Surface = base_surf.copy()
+
 
     @property
     def size(self) -> pygame.Vector2:
@@ -29,7 +31,7 @@ class UiSprite_exp(UiDrawable):
         max_x = max(val.x for val in local_trs_rect.values())
         min_y = min(val.y for val in local_trs_rect.values())
         max_y = max(val.y for val in local_trs_rect.values())
-        return pygame.Rect((min_x, min_y), (max_x - min_x, max_y - min_y))
+        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
     
     def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame)
@@ -38,16 +40,19 @@ class UiSprite_exp(UiDrawable):
         max_x = max(val.x for val in world_trs_rect.values())
         min_y = min(val.y for val in world_trs_rect.values())
         max_y = max(val.y for val in world_trs_rect.values())
-        return pygame.Rect((min_x, min_y), (max_x - min_x, max_y - min_y))
+        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+
+    def _render(self):
+        ...
 
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         if not self.visible:
             return
         draw_rect : pygame.Rect = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
-        display.blit(self.base_surf, draw_rect)
+        display.blit(self.surf, draw_rect)
 
 
 def runtime_imports():
     global UiFrame
-    from framework.ui.ui_frame import UiFrame
+    from .ui_frame import UiFrame

@@ -18,17 +18,17 @@ ANCHOR_DICT : dict[AnchorStr, tuple[float, float]] = {
 }
 
 class UiPosition:
-    def __init__(self, position : pygame.Vector2|tuple[float, float], 
-                 anchor : tuple[float, float]|pygame.Vector2|AnchorStr):
+    def __init__(self, position : pygame.typing.Point, 
+                 anchor : pygame.typing.Point|AnchorStr):
         if isinstance(anchor, str):
             anchor = ANCHOR_DICT[anchor]
         self._anchor : pygame.Vector2 = pygame.Vector2(anchor)
         self._position : pygame.Vector2 = pygame.Vector2(position)
     
     @staticmethod
-    def from_normal_coords(position : pygame.Vector2|tuple[float, float], anchor : tuple[float, float]|pygame.Vector2|AnchorStr, 
-                           frame_size : tuple[int, int] = MAIN_DISPLAY_SIZE):
-        actual_position = (position.x * frame_size[0], position.y * frame_size[1])
+    def from_normal_coords(position : pygame.typing.Point, anchor : pygame.typing.Point|AnchorStr, 
+                           frame_size : pygame.typing.IntPoint = MAIN_DISPLAY_SIZE):
+        actual_position = (position[0] * frame_size[0], position[1] * frame_size[1])
         return UiPosition(actual_position, anchor)
     
     @property
@@ -55,7 +55,7 @@ class UiPosition:
     def position(self, new_val : pygame.Vector2):
         self._position = new_val
     
-    def calculate_anchor(self, size : tuple[int, int]|pygame.Vector2, anchor : tuple[float, float]|pygame.Vector2|AnchorStr) -> pygame.Vector2:
+    def calculate_anchor(self, size : pygame.typing.IntPoint, anchor : pygame.typing.Point|AnchorStr) -> pygame.Vector2:
         if isinstance(anchor, str):
             anchor = ANCHOR_DICT[anchor]
         anchor_offset = pygame.Vector2(anchor) - self._anchor

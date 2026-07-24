@@ -8,3 +8,7 @@
 ---Networking demo improvements---
 -Client side prediction
 -More compact message representation
+
+------Ui rework-------
+-Implement some sort of event manager
+-Implement rotation, scaling and opacity (not important for now)

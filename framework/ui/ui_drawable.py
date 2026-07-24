@@ -1,8 +1,9 @@
 import pygame
-from framework.utils.ui_position import AnyUiPosition, UiPosition, SpecialUiPosition
+from .ui_position import AnyUiPosition, UiPosition, SpecialUiPosition
 
 from typing import Literal, TypeAlias
 from dataclasses import dataclass
+import dataclasses
 
 TransformedRect : TypeAlias = dict[Literal['topleft', 'topright', 'bottomright', 'bottomleft'], pygame.Vector2]
 
@@ -15,6 +16,7 @@ class BaseDrawableInfo:
     start_visible : bool = True
     use_abs_pos : bool = False
     zindex : int = 0
+    data : dict = dataclasses.field(default_factory=lambda : {})
 
     def __post_init__():
         ...
@@ -41,6 +43,7 @@ class UiDrawable:
         self.parent : "UiSpriteGroup|None" = info.parent
         self.use_abs_pos : bool = info.use_abs_pos
         self.zindex : int = info.zindex
+        self.data : dict = info.data
 
     @property
     def size(self) -> pygame.Vector2:
@@ -90,8 +93,20 @@ class UiDrawable:
 
         """
         raise NotImplementedError
+
+    def _render(self):
+        pass
     
     def update(self, delta : float):
+        pass
+
+    def handle_mouse_event(self, event : pygame.Event):
+        pass
+
+    def handle_touch_event(self, event : pygame.Event):
+        pass
+
+    def handle_key_event(self, event : pygame.Event):
         pass
 
 class UiSpriteGroup(UiDrawable):
@@ -120,6 +135,10 @@ class UiSpriteGroup(UiDrawable):
             return
         for element in self.elements:
             element.draw(display, frame)
+
+    def _render(self):
+        for element in self.elements:
+            element._render()
     
     def add(self, new_element : UiDrawable):
         if new_element not in self.elements:
