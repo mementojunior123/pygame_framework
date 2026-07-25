@@ -110,12 +110,6 @@ class NetworkTestPattern(CoroutineScript):
     def initialize(self, time_source : TimeSource, net_key : str):
         return super().initialize(time_source, net_key)
     
-    def type_hints(self):
-        self.coro_attributes = ['timer', 'cooldown', 'curr_angle']
-        self.timer : Timer
-        self.cooldown : Timer
-        self.curr_angle : float
-    
     @staticmethod
     def corou(time_source : TimeSource, net_key : str) -> Generator[None, None, str]:
         textsprite_font : pygame.Font = core_object.menu.font_50
@@ -323,12 +317,6 @@ class TestGameState(NormalGameState):
 class TestPattern(CoroutineScript):
     def initialize(self, time_source : TimeSource):
         return super().initialize(time_source)
-    
-    def type_hints(self):
-        self.coro_attributes = ['timer', 'cooldown', 'curr_angle']
-        self.timer : Timer
-        self.cooldown : Timer
-        self.curr_angle : float
     
     @staticmethod
     def corou(time_source : TimeSource) -> Generator[None, None, str]:

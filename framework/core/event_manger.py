@@ -38,7 +38,7 @@ class EventManger:
         '''Returns False if event_type or target_actions is not found.'''
         target_actions : list[EventCallback]
         if not isinstance(target_actions_arg, Iterable):
-            target_actions : list[EventCallback] = [target_actions_arg]
+            target_actions = [target_actions_arg]
         else:
             target_actions = list(target_actions_arg)
         

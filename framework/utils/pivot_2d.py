@@ -22,13 +22,13 @@ def rotate_around_pivot_pos_only(pos : pygame.Vector2, angle : float, offset : p
 
 
 class Pivot2D:
-    def __init__(self, pos : pygame.Vector2, og_image : pygame.Surface|None = None, colorkey : pygame.Color|None = None) -> None:
+    def __init__(self, pos : pygame.Vector2, og_image : pygame.Surface, colorkey : pygame.Color|None = None) -> None:
         self._origin : pygame.Vector2 = pos
         self._pivot_offset : pygame.Vector2 = pygame.Vector2(0,0)
         self._angle : float = 0
         self._position : pygame.Vector2 = self._origin.copy()
         self.is_cached : bool = True
-        self.original_image : pygame.Surface|None = og_image
+        self.original_image : pygame.Surface = og_image
         self.img_colorkey : pygame.Color|None = colorkey
     
     @property
