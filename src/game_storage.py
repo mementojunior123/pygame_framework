@@ -5,12 +5,10 @@ import json
 import os
 from typing import Any, TypedDict
 from framework.utils.helpers import AnyJson
-from framework.core.base_game_storage import BaseGameStorage, MockGameData
+from framework.core.base_game_storage import BaseGameStorage
 
-if PLATFORM == 'emscripten':
-    from platform import window
 
-class GameData(MockGameData):
+class GameData(TypedDict):
     """
     A TypedDict that defines the data that is stored in the game storage.
     """
@@ -30,7 +28,7 @@ class GameStorage(BaseGameStorage):
         """
         self.high_score = 0
     
-    def validate_data(self, data : GameData) -> bool:
+    def validate_data(self, data : GameData) -> bool: #type: ignore
         """
         Function that verifies if data is valid game data.
             data: The data to verifiy.
@@ -41,14 +39,14 @@ class GameStorage(BaseGameStorage):
             return False
         return True
 
-    def _get_data(self) -> GameData:
+    def _get_data(self) -> GameData: #type: ignore
         """
         Function that converts the game storage object to a dictonnary that contains the data.
         Returns --> A GameData object (TypedDict).
         """
         return {'high_score' : self.high_score}
 
-    def _load_data(self, data : GameData) -> bool:
+    def _load_data(self, data : GameData) -> bool: #type: ignore
         """
         Function that loads game data into the storage object.
             data: The data to load.

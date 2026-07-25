@@ -5,6 +5,8 @@ from framework.core.core import core_object
 from framework.utils.animation import Animation
 from framework.utils.pivot_2d import Pivot2D
 
+from typing import cast
+
 
 class TestPlayer(Sprite, sprite_count = 1):
     debug_circle_size : int = 10
@@ -13,7 +15,7 @@ class TestPlayer(Sprite, sprite_count = 1):
     debug_circle.fill((0,255 ,0))
     pygame.draw.circle(debug_circle, 'Red', (debug_circle_size // 2, debug_circle_size // 2), debug_circle_size // 2)
     IMAGE_SIZE : tuple[int, int]|list[int] = (20, 60)
-    test_anim : Animation = Animation.get_animation("test")
+    test_anim : Animation = Animation.get_animation("test") #type: ignore
     #load assets
     test_image : pygame.Surface = pygame.surface.Surface(IMAGE_SIZE)
     pygame.draw.rect(test_image, "Red", (0,0, *IMAGE_SIZE))
@@ -22,10 +24,10 @@ class TestPlayer(Sprite, sprite_count = 1):
     surface_list : list[pygame.Surface] = []
     surfaces : dict[str, pygame.Surface] = {}
     for color in colors:
-        image : pygame.Surface = pygame.surface.Surface(IMAGE_SIZE)
-        pygame.draw.rect(image, color, (0,0, *IMAGE_SIZE))
-        surfaces[color] = image
-        surface_list.append(image)
+        color_image : pygame.Surface = pygame.surface.Surface(IMAGE_SIZE)
+        pygame.draw.rect(color_image, color, (0,0, *IMAGE_SIZE))
+        surfaces[color] = color_image
+        surface_list.append(color_image)
 
     def __init__(self) -> None:
         super().__init__()
@@ -76,13 +78,8 @@ class TestPlayer(Sprite, sprite_count = 1):
         self.clamp_rect(pygame.Rect(0,0, *core_object.main_display.get_size()))
     
     def clean_instance(self):
-        self.image = None
-        self.color_images = None
-        self.color_image_list = None
-        self.rect = None
-        self.pivot = None
-        self._position = pygame.Vector2(0,0)
-        self.zindex = None
+        super().clean_instance()
+
     
     def draw(self, display : pygame.Surface):
         super().draw(display)
@@ -185,9 +182,9 @@ class NetworkTestPlayer(Sprite, sprite_count = 1):
     
     def clean_instance(self):
         super().clean_instance()
-        self.attempted_move = None
-        self.attempted_rotate = None
-        self.is_host = None
+        del self.attempted_move
+        del self.attempted_rotate
+        del self.is_host
 
 class NetworkSyncTestPlayer(Sprite, sprite_count = 1):
     IMAGE_SIZE : tuple[int, int]|list[int] = (20, 60)
@@ -233,7 +230,7 @@ class NetworkSyncTestPlayer(Sprite, sprite_count = 1):
     
     def clean_instance(self):
         super().clean_instance()
-        self.other_is_host = None
+        del self.other_is_host
 
 def make_connections():
     core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, TestPlayer.receive_event)

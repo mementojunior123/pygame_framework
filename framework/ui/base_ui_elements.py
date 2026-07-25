@@ -14,7 +14,7 @@ class BaseUiElements:
                    name : str|None = None, parent : UiSpriteGroup|None = None) -> UiSprite:
         if text_settings is None: text_settings = (cls.font_40, "Black", False)
         font : pygame.Font
-        text_color : pygame.Color|str
+        text_color : pygame.typing.ColorLike
         AA_enabled : bool
         font, text_color, AA_enabled = text_settings
 
@@ -61,7 +61,7 @@ class BaseUiElements:
         If the text has newlines, set newline_settings to a tuple of (newline_height(int), text_alignment(str)).
         """
         font : pygame.Font
-        color_arg : pygame.Color|str
+        color_arg : pygame.typing.ColorLike
         AA_enabled : bool
         font, color_arg, AA_enabled = settings
         color : pygame.Color = pygame.color.Color(color_arg)

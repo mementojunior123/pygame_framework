@@ -144,8 +144,8 @@ class Core:
         self.menu.prepare_exit()
         self.game.start_game(event)
 
-        self.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
-        self.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        self.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event_Sprite)
+        self.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event_Sprite)
         self.event_manager.bind(pygame.KEYDOWN, self.detect_game_over)
 
         
@@ -162,8 +162,8 @@ class Core:
     def end_game(self, event : pygame.Event|None = None):
         self.game.end_game()
         self.menu.prepare_entry(1)
-        self.event_manager.unbind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
-        self.event_manager.unbind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        self.event_manager.unbind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event_Sprite)
+        self.event_manager.unbind(pygame.FINGERDOWN, Sprite.handle_touch_event_Sprite)
         self.event_manager.unbind(pygame.KEYDOWN, self.detect_game_over)
 
     def is_web(self) -> bool:

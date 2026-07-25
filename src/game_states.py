@@ -62,13 +62,13 @@ class NetworkTestGameState(NormalGameState):
     def __init__(self, game_object : 'Game'):
         self.game = game_object
         self.player : TestPlayer = TestPlayer.spawn(pygame.Vector2(random.randint(0, 960),random.randint(0, 540)))
-        self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
+        self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False) #type: ignore
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
         src.sprites.test_player.make_connections()
         self.test_pattern : NetworkTestPattern = NetworkTestPattern()
         host_arg : str = "true" if pygame.key.get_pressed()[pygame.K_f] else "false"
         core_object.log("Hosting : ", host_arg.capitalize())
-        peer_id : int = "fsafgasg12345abcsss5"
+        peer_id : str = "fsafgasg12345abcsss5"
         self.network_key : str = "tmp_" + peer_id + host_arg
         core_object.networker.create_peer(peer_id, host_arg, self.network_key)
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
@@ -145,7 +145,7 @@ class NetworkWaitingGameState(GameState):
         self.is_host : bool = True if pygame.key.get_pressed()[pygame.K_f] else False
         host_arg : str = "true" if self.is_host else "false"
         core_object.log("Hosting :", host_arg.capitalize())
-        self.peer_id : int = "fsaffnaf_2players"
+        self.peer_id : str = "fsaffnaf_2players"
         self.network_key : str = "tmp_" + self.peer_id + host_arg
         core_object.networker.create_peer(self.peer_id, host_arg, self.network_key, debug_level=1)
         for event_type in [core_object.networker.NETWORK_CLOSE_EVENT, core_object.networker.NETWORK_CONNECTION_EVENT, core_object.networker.NETWORK_DISCONNECT_EVENT,
@@ -298,7 +298,7 @@ class TestGameState(NormalGameState):
     def __init__(self, game_object : 'Game'):
         self.game = game_object
         self.player : TestPlayer = TestPlayer.spawn(pygame.Vector2(random.randint(0, 960),random.randint(0, 540)))
-        self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False)
+        self.particle_effect : ParticleEffect = ParticleEffect.load_effect('test2', persistance=False) #type: ignore
         self.particle_effect.play(pygame.Vector2(480, 270), time_source=self.game.game_timer.get_time)
         src.sprites.test_player.make_connections()
         self.test_pattern : TestPattern = TestPattern()

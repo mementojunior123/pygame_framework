@@ -164,7 +164,7 @@ class Sprite:
             cls.pool(element)
 
     @classmethod
-    def spawn(cls):
+    def spawn(cls, *args, **kwargs):
         raise NotImplementedError('Sub-class must implement the spawn method; Base-classes cannot be instanciated')
 
     def clean_instance(self):
@@ -351,7 +351,7 @@ class Sprite:
         return None
     
     @classmethod
-    def handle_mouse_event(cls, event : pygame.Event):
+    def handle_mouse_event_Sprite(cls, event : pygame.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.touch: return
             if event.button not in (1, 2, 3):
@@ -365,7 +365,7 @@ class Sprite:
             pygame.event.post(new_event)
     
     @classmethod
-    def handle_touch_event(cls, event : pygame.Event):
+    def handle_touch_event_Sprite(cls, event : pygame.Event):
         if event.type == pygame.FINGERDOWN:
             x = event.x * core_object.main_display.get_width()
             y = event.y * core_object.main_display.get_height()
