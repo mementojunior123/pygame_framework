@@ -104,7 +104,7 @@ class UiDrawable:
                 If None is passed in as a frame, gets window pos"""
         raise NotImplementedError
     
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         """
         When frame is None: draw at local pos
         when frame is not None: convert from local to world pos, then draw
@@ -218,7 +218,7 @@ class UiSpriteGroup(UiDrawable):
         return self.elements[0].get_world_draw_rect(frame).unionall([e.get_world_draw_rect(frame) for e in self.elements if e != self.elements[0]]) # type: ignore
         
     
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         if not self.visible:
             return
         for element in self.elements:

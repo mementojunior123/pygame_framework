@@ -57,6 +57,8 @@ class BrightnessOverlay(UiSprite):
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         if not self.visible:
             return
-        draw_rect : pygame.Rect = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        if draw_rect is None:
+            return
         display.blit(self.surf, draw_rect, special_flags=self._blend_mode)
     

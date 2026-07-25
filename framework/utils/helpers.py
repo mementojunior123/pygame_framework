@@ -1,6 +1,6 @@
 import pygame
 from math import copysign
-from typing import Callable, Any, Union, TypeAlias
+from typing import Callable, Any, Union, TypeAlias, Sequence
 from random import random
 from collections import OrderedDict
 
@@ -157,7 +157,7 @@ def load_alpha_to_colorkey(path : str, colorkey : ColorType|str):
     new_surf.blit(image, (0,0))
     return new_surf
 
-def tuple_vec_average(l : list[tuple[float, float]]) -> float:
+def tuple_vec_average(l : list[tuple[float, float]]) -> tuple[float, float]:
     x_sum : float = 0
     y_sum : float = 0
     count : int = 0
@@ -175,7 +175,7 @@ def vector_sum(l : list[pygame.Vector2]) -> pygame.Vector2:
         total += val
     return total
 
-def vector_xmax_ysum(l : list[pygame.Vector2]) -> pygame.Vector2:
+def vector_xmax_ysum(l : list[Sequence[float]]) -> pygame.Vector2:
     return pygame.Vector2(max([val[0] for val in l]), sum([val[1] for val in l]))
 
 def recolor_image(img : pygame.Surface, new_color : ColorType) -> pygame.Surface:

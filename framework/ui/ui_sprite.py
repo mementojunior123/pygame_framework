@@ -2,6 +2,8 @@ import pygame
 from .ui_position import AnyUiPosition, UiPosition, AnchorStr
 from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 
+from typing import overload
+
 class UiSprite(UiDrawable):
     def __init__(self, info : BaseDrawableInfo, base_surf : pygame.Surface):
         super().__init__(info)
@@ -11,7 +13,7 @@ class UiSprite(UiDrawable):
 
     @property
     def size(self) -> pygame.Vector2:
-        return self.base_surf.get_size()
+        return pygame.Vector2(self.base_surf.get_size())
     
     def get_local_rotoscaled_rect(self) -> TransformedRect:
         return {anchor : self.position.calculate_anchor(self.size, anchor) for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
@@ -33,6 +35,10 @@ class UiSprite(UiDrawable):
         max_y = max(val.y for val in local_trs_rect.values())
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
     
+    @overload
+    def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
+    @overload
+    def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
     def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame)
         if world_trs_rect is None: return None
@@ -49,7 +55,9 @@ class UiSprite(UiDrawable):
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         if not self.visible:
             return
-        draw_rect : pygame.Rect = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        if draw_rect is None:
+            return
         display.blit(self.surf, draw_rect)
 
 

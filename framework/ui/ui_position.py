@@ -55,7 +55,7 @@ class UiPosition:
     def value(self, new_val : pygame.Vector2):
         self._position = new_val
     
-    def calculate_anchor(self, size : pygame.typing.IntPoint, anchor : pygame.typing.Point|AnchorStr) -> pygame.Vector2:
+    def calculate_anchor(self, size : pygame.typing.Point, anchor : pygame.typing.Point|AnchorStr) -> pygame.Vector2:
         if isinstance(anchor, str):
             anchor = ANCHOR_DICT[anchor]
         anchor_offset = pygame.Vector2(anchor) - self._anchor

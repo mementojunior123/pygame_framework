@@ -2,7 +2,7 @@ import pygame
 from .ui_drawable import BaseDrawableInfo, UiSpriteGroup
 from .ui_sprite import UiSprite
 from . import button_templates
-from .ui_position import UiPosition
+from .ui_position import UiPosition, AnchorStr
 from .ui_frame import UiFrame
 
 class BaseUiElements:
@@ -10,7 +10,7 @@ class BaseUiElements:
     image_dict : dict[str, pygame.Surface] = button_templates.image_dict
 
     @classmethod
-    def new_button(cls, button_type : str, text, tag, alignment, pos, scale : float|tuple = 1, text_settings : tuple = None, 
+    def new_button(cls, button_type : str, text, tag, alignment, pos, scale : float|tuple = 1, text_settings : tuple|None = None, 
                    name : str|None = None, parent : UiSpriteGroup|None = None) -> UiSprite:
         if text_settings is None: text_settings = (cls.font_40, "Black", False)
         font : pygame.Font
@@ -20,7 +20,7 @@ class BaseUiElements:
 
         text_scale : float
         surf_scale : float
-        if type(scale) == float or type(scale) == int:
+        if isinstance(scale, (int, float)):
             text_scale = surf_scale = scale
         else:
             surf_scale, text_scale = scale
@@ -53,7 +53,7 @@ class BaseUiElements:
 
 
     @classmethod
-    def new_text_sprite(cls, text : str, settings : tuple, tag : int, alignment : str, pos : tuple, newline_settings = None,
+    def new_text_sprite(cls, text : str, settings : tuple, tag : int, alignment : AnchorStr, pos : tuple, newline_settings = None,
                         name : str|None = None, scale : float|tuple = 1, parent : UiSpriteGroup|None = None) -> UiSprite:
         """
         Returns an UiSprite.
@@ -61,10 +61,10 @@ class BaseUiElements:
         If the text has newlines, set newline_settings to a tuple of (newline_height(int), text_alignment(str)).
         """
         font : pygame.Font
-        color : pygame.Color|str
+        color_arg : pygame.Color|str
         AA_enabled : bool
-        font, color, AA_enabled = settings
-        color : pygame.Color = pygame.color.Color(color)
+        font, color_arg, AA_enabled = settings
+        color : pygame.Color = pygame.color.Color(color_arg)
         if newline_settings is None:
 
             
