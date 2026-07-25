@@ -22,7 +22,7 @@ class TweenTrack:
         self.info = info
         self.goal = goal
         self.start : dict[str, Any] = {}
-        self.timer : Timer = None
+        self.timer : Timer|None = None
         self.use_compatibilty_lerp : bool = use_compat_lerp
         self.is_playing = False
         self.has_finished = False
@@ -83,7 +83,7 @@ class TweenTrack:
     def destroy(self):
         self.start.clear()
         self.goal.clear()
-        self.info = None
+        del self.info
         self.target = None
         self.is_playing = False
         self.timer = None
@@ -144,16 +144,15 @@ class TweenChain:
     def __init__(self, target : object, steps : list[tuple[TweenInfo, dict[str, Any]]], use_compat_lerp = True,
               time_source : Callable[[], float]|None = None, time_factor : float = 1) -> None:
         self.target = target
-        self.current_step : int|None = None
-        self.current_track : TweenTrack = None
+        self.current_step : int = 0
+        self.current_track : TweenTrack|None = None
         self.steps = steps
-        self.timer : Timer = None
         self.use_compatibilty_lerp : bool = use_compat_lerp
         self.is_playing : bool = False
         self.has_finished : bool = False
         self.step_count = len(steps)
 
-        self.time_source : Callable[[], float] = time_source
+        self.time_source : Callable[[], float]|None = time_source
         self.time_factor : float = time_factor
     
     def register(self):
@@ -171,11 +170,13 @@ class TweenChain:
         self.current_track = None
     
     def pause(self):
+        if not self.current_track: return
         self.is_playing = False
         if self.current_track.timer:
             self.current_track.timer.pause()
     
     def unpause(self):
+        if not self.current_track: return
         if self.current_track.timer:
             self.is_playing = True
             self.current_track.timer.unpause()

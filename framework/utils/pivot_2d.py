@@ -1,11 +1,14 @@
 import pygame
 from typing import Any
 def rotate_around_pivot_accurate(image : pygame.Surface, pos : pygame.Vector2, angle : float,
-                        offset : pygame.Vector2 = None, debug = False, colorkey : pygame.Color|None = None):
+                        offset : pygame.Vector2|None = None, debug = False, colorkey : pygame.Color|None = None) -> tuple:
     
+    prev_colorkey = image.get_colorkey()
     if colorkey is not None:
-        prev_colorkey = image.get_colorkey()
         image.set_colorkey(colorkey)
+
+    if offset is None:
+        offset = pygame.Vector2(0, 0)
 
     new_image = pygame.transform.rotate(image, -angle)
     new_pos = pos - offset.rotate(angle)

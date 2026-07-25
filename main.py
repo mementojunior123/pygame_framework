@@ -28,7 +28,7 @@ from framework.utils.animation import Animation, AnimationTrack, _sprite_hint
 _sprite_hint()
 
 from framework.ui import UiDrawable
-from framework.utils.helpers import rotate_around_pivot_accurate, copysign
+from framework.utils.helpers import copysign
 from framework.utils.particle_effects import ParticleEffect, Particle
 import framework.utils.particle_effects
 framework.utils.particle_effects.runtime_imports()

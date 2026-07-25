@@ -13,19 +13,14 @@ def compatibilty_lerp(a, b, t : float):
     else: 
         if size_a != size_b: raise ValueError("Size mismatch")
         
-    try: return [a[i] + (b[i] - a[i]) * t for i in range(size_a)]
+    try: return [a[i] + (b[i] - a[i]) * t for i in range(size_a)] #type: ignore
     except: pass
         
     raise ValueError(f"Compatibilty checks failed ({a} does not match {b})")
 
-def lerp(a, b, t : float):
-    try:
-        return a + (b-a) * t
-    except:
-        pass
-
-    return [a[i] + (b[i] - a[i]) * t for i in range(2)]
-
+def lerp(a : float, b : float, t : float) -> float:
+    return a + (b-a) * t
+    
 def flip(t : float) -> float:
     return 1 - t
 
@@ -66,4 +61,6 @@ easing_style_dict : dict[EasingStylesStr, EasingFunc] = {
     'mirror' : mirror,
 }
 def get_easing_from_str(val : str) -> EasingFunc|None:
-    return easing_style_dict.get(val.strip().lower(), None)
+    if val not in easing_style_dict:
+        return None
+    return easing_style_dict[val]

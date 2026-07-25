@@ -39,7 +39,7 @@ class Core:
     ENABLE_ESC_CLOSE_GAME : bool = True
     def __init__(self) -> None:
         self.js_source : dict[str, JsSource] = {}
-        self.FPS = 60
+        self.FPS : int = 60
         self.PERFORMANCE_MODE = False
         self.WEBPLATFORM = 'emscripten'
         self.CURRENT_PLATFORM = sys.platform
