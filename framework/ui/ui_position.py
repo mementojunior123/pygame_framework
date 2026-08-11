@@ -1,27 +1,15 @@
 import pygame
 
 from typing import Literal, TypeAlias
+from utils.helpers import AnchorStr, AnchorNameList, ANCHOR_REL_POS_DICT
 
 MAIN_DISPLAY_SIZE : tuple[int, int] = (960, 540)
-AnchorStr : TypeAlias = Literal['topleft', 'midtop', 'topright', 'midleft', 'center', 'midright', 'bottomleft', 'midbottom', 'bottomright']
-AnchorNameList : list[AnchorStr] = ['topleft', 'midtop', 'topright', 'midleft', 'center', 'midright', 'bottomleft', 'midbottom', 'bottomright']
-ANCHOR_DICT : dict[AnchorStr, tuple[float, float]] = {
-    'topleft' : (0, 0),
-    'midtop' : (0.5, 0),
-    'topright' : (1, 0),
-    'midleft' : (0, 0.5),
-    'center' : (0.5, 0.5),
-    'midright' : (1.0, 0.5),
-    'bottomleft' : (0, 1),
-    'midbottom' : (0.5, 1),
-    'bottomright' : (1, 1)
-}
 
 class UiPosition:
     def __init__(self, position : pygame.typing.Point, 
                  anchor : pygame.typing.Point|AnchorStr):
         if isinstance(anchor, str):
-            anchor = ANCHOR_DICT[anchor]
+            anchor = ANCHOR_REL_POS_DICT[anchor]
         self._anchor : pygame.Vector2 = pygame.Vector2(anchor)
         self._position : pygame.Vector2 = pygame.Vector2(position)
     
@@ -57,7 +45,7 @@ class UiPosition:
     
     def calculate_anchor(self, size : pygame.typing.Point, anchor : pygame.typing.Point|AnchorStr) -> pygame.Vector2:
         if isinstance(anchor, str):
-            anchor = ANCHOR_DICT[anchor]
+            anchor = ANCHOR_REL_POS_DICT[anchor]
         anchor_offset = pygame.Vector2(anchor) - self._anchor
         pos_offset = pygame.Vector2(anchor_offset.x * size[0], anchor_offset.y * size[1])
         return self.value + pos_offset

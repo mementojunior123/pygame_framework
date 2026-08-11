@@ -1,11 +1,28 @@
 import pygame
 from math import copysign
-from typing import Callable, Any, Union, TypeAlias, Sequence
+from typing import Callable, Any, Union, TypeAlias, Sequence, Literal
 from random import random
 from collections import OrderedDict
 
 AnyJson : TypeAlias = Union[int, float, str, None, bool, list["AnyJson"], dict[str, "AnyJson"]]
 EasingFunc : TypeAlias = Callable[[float], float]
+
+AnchorStr : TypeAlias = Literal['topleft', 'midtop', 'topright', 'midleft', 'center', 'midright', 'bottomleft', 'midbottom', 'bottomright']
+AnchorNameList : list[AnchorStr] = ['topleft', 'midtop', 'topright', 'midleft', 'center', 'midright', 'bottomleft', 'midbottom', 'bottomright']
+ANCHOR_REL_POS_DICT : dict[AnchorStr, tuple[float, float]] = {
+    'topleft' : (0, 0),
+    'midtop' : (0.5, 0),
+    'topright' : (1, 0),
+    'midleft' : (0, 0.5),
+    'center' : (0.5, 0.5),
+    'midright' : (1.0, 0.5),
+    'bottomleft' : (0, 1),
+    'midbottom' : (0.5, 1),
+    'bottomright' : (1, 1)
+}
+
+RectSideAnchorStr : TypeAlias = Literal['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
+RectSideAnchorNameList : list[RectSideAnchorStr] = ['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
 
 def to_roman(num : int) -> str:
 

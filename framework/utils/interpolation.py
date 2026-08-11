@@ -1,7 +1,7 @@
 """Module that contains multiple lerp related utility functions."""
-from typing import Callable, TypeAlias, Literal
+from typing import Callable, TypeAlias, Literal, Any, TypeVar
 EasingFunc : TypeAlias = Callable[[float], float]
-def compatibilty_lerp(a, b, t : float):
+def compatibilty_lerp(a, b, t : float) -> Any:
     try: return a + (b-a) * t 
     except: pass
         
@@ -18,7 +18,8 @@ def compatibilty_lerp(a, b, t : float):
         
     raise ValueError(f"Compatibilty checks failed ({a} does not match {b})")
 
-def lerp(a : float, b : float, t : float) -> float:
+T = TypeVar("T", bound=Any)
+def lerp(a : T, b : T, t : float) -> T:
     return a + (b-a) * t
     
 def flip(t : float) -> float:

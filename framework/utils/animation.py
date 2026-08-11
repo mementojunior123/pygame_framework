@@ -4,27 +4,28 @@ from framework.utils.helpers import Task
 from framework.utils.my_timer import Timer
 import framework.utils.interpolation as interpolation
 import framework.utils.tween_module as TweenModule
-from typing import Any, Callable, Union
+from typing import Any, Callable, Union, overload, Literal
+
+from utils.helpers import AnchorStr, AnchorNameList, ANCHOR_REL_POS_DICT
+from utils.helpers import RectSideAnchorStr, RectSideAnchorNameList
 
 ColorType = Union[list[int], tuple[int, int, int], pygame.Color]
 
 def is_rect_side(name : str) -> bool:
-    return name in ['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
+    return name in RectSideAnchorNameList
 
 def is_rect_pos(name : str) -> bool:
-    return name in ['topleft', 'topright', 'bottomleft', 'bottomright', 'center', 'midleft', 'midright', 'midbottom', 'midtop']
+    return name in AnchorNameList
     
 
 class AnimationTrack:
     elements : list['AnimationTrack'] = []
     def __init__(self, owner : 'Sprite', data : list[dict], name : str|None = None, time_source : Callable[[], float]|None = None, timer_factor : float = 1):
-        self.target : Sprite = owner
+        self.target : 'Sprite' = owner
         
-        new_data = [None for instruction in data]
-        for i, value in enumerate(data):
-            instruction = AnimationInstruction.new(value)
+        new_data = [AnimationInstruction.new(value) for value in data]
+        for i, instruction in enumerate(new_data):
             instruction.animation_index = i
-            new_data[i] = instruction
 
         self.data : list[AnimationInstruction] = new_data
         self.blocking_tasks : list[AnimationInstruction] = []
@@ -164,11 +165,11 @@ class AnimationInstruction:
         self.start_value : Any|None = None
         self.last_update : Any|None = None
         self.last_value : Any|None = None
-        self.timer : Timer|None = None
+        self.timer : Timer
         self.animation_index : int
     
     
-    def get_anchor(self, sprite : 'Sprite', anchor : str|None) -> pygame.Vector2:
+    def get_anchor(self, sprite : 'Sprite', anchor : AnchorStr) -> pygame.Vector2:
         if anchor is None:
             return sprite.position
         elif anchor == 'true':
@@ -176,7 +177,7 @@ class AnimationInstruction:
         else:
             return pygame.Vector2(sprite.rect.__getattribute__(anchor))
     
-    def set_anchor(self, sprite : 'Sprite', anchor : str|None, position : pygame.Vector2):
+    def set_anchor(self, sprite : 'Sprite', anchor : AnchorStr, position : pygame.Vector2):
         if anchor is None:
             sprite.position = position
         elif anchor == 'true':
@@ -184,21 +185,38 @@ class AnimationInstruction:
         else:
             sprite.move_rect(anchor, position)
     
-    def get_rect_side(self, sprite : 'Sprite', anchor : str) -> int:
+    def get_rect_side(self, sprite : 'Sprite', anchor : RectSideAnchorStr) -> int:
         return sprite.rect.__getattribute__(anchor)
     
-    def set_rect_side(self, sprite : 'Sprite', anchor : str, position : int):
+    def set_rect_side(self, sprite : 'Sprite', anchor : RectSideAnchorStr, position : int):
         sprite.move_rect(anchor, position)
 
-    def get_any_anchor(self, sprite : 'Sprite', anchor : str|None) -> pygame.Vector2|int:
-        return self.get_rect_side(sprite, anchor) if is_rect_side(anchor) else self.get_anchor(sprite, anchor)
+    def get_any_anchor(self, sprite : 'Sprite', anchor : RectSideAnchorStr|AnchorStr) -> int|pygame.Vector2:
+        if anchor in AnchorNameList:
+            return self.get_anchor(sprite, anchor)
+        elif anchor in RectSideAnchorNameList:
+            return self.get_rect_side(sprite, anchor)
+        else:
+            raise ValueError(f"{anchor} is not a valid anchor target!")
     
-    def set_any_anchor(self, sprite : 'Sprite', anchor : str|None, position : pygame.Vector2|int):
-        return self.set_rect_side(sprite, anchor, position) if is_rect_side(anchor) else self.set_anchor(sprite, anchor, position)    
-    
+    def set_any_anchor(self, sprite : 'Sprite', anchor : RectSideAnchorStr|AnchorStr, position : pygame.Vector2|int):
+        if anchor in AnchorNameList:
+            if not isinstance(position, pygame.Vector2):
+                try:
+                    position = pygame.Vector2(position)
+                except ValueError:
+                    raise ValueError(f"-->{position}<-- is not a valid value for a rect anchor")
+            self.set_anchor(sprite, anchor, position)
+        elif anchor in RectSideAnchorNameList:
+            if not isinstance(position, int):
+                raise ValueError(f"-->{position}<-- is not a valid position for the side of a rect!")
+            self.set_rect_side(sprite, anchor, position)
+        else:
+            raise ValueError(f"{anchor} is not a valid anchor target!")
+          
     @staticmethod
     def new(data : dict) -> 'AnimationInstruction':
-        anim_conversion_dict : dict[str, AnimationInstruction] = {
+        anim_conversion_dict : dict[str, type[AnimationInstruction]] = {
             "wait" : WaitInstruction,
             "delay" : DelayInstruction,
             'delay_rel' : DelayRelInstruction,
@@ -230,7 +248,10 @@ class AnimationInstruction:
         self.start_value = None
         self.last_update = None
         self.last_value = None
-        self.timer = None
+        del self.timer
+
+    def __str__(self) -> str:
+        return f"Animation instruction of type {self.__class__.__name__} with {self.data =}"
 
 
 class WaitInstruction(AnimationInstruction):
@@ -253,7 +274,7 @@ class DelayInstruction(AnimationInstruction):
     def __init__(self, data):
         super().__init__(data)
         indexes : int|list[int] = data["index"]
-        self.indexes : list[int] = [indexes] if type(indexes) == int else indexes
+        self.indexes : list[int] = [indexes] if isinstance(indexes, int) else indexes
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
         if not self.has_started:
@@ -268,7 +289,7 @@ class DelayRelInstruction(AnimationInstruction):
     def __init__(self, data):
         super().__init__(data)
         indexes : int|list[int] = data["index"]
-        self.indexes : list[int] = [indexes] if type(indexes) == int else indexes
+        self.indexes : list[int] = [indexes] if isinstance(indexes, int) else indexes
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
         if not self.has_started:
@@ -277,7 +298,9 @@ class DelayRelInstruction(AnimationInstruction):
         
         for index in self.indexes:
             target_index = self.animation_index + index
-            if target_index < 0: target_index = f"Target index went below 0 ({target_index})"
+            if target_index < 0:
+                print(f"@ {self}: Target index went below 0 ({target_index})")
+                return
             if not track.data[target_index].has_ended: return     
         self.has_ended = True
 
@@ -296,12 +319,12 @@ class MoveByInstruction(AnimationInstruction):
 class MoveToInstruction(AnimationInstruction):
     def __init__(self, data):
         super().__init__(data)
-        self.anchor : str|None = data['anchor']
-        target : int|list[int, int] = data['target']
+        self.anchor : AnchorStr|RectSideAnchorStr = data['anchor'] if data['anchor'] is not None else 'center'
+        target : int|list[int] = data['target']
         self.target : pygame.Vector2|int
 
-        if type(target) == int or type(target) == float:
-            self.target = target
+        if isinstance(target, int) or isinstance(target, float):
+            self.target = round(target)
         else:
             self.target = pygame.Vector2(target)
     
@@ -318,10 +341,12 @@ class SlideByInstruction(AnimationInstruction):
         self.time : float = data['time']
         self.easing_style : Callable[[float], float]
         easing_style : str|Callable[[float], float] = data['easing_style']
-        if type(easing_style) == str: 
+        if isinstance(easing_style, str): 
             self.easing_style = getattr(interpolation, easing_style)
         else:
             self.easing_style = easing_style
+
+        self.last_value : pygame.Vector2
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
         if self.has_ended: return
@@ -352,23 +377,25 @@ class SlideByInstruction(AnimationInstruction):
 class SlideToInstruction(AnimationInstruction):
     def __init__(self, data):
         super().__init__(data)
-        self.anchor : str|None = data['anchor']
+        self.anchor : AnchorStr|RectSideAnchorStr = data['anchor'] if data['anchor'] is not None else 'center'
 
-        target : int|list[int, int] = data['target']
+        target : int|list[int] = data['target']
         self.target : pygame.Vector2|int
 
-        if type(target) == int or type(target) == float:
-            self.target = target
+        if isinstance(target, int) or isinstance(target, float):
+            self.target = round(target)
         else:
             self.target = pygame.Vector2(target)
         
         self.time : float = data['time']
         self.easing_style : Callable[[float], float]
         easing_style : str|Callable[[float], float] = data['easing_style']
-        if type(easing_style) == str: 
+        if isinstance(easing_style, str): 
             self.easing_style = getattr(interpolation, easing_style)
         else:
             self.easing_style = easing_style
+
+        self.start_value : pygame.Vector2|int
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
         if not self.has_started:
@@ -391,7 +418,7 @@ class SwitchImageInstruction(AnimationInstruction):
         super().__init__(data)
         self.source_name : str = data['source']
         self.index : str = data['index']
-        self.anchor : str|None = data['dynamic_anchor']
+        self.anchor : RectSideAnchorStr|AnchorStr|None = data['dynamic_anchor']
         self.colorkey : str|ColorType|None = data['colorkey']
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
@@ -414,7 +441,7 @@ class SwitchImageInstruction(AnimationInstruction):
                 track.target.pivot.img_colorkey = self.colorkey
 
         track.target.rect = new_image.get_rect()
-        if self.anchor is None:
+        if self.anchor is None or old_pos is None:
             track.target.align_rect()
         else:
             track.target.move_rect(self.anchor, old_pos)
@@ -454,10 +481,12 @@ class RotateByOverTimeInstruction(AnimationInstruction):
         self.time : float = data['time']
         self.easing_style : Callable[[float], float]
         easing_style : str|Callable[[float], float] = data['easing_style']
-        if type(easing_style) == str: 
+        if isinstance(easing_style, str): 
             self.easing_style = getattr(interpolation, easing_style)
         else:
             self.easing_style = easing_style
+
+        self.last_value : float
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
         if not self.has_started:
@@ -489,10 +518,12 @@ class RotateToOverTimeInstruction(AnimationInstruction):
         self.time : float = data['time']
         self.easing_style : Callable[[float], float]
         easing_style : str|Callable[[float], float] = data['easing_style']
-        if type(easing_style) == str: 
+        if isinstance(easing_style, str): 
             self.easing_style = getattr(interpolation, easing_style)
         else:
             self.easing_style = easing_style
+
+        self.start_value : float
     
     def execute(self, track: AnimationTrack, current_index : int|None = None):
         if not self.has_started:
@@ -515,14 +546,14 @@ class ImageGradientInstruction(AnimationInstruction):
         super().__init__(data)
         self.source_name : str = data['source']
         self.target_index : int|float = data['target_index']
-        self.anchor : str|None = data['dynamic_anchor']
+        self.anchor : RectSideAnchorStr|AnchorStr|None = data['dynamic_anchor']
         self.colorkey : str|ColorType|None = data['colorkey']
 
         self.time : float = data['time']
 
         self.easing_style : Callable[[float], float]
         easing_style : str|Callable[[float], float] = data['easing_style']
-        if type(easing_style) == str: 
+        if isinstance(easing_style, str): 
             self.easing_style = getattr(interpolation, easing_style)
         else:
             self.easing_style = easing_style
@@ -566,7 +597,7 @@ class ImageGradientInstruction(AnimationInstruction):
             track.target.angle = track.target.angle
 
         
-        if self.anchor is None:
+        if self.anchor is None or old_pos is None:
             track.target.align_rect()
         else:
             track.target.move_rect(self.anchor, old_pos)    
@@ -582,10 +613,12 @@ class TweenPropertyInstruction(AnimationInstruction):
 
         self.easing_style : Callable[[float], float]
         easing_style : str|Callable[[float], float] = data['easing_style']
-        if type(easing_style) == str: 
+        if isinstance(easing_style, str): 
             self.easing_style = getattr(interpolation, easing_style)
         else:
             self.easing_style = easing_style
+
+        self.start_value : TweenModule.TweenTrack
     
     def execute(self, track: AnimationTrack):
         if not self.has_started:
@@ -601,7 +634,7 @@ class TweenPropertyInstruction(AnimationInstruction):
         if tween.has_finished:
             self.has_ended = True
 
-
+# TODO : Add dataclasses
 TEMPLATES = [
     {"type" : "move_by", "offset" : (0,0)},
     {"type" : "move_to", "target" : (0,0), "anchor" : "center"},
