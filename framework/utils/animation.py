@@ -6,8 +6,8 @@ import framework.utils.interpolation as interpolation
 import framework.utils.tween_module as TweenModule
 from typing import Any, Callable, Union, overload, Literal
 
-from utils.helpers import AnchorStr, AnchorNameList, ANCHOR_REL_POS_DICT
-from utils.helpers import RectSideAnchorStr, RectSideAnchorNameList
+from framework.utils.helpers import AnchorStr, AnchorNameList, ANCHOR_REL_POS_DICT
+from framework.utils.helpers import RectSideAnchorStr, RectSideAnchorNameList
 
 ColorType = Union[list[int], tuple[int, int, int], pygame.Color]
 

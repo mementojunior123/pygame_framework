@@ -1,7 +1,7 @@
 import pygame
 
 from typing import Literal, TypeAlias
-from utils.helpers import AnchorStr, AnchorNameList, ANCHOR_REL_POS_DICT
+from framework.utils.helpers import AnchorStr, AnchorNameList, ANCHOR_REL_POS_DICT
 
 MAIN_DISPLAY_SIZE : tuple[int, int] = (960, 540)
 

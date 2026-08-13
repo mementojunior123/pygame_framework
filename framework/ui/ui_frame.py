@@ -1,5 +1,6 @@
 import pygame
-from .ui_position import AnyUiPosition, UiPosition, AnchorStr
+from .ui_position import AnyUiPosition, UiPosition
+from framework.utils.helpers import AnchorStr
 from .ui_sprite import UiSprite
 from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 

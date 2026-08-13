@@ -2,7 +2,8 @@ import pygame
 from .ui_drawable import BaseDrawableInfo, UiSpriteGroup
 from .ui_sprite import UiSprite
 from . import button_templates
-from .ui_position import UiPosition, AnchorStr
+from .ui_position import UiPosition
+from framework.utils.helpers import AnchorStr
 from .ui_frame import UiFrame
 
 class BaseUiElements:

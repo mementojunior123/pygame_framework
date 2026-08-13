@@ -18,19 +18,20 @@ class Sprite:
     registered_classes : list[Type['Sprite']] = []
     SPRITE_CLICKED : int = pygame.event.custom_type()
 
-    def __init_subclass__(cls : Type['Sprite'], do_register : bool = True, sprite_count : int = 0):
+    def __init_subclass__(cls : Type['Sprite'], do_link : bool = True, sprite_count : int = 0):
         parents : list[Type[Sprite]] = list(cls.__bases__)
         cls.active_elements = []
         cls.inactive_elements = []
         cls.linked_classes : list[Type['Sprite']] = []
-        for parent in parents:
-            for linked in (parent.linked_classes):
-                if linked not in cls.linked_classes:
-                    cls.linked_classes.append(linked)
-            if parent not in cls.linked_classes:
-                cls.linked_classes.append(parent)
-        
-        Sprite.register_class(cls)
+        if do_link:
+            for parent in parents:
+                for linked in (parent.linked_classes):
+                    if linked not in cls.linked_classes:
+                        cls.linked_classes.append(linked)
+                if parent not in cls.linked_classes:
+                    cls.linked_classes.append(parent)
+            
+            Sprite.register_class(cls)
         for _ in range(sprite_count): cls()
     
     def __init__(self) -> None:
