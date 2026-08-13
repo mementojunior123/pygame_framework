@@ -10,7 +10,7 @@ from src.settings import Settings
 from framework.core.bg_manager import BgManager
 from framework.core.ui import Ui
 from src.menu import Menu
-from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition
+from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition, UiDrawable
 from src.game_storage import GameStorage
 import src.menu
 from framework.game.game_module import Game
@@ -19,7 +19,7 @@ from framework.utils.tween_module import TweenTrack, TweenChain
 from framework.utils.animation import AnimationTrack
 import sys
 import platform
-from typing import Any, TypedDict, Callable
+from typing import Any, TypedDict, Callable, cast
 from types import SimpleNamespace
 from sys import exit
 
@@ -39,7 +39,7 @@ class Core:
     ENABLE_ESC_CLOSE_GAME : bool = True
     def __init__(self) -> None:
         self.js_source : dict[str, JsSource] = {}
-        self.FPS = 60
+        self.FPS : int = 60
         self.PERFORMANCE_MODE = False
         self.WEBPLATFORM = 'emscripten'
         self.CURRENT_PLATFORM = sys.platform
@@ -68,7 +68,7 @@ class Core:
         self.brightness_map_blend_mode = pygame.BLENDMODE_NONE
 
         self.global_timer : Timer = Timer(-1, perf_counter, 1)
-        Timer.time_source = self.global_timer.get_time
+        Timer.base_time_source = self.global_timer.get_time
 
         self.window_bools : dict = {'Shown' : True, 'input_focused' : True}
         self.frame_counter : int = 0
@@ -104,10 +104,7 @@ class Core:
         if args is None: args = {}
         try:
             with open(file_path, "r", encoding="utf-8") as file:
-                source_dict : JsSource = {}
-                source_dict['source'] = file.read()
-                source_dict['allow_default'] = allow_default
-                source_dict['args'] = args
+                source_dict : JsSource = {'source' : file.read(), 'allow_default' : allow_default, 'args' : args}
                 self.js_source[script_name] = source_dict
         except FileNotFoundError:
             return False
@@ -122,7 +119,7 @@ class Core:
             return False
         script : JsSource = self.js_source[script_name]
         current_source : str = script['source']
-        used_args : dict[str, str] = script['args'].copy()
+        used_args : dict[str, str|None] = script['args'].copy()
         if not script['allow_default']:
             for arg_name in used_args:
                 if arg_name not in args:
@@ -133,8 +130,10 @@ class Core:
         for arg_name in used_args:
             if used_args[arg_name] is None:
                 return False
-        for arg_name in used_args:
-            current_source = current_source.replace(f"`{{{arg_name}}}`", used_args[arg_name])
+            
+        used_args_cast : dict[str, str] = cast(dict[str, str], used_args)
+        for arg_name in used_args_cast:
+            current_source = current_source.replace(f"`{{{arg_name}}}`", used_args_cast[arg_name])
 
         self.run_js_code(current_source)
         return True
@@ -145,8 +144,8 @@ class Core:
         self.menu.prepare_exit()
         self.game.start_game(event)
 
-        self.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
-        self.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        self.event_manager.bind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event_Sprite)
+        self.event_manager.bind(pygame.FINGERDOWN, Sprite.handle_touch_event_Sprite)
         self.event_manager.bind(pygame.KEYDOWN, self.detect_game_over)
 
         
@@ -158,13 +157,13 @@ class Core:
             return
         if event.type == pygame.KEYDOWN: 
             if event.key == pygame.K_ESCAPE: 
-                self.end_game(None)
+                self.end_game()
     
-    def end_game(self, event : pygame.Event = None):
+    def end_game(self, event : pygame.Event|None = None):
         self.game.end_game()
         self.menu.prepare_entry(1)
-        self.event_manager.unbind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event)
-        self.event_manager.unbind(pygame.FINGERDOWN, Sprite.handle_touch_event)
+        self.event_manager.unbind(pygame.MOUSEBUTTONDOWN, Sprite.handle_mouse_event_Sprite)
+        self.event_manager.unbind(pygame.FINGERDOWN, Sprite.handle_touch_event_Sprite)
         self.event_manager.unbind(pygame.KEYDOWN, self.detect_game_over)
 
     def is_web(self) -> bool:
@@ -173,13 +172,13 @@ class Core:
     def setup_web(self, method : int = 2, pixelated_canavs : bool = True):
         if not self.is_web(): return
         if method == 1:
-            platform.window.onfocus = self.continue_things
-            platform.window.onblur = self.stop_things
+            platform.window.onfocus = self.continue_things #type: ignore
+            platform.window.onblur = self.stop_things #type: ignore
         elif method == 2:
-            platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things)
-            platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things)
-            platform.EventTarget.addEventListener(platform.window, "beforeunload", self.close_web)
-        if pixelated_canavs: platform.window.canvas.style.imageRendering = "pixelated"
+            platform.EventTarget.addEventListener(platform.window, "blur", self.stop_things) #type: ignore
+            platform.EventTarget.addEventListener(platform.window, "focus", self.continue_things) #type: ignore
+            platform.EventTarget.addEventListener(platform.window, "beforeunload", self.close_web) #type: ignore
+        if pixelated_canavs: platform.window.canvas.style.imageRendering = "pixelated" #type: ignore
     
     def close_web(self):
         self.save_game()
@@ -210,8 +209,8 @@ class Core:
             self.last_dt_measurment = mark
     
     def set_debug_message(self, text : str):
-        debug_textsprite : TextSprite = self.main_ui.get_sprite('debug_sprite')
-        if not debug_textsprite: return
+        debug_textsprite : UiDrawable|None = self.main_ui.get_sprite('debug_sprite')
+        if not isinstance(debug_textsprite, TextSprite): return
         debug_textsprite.text = text
     
     def set_brightness(self, new_val : int):
@@ -352,7 +351,7 @@ class Core:
         if not self.is_web():
             print("Warning : Shouldn't use Core.run_js_code in a non web context")
             return None
-        return platform.eval(code)
+        return platform.eval(code) # type: ignore
     
     def log(self, *args : Any, sep=' '):
         text = sep.join(str(arg) for arg in args)
@@ -366,7 +365,7 @@ class Core:
             return
         lines = info.split("\n")
         code = ''.join([f"console.log(String.raw`{line.replace("`", "'")}`);" for line in lines])
-        platform.eval(code)
+        platform.eval(code) # type: ignore
     
     def alert_js(self, info : str):
         if not self.is_web():
@@ -374,7 +373,7 @@ class Core:
             return
         lines = info.split("\n")
         code = ''.join([f"alert(String.raw`{line.replace("`", "'")}`);" for line in lines])
-        platform.eval(code)
+        platform.eval(code) # type: ignore
     
     def get_platform_attribute(self, attr : str, default : Any = None) -> Any:
         if not self.is_web():

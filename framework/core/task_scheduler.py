@@ -9,8 +9,7 @@ class TaskScheduler:
 
     def schedule_task(self, time : float|tuple[float, Callable[[], float], float], callback : Callable, *args, **kwargs):
         new_task = Task(callback, *args, **kwargs)
-        t = type(time)
-        if t == int or float:
+        if isinstance(time, (int, float)):
             self.scheduled_tasks[new_task] = Timer(time)
         else:
             self.scheduled_tasks[new_task] = Timer(time[0], time[1], time[2])
@@ -18,8 +17,7 @@ class TaskScheduler:
     
     def schedule_continuous_task(self, time : float|tuple[float, Callable[[], float], float], callback : Callable, *args, **kwargs):
         new_task = Task(callback, *args, **kwargs)
-        t = type(time)
-        if (t == int) or (t == float):
+        if isinstance(time, (int, float)):
             self.continous_tasks[new_task] = Timer(time)
         else:
             self.continous_tasks[new_task] = Timer(time[0], time[1], time[2])

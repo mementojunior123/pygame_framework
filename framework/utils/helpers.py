@@ -1,11 +1,28 @@
 import pygame
 from math import copysign
-from typing import Callable, Any, Union, TypeAlias
+from typing import Callable, Any, Union, TypeAlias, Sequence, Literal
 from random import random
 from collections import OrderedDict
 
 AnyJson : TypeAlias = Union[int, float, str, None, bool, list["AnyJson"], dict[str, "AnyJson"]]
 EasingFunc : TypeAlias = Callable[[float], float]
+
+AnchorStr : TypeAlias = Literal['topleft', 'midtop', 'topright', 'midleft', 'center', 'midright', 'bottomleft', 'midbottom', 'bottomright']
+AnchorNameList : list[AnchorStr] = ['topleft', 'midtop', 'topright', 'midleft', 'center', 'midright', 'bottomleft', 'midbottom', 'bottomright']
+ANCHOR_REL_POS_DICT : dict[AnchorStr, tuple[float, float]] = {
+    'topleft' : (0, 0),
+    'midtop' : (0.5, 0),
+    'topright' : (1, 0),
+    'midleft' : (0, 0.5),
+    'center' : (0.5, 0.5),
+    'midright' : (1.0, 0.5),
+    'bottomleft' : (0, 1),
+    'midbottom' : (0.5, 1),
+    'bottomright' : (1, 1)
+}
+
+RectSideAnchorStr : TypeAlias = Literal['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
+RectSideAnchorNameList : list[RectSideAnchorStr] = ['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
 
 def to_roman(num : int) -> str:
 
@@ -48,57 +65,10 @@ class Task:
 def scale_surf(surf : pygame.Surface, scale : float):
     return pygame.transform.scale_by(surf, scale)
 
-def rotate_around_pivot(image : pygame.Surface, rect : pygame.Rect, angle : float, 
-                        anchor : pygame.Vector2 = None, offset : pygame.Vector2= None, return_new_pos = False):
-    
-    if anchor:
-        real_anchor_point = anchor or pygame.Vector2(rect.center) + offset
-        offset= offset or real_anchor_point - pygame.Vector2(rect.center)
-
-    elif offset:
-        real_anchor_point = offset + pygame.Vector2(rect.center)
-        offset = offset
-
-    new_offset = offset.rotate(angle)
-    old_center = rect.center
-
-    new_image = pygame.transform.rotate(image, -angle)
-    new_rect = new_image.get_rect(center = old_center)
-    new_pos = real_anchor_point - new_offset
-    new_rect.center = round(new_pos)
-    if return_new_pos:
-        return new_image, new_rect, new_pos
-    else:
-        return new_image, new_rect
-
 def rotate_around_center(image : pygame.Surface, pos : pygame.Vector2, angle : float) -> tuple[pygame.Surface, pygame.Rect]:
     new_image = pygame.transform.rotate(image, -angle)
     new_rect = new_image.get_rect(center = round(pos))
     return new_image, new_rect
-
-def rotate_around_pivot_accurate(image : pygame.Surface, pos : pygame.Vector2, angle : float, 
-                        anchor : pygame.Vector2 = None, offset : pygame.Vector2 = None, debug = False):
-    
-    if anchor is not None:
-        real_anchor_point = anchor
-        offset = offset or (real_anchor_point - pos).rotate(-angle)
-
-    elif offset is not None:
-        real_anchor_point = pos + offset.rotate(angle)
-        offset = offset
-    else:
-        raise ValueError('Either offset or anchor must be provided')
-    new_offset = offset.rotate(angle)
-
-    new_image = pygame.transform.rotate(image, -angle)  
-    new_pos = real_anchor_point - new_offset
-
-
-    new_rect = new_image.get_rect(center = round(new_pos))
-    if debug:
-        return new_image, new_rect, new_pos, [real_anchor_point]
-    else:
-        return new_image, new_rect, new_pos
 
 def sign(x):
     return copysign(1, x) if x != 0 else 0
@@ -157,7 +127,7 @@ def load_alpha_to_colorkey(path : str, colorkey : ColorType|str):
     new_surf.blit(image, (0,0))
     return new_surf
 
-def tuple_vec_average(l : list[tuple[float, float]]) -> float:
+def tuple_vec_average(l : list[tuple[float, float]]) -> tuple[float, float]:
     x_sum : float = 0
     y_sum : float = 0
     count : int = 0
@@ -175,7 +145,7 @@ def vector_sum(l : list[pygame.Vector2]) -> pygame.Vector2:
         total += val
     return total
 
-def vector_xmax_ysum(l : list[pygame.Vector2]) -> pygame.Vector2:
+def vector_xmax_ysum(l : list[Sequence[float]]) -> pygame.Vector2:
     return pygame.Vector2(max([val[0] for val in l]), sum([val[1] for val in l]))
 
 def recolor_image(img : pygame.Surface, new_color : ColorType) -> pygame.Surface:

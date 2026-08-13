@@ -6,19 +6,21 @@ from random import random
 from math import sin, radians, cos, atan2
 from framework.game.sprite import Sprite
 from framework.utils.pivot_2d import Pivot2D
-from typing import TypedDict, Literal, Union, TypeAlias
+from typing import TypedDict, Literal, Union, TypeAlias, Sequence, cast, NotRequired
 
-def __random_float(a, b):
+from dataclasses import dataclass
+
+def __random_float(a : float, b : float) -> float:
     return random() * (b-a) + a
 
-def rand_float(iterable):
+def rand_float(iterable : float|Sequence[float]) -> float:
     if iterable is None: return iterable
-    t = type(iterable)
-    if t == int or t == float: return iterable
+    if isinstance(iterable, (float, int)): 
+        return iterable
     return __random_float(iterable[0], iterable[1])
 
 
-def vec_from_angle(angle : float, magnitude = 1) -> pygame.Vector2:
+def vec_from_angle(angle : float, magnitude : float = 1) -> pygame.Vector2:
     x = cos(radians(angle))
     y = -sin(radians(angle))
     return pygame.Vector2(x, y) * magnitude
@@ -29,7 +31,7 @@ def get_vec_angle(vec : pygame.Vector2) -> float:
 NumberRange : TypeAlias = Union[float, tuple[float, float], list[float]]
 UpdateMethod : TypeAlias = Literal['simulated', 'animated', 'spiral']
 
-class EffectData(TypedDict):
+class EffectDataDict(TypedDict):
     offset_x : NumberRange
     offset_y : NumberRange
     velocity_x : NumberRange|None
@@ -48,15 +50,80 @@ class EffectData(TypedDict):
     alt_textures : None|list[pygame.Surface]
     animation : None|Animation
     update_method : UpdateMethod
-    destroy_offscreen : bool
+    destroy_offscreen : NotRequired[bool]
     copy_surface : bool
     type : None|str
 
-class Particle(Sprite):
-    active_elements : list['Particle'] = []
-    inactive_elements : list['Particle']  = []
-    linked_classes : list[Sprite] = [Sprite]
+@dataclass
+class EffectData:
+    offset_x : NumberRange
+    offset_y : NumberRange
+    init_spawn_count : int
+    cooldown : float
+    target_spawn_count : int 
+    lifetime : NumberRange 
+    part_per_wave : int
+    main_texture : pygame.Surface
+    update_method : UpdateMethod
+    copy_surface : bool
+    destroy_offscreen : bool = True
 
+    velocity_x : NumberRange|None = None
+    velocity_y : NumberRange|None = None
+    angle : NumberRange|None = None
+    speed : NumberRange|None = None    
+    accel_x : NumberRange|None = None
+    accel_y : NumberRange|None = None
+    drag : NumberRange|None = None
+
+    alt_textures : None|list[pygame.Surface] = None
+    animation : None|Animation = None
+    type : None|str = None
+
+    def get_rand_offset(self) -> pygame.Vector2:
+        return pygame.Vector2(rand_float(self.offset_x), rand_float(self.offset_y))
+
+    def get_rand_lifetime(self) -> float:
+        return rand_float(self.lifetime)
+
+    def get_rand_base_velocity(self) -> pygame.Vector2:
+        if self.velocity_x is None or self.velocity_y is None:
+            return pygame.Vector2(0, 0)
+        return pygame.Vector2(rand_float(self.velocity_x), rand_float(self.velocity_y))
+
+    def get_rand_drag(self) -> float:
+        if self.drag is None:
+            return 0
+        return rand_float(self.drag)
+
+    def get_rand_vel_angle(self) -> float:
+        if self.angle is None:
+            return 0
+        return rand_float(self.angle)
+
+    def get_rand_vel_mag(self) -> float:
+        if self.speed is None:
+            return 0
+        return rand_float(self.speed)
+
+    def get_rand_accel(self) -> pygame.Vector2:
+        if self.accel_x is None or self.accel_y is None:
+            return pygame.Vector2(0, 0)
+        return pygame.Vector2(rand_float(self.accel_x), rand_float(self.accel_y))
+    
+
+    @classmethod
+    def from_dict(cls, data : EffectDataDict):
+        return cls(**data)
+
+    def to_dict(self) -> EffectDataDict:
+        return cast(EffectDataDict, self.__dict__)
+
+    def validate(self) -> bool:
+        return True
+
+
+class Particle(Sprite, sprite_count=250, do_link=False):
     test_image = pygame.surface.Surface((4,4))
     pygame.draw.rect(test_image, 'White', (0, 0, 4, 4))
     bounding_box = pygame.Rect(0, 0, 960, 540)
@@ -72,22 +139,28 @@ class Particle(Sprite):
 
         self.update_method : UpdateMethod = 'simulated'
         self.textures : list[pygame.Surface]
-        self.kill_offscreen = True
-        Particle.inactive_elements.append(self)
+        self.kill_offscreen : bool = True
+        self.pivot : Pivot2D
+
     
-    def spawn(self, pos, lifetime, update_method, main_texture : pygame.Surface, velocity = None, accel = None, drag = None, 
-              alt_textures = None, anim : Animation = None, destroy_offscreen : bool = False, angle = None, mag = None, copy_surf = False,
-              time_source : TimeSource|None = None):
+    def spawn(self, pos : pygame.Vector2, lifetime : float, update_method : UpdateMethod, main_texture : pygame.Surface, 
+              velocity : pygame.Vector2|None = None, accel : pygame.Vector2|None = None, drag : float = 0, 
+              alt_textures : list[pygame.Surface]|None = None, anim : Animation|None = None, destroy_offscreen : bool = False, angle : float = 0, mag : float = 0, 
+              copy_surf = False, time_source : TimeSource|None = None):
+
+        velocity = velocity if velocity is not None else pygame.Vector2(0, 0)
+        accel = accel if accel is not None else pygame.Vector2(0, 0)
+        alt_textures = alt_textures if alt_textures is not None else []
+
         self.zindex = 100
         self._position = pos
         self.update_method = update_method
         if copy_surf is False:
             self.image = main_texture
-            self.textures = alt_textures or []
+            self.textures = alt_textures
         else:
             self.image = main_texture.copy()
-            if alt_textures is None: self.textures = []
-            else: self.textures = [surf.copy() for surf in alt_textures]
+            self.textures = [surf.copy() for surf in alt_textures]
 
         self.rect = self.image.get_rect()
         self.rect.center = self.position
@@ -95,16 +168,14 @@ class Particle(Sprite):
         self.lifetime = lifetime
         self.lifetime_timer = Timer(lifetime, time_source=time_source)
 
-        
-        self.velocity = velocity or pygame.Vector2(0,0)
+        self.velocity = velocity
+        self.pivot = Pivot2D(self._position, self.image) # type: ignore
         if self.update_method == 'spiral':
-            self.pivot = Pivot2D(self._position, self.image)
-            self.pivot.pivot_offset = pygame.Vector2((mag or 1),0).rotate(-angle)
-        elif angle is not None:
-            if mag is None: mag = 1
+            self.pivot.pivot_offset = pygame.Vector2(mag, 0).rotate(-angle)
+        else:
             self.velocity += vec_from_angle(angle, mag)
-        self.acceleration = accel or pygame.Vector2(0,0)
-        self.drag = drag or 0
+        self.acceleration = accel
+        self.drag = drag
         self.kill_offscreen= destroy_offscreen
 
         if anim:
@@ -149,34 +220,29 @@ class Particle(Sprite):
             if self.anim_track is not None:
                 self.anim_track.update()
         
-        elif self.update_method == 'animated':
+        elif self.update_method == 'animated' and self.anim_track:
             self.anim_track.update()
 
     def clean_instance(self):
-        self._position = None
-        self.lifetime = None
-        self.lifetime_timer = None
-        self.pivot = None
+        super().clean_instance()
+        del self.lifetime
+        del self.lifetime_timer
 
-        self.velocity = None
-        self.acceleration = None
-        self.drag = None
+        del self.velocity
+        del self.acceleration
+        del self.drag
 
-        self.update_method = None
-        self.image = None
-        self.rect = None
-        self.textures = None
-        self.kill_offscreen = None
-
-for _ in range(250):
-    Particle()
+        del self.update_method
+        del self.textures
+        del self.kill_offscreen
+        del self.pivot
 
 class ParticleEffect:
     elements : list['ParticleEffect'] = []
-    effects_data : dict[str, EffectData] = {}
-    special_effect_name_dict : dict[str, 'ParticleEffect'] = {}
-    def __init__(self, data : EffectData, persistance : bool, dynamic_origin : bool = False) -> None:
-        self.data : EffectData = data
+    effects_data : dict[str, EffectDataDict] = {}
+    special_effect_name_dict : dict[str, type['ParticleEffect']] = {}
+    def __init__(self, data : EffectDataDict, persistance : bool, dynamic_origin : bool = False) -> None:
+        self.data : EffectDataDict = data
         ParticleEffect.elements.append(self)
         self.tracks : list[ParticleEffectTrack] = []
         self.plays_remaining = None
@@ -190,32 +256,33 @@ class ParticleEffect:
     @classmethod
     def load_effect(cls, name : str, persistance : bool = False, dynamic_origin : bool = False):
         if name not in cls.effects_data: return None
-        effect_data : EffectData = cls.effects_data[name]
-        effect_type : str = effect_data['type']
+        effect_data : EffectDataDict = cls.effects_data[name]
+        effect_type : str|None = effect_data['type']
         if effect_type is None:
             return ParticleEffect(effect_data, persistance, dynamic_origin)
         special_effect_class = ParticleEffect.special_effect_name_dict.get(effect_type, SpecialParticleEffect)
         return special_effect_class(effect_data, persistance, dynamic_origin)
     
     def emit(self, track : 'ParticleEffectTrack'):
+        if not Particle.inactive_elements:
+            return
         new_particle : Particle = Particle.inactive_elements[0]
 
-        offset = pygame.Vector2(rand_float(self.data['offset_x']), rand_float(self.data['offset_y']))
+        effect_data_class = EffectData.from_dict(self.data)
+
+        offset : pygame.Vector2 = effect_data_class.get_rand_offset()
         if not self.dynamic_origin:
             new_pos = track.origin + offset
         else:
             new_pos = self.position + offset
 
-        life = rand_float(self.data['lifetime'])
-        if (self.data['velocity_x'] is None) or (self.data['velocity_y'] is None):
-            velocity = None
-        else:
-            velocity = pygame.Vector2(rand_float(self.data['velocity_x']), rand_float(self.data['velocity_y']))
-        drag = rand_float(self.data['drag'])
-        accel = pygame.Vector2(rand_float(self.data['accel_x']), rand_float(self.data['accel_y']))
+        life : float = effect_data_class.get_rand_lifetime()
+        velocity : pygame.Vector2 = effect_data_class.get_rand_base_velocity()
+        drag : float = effect_data_class.get_rand_drag()
+        accel : pygame.Vector2 = effect_data_class.get_rand_accel()
         kill_offscreen = self.data.get('destroy_offscreen', True)
-        angle = rand_float(self.data['angle'])
-        mag = rand_float(self.data['speed'])
+        angle : float = effect_data_class.get_rand_vel_angle()
+        mag : float = effect_data_class.get_rand_vel_mag()
         new_particle.spawn(new_pos, life, self.data['update_method'], self.data['main_texture'], 
                            velocity=velocity, accel=accel, drag=drag, alt_textures=self.data['alt_textures'], anim=self.data['animation'], 
                            destroy_offscreen=kill_offscreen, angle=angle, mag=mag, copy_surf = self.data['copy_surface'],
@@ -300,15 +367,15 @@ class ParticleEffect:
         self.destroy_on_end = True
 
 class SpecialParticleEffect(ParticleEffect):
-    def __init__(self, data : EffectData, persistance : bool, dynamic_origin : bool = False):
+    def __init__(self, data : EffectDataDict, persistance : bool, dynamic_origin : bool = False):
         super().__init__(data, persistance, dynamic_origin)
-        self.type : str = data['type']
+        self.type : str = data['type'] or 'NoNameSpecialEffect'
 
 class TestParticleEffect(SpecialParticleEffect):
     pass
 
 ParticleEffect.special_effect_name_dict['test'] = TestParticleEffect
-class TestEffectData(EffectData):
+class TestEffectData(EffectDataDict):
     pass
 
 
@@ -330,19 +397,19 @@ class ParticleEffectTrack:
     def stop_emission(self):
         self.can_emit = False
 
-TEMPLATE : EffectData = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : [0,360], 'speed' : [0,0],
+TEMPLATE : EffectDataDict = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : [0,360], 'speed' : [0,0],
             'accel_x' : [0,0], 'accel_y' : [0,0], 'drag' : [0, 0],
             'init_spawn_count' : 0, 'cooldown' : 0.25, 'target_spawn_count' : 0, 'lifetime' : [0,0], 'part_per_wave' : 1,
             'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
             'update_method' : 'simulated', 'destroy_offscreen' : True, 'copy_surface' : False, 'type' : None}
 
-test_effect : EffectData = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : [80, 100], 'speed' : [5, 9],
+test_effect : EffectDataDict = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : [80, 100], 'speed' : [5, 9],
             'accel_x' : [0,0], 'accel_y' : [0.15,0.12], 'drag' : [0, 0],
             'init_spawn_count' : 3, 'cooldown' : 0.20, 'target_spawn_count' : 35, 'lifetime' : [5,5], 'part_per_wave' : 3,
             'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
             'update_method' : 'simulated', 'destroy_offscreen' : False, 'copy_surface' : False, 'type' : None}
 
-test_effect2 : EffectData = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [1.5,1.6], 'velocity_y' : [0.8,0.82], 'angle' : [0, 20], 'speed' : [20, 22],
+test_effect2 : EffectDataDict = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [1.5,1.6], 'velocity_y' : [0.8,0.82], 'angle' : [0, 20], 'speed' : [20, 22],
             'accel_x' : [0,0], 'accel_y' : [0.0,0.0], 'drag' : [0, 0],
             'init_spawn_count' : 1, 'cooldown' : 0.05, 'target_spawn_count' : 35, 'lifetime' : [5,5], 'part_per_wave' : 1,
             'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,

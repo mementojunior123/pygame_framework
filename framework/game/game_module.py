@@ -24,9 +24,10 @@ class Game:
         self.STATES = GameStates
 
         self.active : bool = False
-        self.state : None|GameState = None
-        self.game_timer : Timer|None = None
-        self.game_data : dict|None = {}
+        self.state : GameState
+        self.game_timer : Timer
+        self.game_data : dict
+        self.main_camera : SpriteCamera
 
         
 
@@ -34,7 +35,7 @@ class Game:
         self.active = True
         self.game_timer = Timer(-1)
         self.game_data = {}
-        self.main_camera : SpriteCamera = SpriteCamera()
+        self.main_camera = SpriteCamera()
         self.make_connections()
         initialise_game(self, event)
 
@@ -42,8 +43,8 @@ class Game:
     def alert_player(self, text : str, alert_speed : float = 1):
         text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
                                          TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
-        mid_height : int = text_sprite.size.y // 2
-        self.add_temp(text_sprite, 5)
+        mid_height : float = text_sprite.size.y // 2
+        core_object.main_ui.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo
         goal1 = {'position.value.y' : 50 + mid_height}
         info1 = TInfo(interpolation.quad_ease_out, 0.3 / alert_speed)
@@ -111,9 +112,9 @@ class Game:
         #Cleanup basic variables
         self.active = False
         self.state.cleanup()
-        self.state = None
-        self.game_timer = None
-        self.main_camera = None
+        del self.state
+        del self.game_timer
+        del self.main_camera
         self.game_data.clear()
 
         #Cleanup ingame object

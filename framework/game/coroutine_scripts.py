@@ -1,4 +1,4 @@
-from typing import Callable, Generator
+from typing import Callable, Generator, Any
 
 CoroutineFunction = Callable[..., Generator]
 
@@ -7,11 +7,8 @@ class CoroutineScript:
         self.initialized : bool = False
         self.is_over : bool = False
         self.coro_func : CoroutineFunction = coroutine or self.corou
-        self.coroutine : Generator = None
+        self.coroutine : Generator
         self.coro_attributes : list[str] = []
-
-    def type_hints(self):
-        self.coro_attributes = []
     
     def initialize(self, *args, **kwargs):
         self.coroutine = self.coro_func(*args, **kwargs)
@@ -27,10 +24,6 @@ class CoroutineScript:
             self.is_over = True
             return e.value
     
-    def __getattr__(self, name : str):
-        if name not in self.coro_attributes: raise AttributeError
-        return self.coroutine.gi_frame.f_locals[name]
-    
     @staticmethod
-    def corou(*args, **kwargs) -> Generator:
+    def corou(*args, **kwargs) -> Generator[Any, Any, Any]:
         raise NotImplementedError

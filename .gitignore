@@ -6,3 +6,5 @@ dist
 *.spec
 build_scripts
 .vscode
+.idea
+.venv
