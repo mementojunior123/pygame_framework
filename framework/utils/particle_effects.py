@@ -142,10 +142,6 @@ class Particle(Sprite, sprite_count=250, do_link=False):
         self.kill_offscreen : bool = True
         self.pivot : Pivot2D
 
-        Particle.inactive_elements.append(self)
-        Sprite.inactive_elements.remove(self)
-
-    
     
     def spawn(self, pos : pygame.Vector2, lifetime : float, update_method : UpdateMethod, main_texture : pygame.Surface, 
               velocity : pygame.Vector2|None = None, accel : pygame.Vector2|None = None, drag : float = 0, 
