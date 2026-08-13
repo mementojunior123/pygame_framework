@@ -14,16 +14,18 @@ from math import floor, ceil
 from framework.utils.helpers import ColorType
 from typing import Callable, cast
 
+from framework.core.asset_manager import asset_manager
+
 def noop():
     pass
 
 class Menu(BaseMenu):
     """Implementation of the menu class."""
-    font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
-    font_50 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 50)
-    font_60 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 60)
-    font_70 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 70)
-    font_150 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 150)
+    font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
+    font_50 = cast(pygame.Font, asset_manager.get_font("font_50"))
+    font_60 = cast(pygame.Font, asset_manager.get_font("font_60"))
+    font_70 = cast(pygame.Font, asset_manager.get_font("font_70"))
+    font_150 = cast(pygame.Font, asset_manager.get_font("font_150"))
 
     @staticmethod
     def _get_core_object():

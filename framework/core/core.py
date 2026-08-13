@@ -15,6 +15,7 @@ from src.game_storage import GameStorage
 import src.menu
 from framework.game.game_module import Game
 from framework.core.task_scheduler import TaskScheduler
+from framework.core.asset_manager import AssetManager, asset_manager
 from framework.utils.tween_module import TweenTrack, TweenChain
 from framework.utils.animation import AnimationTrack
 import sys
@@ -63,6 +64,7 @@ class Core:
         self.game = Game()
         self.storage = GameStorage()
         self.task_scheduler = TaskScheduler()
+        self.asset_manager : AssetManager = asset_manager
         self.delta_stream : deque[float] = deque([1 for _ in range(30)])
         self.dirty_display_rects : list[pygame.Rect] = []
         self.brightness_map_blend_mode = pygame.BLENDMODE_NONE
