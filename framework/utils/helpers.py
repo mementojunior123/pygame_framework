@@ -62,7 +62,7 @@ class Task:
     def execute(self):
         self.callback(*self.args, **self.kwargs)
 
-def scale_surf(surf : pygame.Surface, scale : float):
+def scale_surf(surf : pygame.Surface, scale : float|Sequence[float]):
     return pygame.transform.scale_by(surf, scale)
 
 def rotate_around_center(image : pygame.Surface, pos : pygame.Vector2, angle : float) -> tuple[pygame.Surface, pygame.Rect]:
@@ -160,7 +160,17 @@ def recolor_image_ip(img : pygame.Surface, new_color : ColorType) -> None:
 
 def remove_image_empty(img : pygame.Surface) -> pygame.Surface:
     bounding_box : pygame.Rect = img.get_bounding_rect()
-    new_surf : pygame.Surface = pygame.Surface(bounding_box.size)
+    img_rect : pygame.Rect = img.get_rect()
+    if bounding_box.size == img_rect.size:
+        return img
+    
+    colorkey = img.get_colorkey()
+    flags : int
+    if not colorkey:
+        flags = pygame.SRCALPHA
+    else:
+        flags = 0
+    new_surf : pygame.Surface = pygame.Surface(bounding_box.size, flags)
     colorkey = img.get_colorkey()
     if colorkey:
         new_surf.set_colorkey(colorkey)

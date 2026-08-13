@@ -6,8 +6,11 @@ from .ui_position import UiPosition
 from framework.utils.helpers import AnchorStr
 from .ui_frame import UiFrame
 
+from framework.core.asset_manager import asset_manager
+from typing import cast
+
 class BaseUiElements:
-    font_40 = pygame.font.Font("assets/fonts/Pixeltype.ttf", 40)
+    font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
     image_dict : dict[str, pygame.Surface] = button_templates.image_dict
 
     @classmethod

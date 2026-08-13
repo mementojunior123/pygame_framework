@@ -3,6 +3,8 @@ import json
 import platform
 from typing import Union, TypeAlias, Literal, cast, overload
 
+from framework.core.asset_manager import asset_manager
+
 class SoundTypes:
     music = 'Music'
     sfx = 'SFX'
