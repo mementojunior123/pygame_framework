@@ -1,7 +1,7 @@
 import pygame
 from .ui_position import AnyUiPosition, UiPosition
 
-from typing import Literal, TypeAlias, overload
+from typing import Literal, TypeAlias, overload, Iterable
 from dataclasses import dataclass
 import dataclasses
 
@@ -18,10 +18,15 @@ class BaseDrawableInfo:
     zindex : int = 0
     data : dict = dataclasses.field(default_factory=lambda : {})
 
+    relevant_events : Iterable[int] = tuple()
+    fire_tag_events : bool = True
+    obstructs_cliks : bool = True
+
     def __post_init__(self):
         ...
 
 class UiDrawable:
+    TAG_EVENT : int = pygame.event.custom_type()
     @staticmethod
     def unpack_drawable_list(drawables : list["UiDrawable"]) -> list["UiDrawable"]:
         result : list[UiDrawable] = []
@@ -32,7 +37,21 @@ class UiDrawable:
                 result.append(drawable)
         result.sort(key=lambda d : d.zindex)
         return result
-        
+
+    @staticmethod
+    def get_clicked(drawables : list["UiDrawable"], click_pos : pygame.typing.Point, 
+                    do_unpack : bool = False, do_sort : bool = False) -> list["UiDrawable"]:
+        if do_unpack:
+            drawables = UiDrawable.unpack_drawable_list(drawables)
+        elif do_sort:
+            drawables.sort(key=lambda d : d.zindex)
+        result = []
+        for drawable in reversed(drawables):
+            if drawable.collidepoint(click_pos):
+                result.append(drawable)
+                if drawable.obstructs_clicks:
+                    break
+        return result
 
     def __init__(self, info : BaseDrawableInfo):
         self.position : AnyUiPosition = info.position
@@ -44,6 +63,18 @@ class UiDrawable:
         self.use_abs_pos : bool = info.use_abs_pos
         self.zindex : int = info.zindex
         self.data : dict = info.data
+
+        self._relevant_custom_events : set[int] = set(info.relevant_events)
+        self.do_fire_tag_events : bool = info.fire_tag_events
+        self.obstructs_clicks : bool = info.obstructs_cliks
+
+    @property
+    def relevant_custom_events(self) -> set[int]:
+        return self._relevant_custom_events
+
+    @relevant_custom_events.setter
+    def relevant_custom_events(self, new_val : Iterable[int]):
+        self._relevant_custom_events = set(new_val)
 
     @property
     def size(self) -> pygame.Vector2:
@@ -103,6 +134,9 @@ class UiDrawable:
         """Note : If frame is given and not an ancestor, None is returned.
                 If None is passed in as a frame, gets window pos"""
         raise NotImplementedError
+
+    def collidepoint(self, point : pygame.typing.Point):
+        return self.get_world_draw_rect().collidepoint(point)
     
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         """
@@ -119,14 +153,14 @@ class UiDrawable:
     def update(self, delta : float):
         pass
 
-    def handle_mouse_event(self, event : pygame.Event):
-        pass
+    def on_click(self, event : pygame.Event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.do_fire_tag_events:
+                pygame.event.post(pygame.Event(UiDrawable.TAG_EVENT, 
+                {"tag" : self.tag, "name" : self.name, 'trigger_type' : 'click', 'trigger_event' : event}))
 
-    def handle_touch_event(self, event : pygame.Event):
-        pass
-
-    def handle_key_event(self, event : pygame.Event):
-        pass
+    def handle_custom_event(self, event : pygame.Event):
+        ...
 
 class UiSpriteGroup(UiDrawable):
     def __init__(self, base_drawable_info : BaseDrawableInfo, elements : list[UiDrawable]):
@@ -136,6 +170,18 @@ class UiSpriteGroup(UiDrawable):
             if element.parent != self and element.parent:
                 if element in element.parent.elements: element.parent.remove(element)
             element._parent = self
+
+    @property
+    def relevant_custom_events(self) -> set[int]:
+        sets_to_merge : list[set[int]] = [element.relevant_custom_events for element in self.elements]
+        result : set[int] = self._relevant_custom_events
+        for set_to_merge in sets_to_merge:
+            result |= set_to_merge
+        return result
+    
+    @relevant_custom_events.setter
+    def relevant_custom_events(self, new_val : Iterable[int]):
+        self._relevant_custom_events = set(new_val)
 
     @property
     def size(self) -> pygame.Vector2:
@@ -227,6 +273,18 @@ class UiSpriteGroup(UiDrawable):
     def _render(self):
         for element in self.elements:
             element._render()
+
+    def on_click(self, event : pygame.Event):
+        super().on_click(event)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for element in self.elements:
+                if element.collidepoint(event.pos):
+                    element.on_click(event)
+
+    def handle_custom_event(self, event : pygame.Event):
+        for element in self.elements:
+            if event.type in element.relevant_custom_events:
+                element.handle_custom_event(event)
     
     def add(self, new_element : UiDrawable):
         if new_element not in self.elements:

@@ -82,5 +82,21 @@ class Ui:
             self.temp_elements.pop(item)
             if item in self.complete_list: self.complete_list.remove(item)
 
+    def handle_mouse_event(self, event : pygame.Event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            drawables : list[UiDrawable] = self.elements + list(self.temp_elements)
+            clicked : list[UiDrawable] = UiDrawable.get_clicked(drawables, event.pos, do_unpack=True)
+            for cliked_drawable in clicked:
+                cliked_drawable.on_click(event)
+
+    def handle_any_event(self, event : pygame.Event):
+        for drawable in self.elements:
+            if event.type in drawable.relevant_custom_events:
+                drawable.handle_custom_event(event)
+
+        for drawable in self.temp_elements:
+            if event.type in drawable.relevant_custom_events:
+                drawable.handle_custom_event(event)
+
     
     

@@ -19,6 +19,5 @@
 -Descendant search
 -Update docs in base_menu
 -Validation?
--Implement some sort of event manager
 -Implement rotation, scaling and opacity (not important for now)
 -Implement missing ui sprites

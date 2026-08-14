@@ -73,6 +73,10 @@ class Game:
         core_object.event_manager.bind(pygame.MOUSEMOTION, self.handle_mouse_event)
         core_object.event_manager.bind(Sprite.SPRITE_CLICKED, self.handle_mouse_event)
 
+        core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, core_object.main_ui.handle_mouse_event)
+        core_object.event_manager.bind(core_object.event_manager.ANY_EVENT, core_object.main_ui.handle_any_event)
+    
+
     def remove_connections(self):
         core_object.event_manager.unbind(pygame.KEYDOWN, self.handle_key_event)
         core_object.event_manager.unbind(pygame.KEYUP, self.handle_key_event)
@@ -81,6 +85,10 @@ class Game:
         core_object.event_manager.unbind(pygame.MOUSEBUTTONUP, self.handle_mouse_event)
         core_object.event_manager.unbind(pygame.MOUSEMOTION, self.handle_mouse_event)
         core_object.event_manager.unbind(Sprite.SPRITE_CLICKED, self.handle_mouse_event)
+
+        core_object.event_manager.unbind(pygame.MOUSEBUTTONDOWN, core_object.main_ui.handle_mouse_event)
+        core_object.event_manager.unbind(core_object.event_manager.ANY_EVENT, core_object.main_ui.handle_any_event)
+
 
     def handle_key_event(self, event : pygame.Event):
         self.state.handle_key_event(event)

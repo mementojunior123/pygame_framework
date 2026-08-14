@@ -19,7 +19,7 @@ def noop():
     pass
 
 class BaseMenu:
-    TAG_EVENT = pygame.event.custom_type()
+    TAG_EVENT : int = UiDrawable.TAG_EVENT
     """Base class for the menu."""
     font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
     font_50 = cast(pygame.Font, asset_manager.get_font("font_50"))
@@ -91,6 +91,7 @@ class BaseMenu:
         """
         core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
         core_object.event_manager.bind(BaseMenu.TAG_EVENT, self.handle_tag_event)
+        core_object.event_manager.bind(core_object.event_manager.ANY_EVENT, self.handle_any_event)
     
     def remove_connections(self):
         """
@@ -98,6 +99,7 @@ class BaseMenu:
         """
         core_object.event_manager.unbind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
         core_object.event_manager.unbind(BaseMenu.TAG_EVENT, self.handle_tag_event)
+        core_object.event_manager.unbind(core_object.event_manager.ANY_EVENT, self.handle_any_event)
     
     
 
@@ -302,8 +304,13 @@ class BaseMenu:
             event: The event to handle.
         """
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos : tuple = event.pos
-            sprite : UiDrawable
-            for sprite in self.stages[self.stage]:
-                if sprite.get_world_draw_rect().collidepoint(mouse_pos):
-                    pygame.event.post(pygame.Event(BaseMenu.TAG_EVENT, {"tag" : sprite.tag, "name" : sprite.name, 'trigger_type' : 'click'}))
+            drawables : list[UiDrawable] = self.stages[self.stage] + list(self.temp)
+            clicked : list[UiDrawable] = UiDrawable.get_clicked(drawables, event.pos, do_unpack=True)
+            for cliked_drawable in clicked:
+                cliked_drawable.on_click(event)
+
+    def handle_any_event(self, event : pygame.Event):
+        drawables : list[UiDrawable] = self.stages[self.stage] + list(self.temp)
+        for drawable in drawables:
+            if event.type in drawable.relevant_custom_events:
+                drawable.handle_custom_event(event)

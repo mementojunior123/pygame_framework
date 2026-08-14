@@ -75,7 +75,7 @@ class Menu(BaseMenu):
             super().__init__(base_drawable_info, self.elements, ui_frame_info)
 
             for text, pos, anchor in zip(text_list, ((0, 0), (1, 0), (0, 1), (1, 1)), ((0, 0), (1, 0), (0, 1), (1, 1))):
-                new_element = TextSprite(BaseDrawableInfo(UiPosition.from_normal_coords(pos, anchor, size), self),
+                new_element = TextSprite(BaseDrawableInfo(UiPosition.from_normal_coords(pos, anchor, size), self, relevant_events=[pygame.KEYDOWN]),
                                          TextSpriteInfo(text, Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0)))
                 self.add(new_element)
 
