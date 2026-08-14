@@ -1,11 +1,14 @@
 import pygame
 from typing import Any
 def rotate_around_pivot_accurate(image : pygame.Surface, pos : pygame.Vector2, angle : float,
-                        offset : pygame.Vector2 = None, debug = False, colorkey : pygame.Color|None = None):
+                        offset : pygame.Vector2|None = None, debug = False, colorkey: pygame.typing.ColorLike|None = None) -> tuple:
     
+    prev_colorkey = image.get_colorkey()
     if colorkey is not None:
-        prev_colorkey = image.get_colorkey()
         image.set_colorkey(colorkey)
+
+    if offset is None:
+        offset = pygame.Vector2(0, 0)
 
     new_image = pygame.transform.rotate(image, -angle)
     new_pos = pos - offset.rotate(angle)
@@ -22,14 +25,14 @@ def rotate_around_pivot_pos_only(pos : pygame.Vector2, angle : float, offset : p
 
 
 class Pivot2D:
-    def __init__(self, pos : pygame.Vector2, og_image : pygame.Surface|None = None, colorkey : pygame.Color|None = None) -> None:
+    def __init__(self, pos : pygame.Vector2, og_image : pygame.Surface, colorkey: pygame.typing.ColorLike|None = None) -> None:
         self._origin : pygame.Vector2 = pos
         self._pivot_offset : pygame.Vector2 = pygame.Vector2(0,0)
         self._angle : float = 0
         self._position : pygame.Vector2 = self._origin.copy()
         self.is_cached : bool = True
-        self.original_image : pygame.Surface|None = og_image
-        self.img_colorkey : pygame.Color|None = colorkey
+        self.original_image : pygame.Surface = og_image
+        self.img_colorkey: pygame.typing.ColorLike|None = colorkey
     
     @property
     def origin(self):

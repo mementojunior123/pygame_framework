@@ -12,7 +12,7 @@ class InputTextbox(UiSprite):
                  attributes: dict = None, data: dict = None, forced_og_surf: pygame.Surface = None, zindex: int = 0, 
                  text_settings : tuple[pygame.Font, pygame.Color, bool]|None = None, 
                  text_alingment : tuple[pygame.Vector2, int, int]|None = None, 
-                 cursor_color : pygame.Color|None = None):
+                 cursor_color: pygame.typing.ColorLike|None = None):
         
         super().__init__(surf, rect, tag, name, True, attributes, data, forced_og_surf, zindex)
         self.text_settings : tuple[pygame.Font, pygame.Color, bool] = text_settings or (InputTextbox.main_font, 'Black', False)

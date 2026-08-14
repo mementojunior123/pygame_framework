@@ -12,6 +12,11 @@ window = pygame.display.set_mode(window_size)
 
 pygame.mixer.set_num_channels(32)
 
+from framework.core.asset_manager import asset_manager
+
+for size in (40, 50, 60, 70, 150):
+    asset_manager.load_font(r'assets/fonts/Pixeltype.ttf', f"font_{size}", size)
+
 from framework.core.core import Core, core_object
 import src.settings as settings_module
 core = core_object
@@ -28,13 +33,15 @@ from framework.utils.animation import Animation, AnimationTrack, _sprite_hint
 _sprite_hint()
 
 from framework.ui import UiDrawable
-from framework.utils.helpers import rotate_around_pivot_accurate, copysign
+from framework.utils.helpers import copysign
 from framework.utils.particle_effects import ParticleEffect, Particle
 import framework.utils.particle_effects
 framework.utils.particle_effects.runtime_imports()
 from framework.utils.my_timer import Timer
 import framework.utils.interpolation as interpolation
 import framework.utils.tween_module as TweenModule
+
+
 
 import src.game_states as game_states
 from src.sprites.test_player import TestPlayer

@@ -5,7 +5,7 @@ from framework.utils.helpers import AnyJson
 from framework.core.base_settings import BaseSettings, runtime_imports, MissingKeyClass, _missing, SettingException, BaseSettingsDict
 
 if PLATFORM == 'emscripten':
-    from platform import window
+    from platform import window #type: ignore
 
 class SettingsDict(BaseSettingsDict):
     Brightness : int

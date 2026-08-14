@@ -1,5 +1,5 @@
 import pygame
-from typing import Any
+from typing import Any, cast
 from math import floor
 from random import shuffle, choice
 import random
@@ -13,20 +13,24 @@ from framework.utils.helpers import average, random_float
 from framework.game.sprite_renderer import SpriteCamera
 from src.game_states import GameState, GameStates, initialise_game
 import framework.utils.particle_effects
+from framework.core.asset_manager import asset_manager
+
 
 class Game:
-    font_40 = pygame.Font('assets/fonts/Pixeltype.ttf', 40)
-    font_50 = pygame.Font('assets/fonts/Pixeltype.ttf', 50)
-    font_60 = pygame.Font('assets/fonts/Pixeltype.ttf', 60)
-    font_70 = pygame.Font('assets/fonts/Pixeltype.ttf', 70)
+    font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
+    font_50 = cast(pygame.Font, asset_manager.get_font("font_50"))
+    font_60 = cast(pygame.Font, asset_manager.get_font("font_60"))
+    font_70 = cast(pygame.Font, asset_manager.get_font("font_70"))
+    font_150 = cast(pygame.Font, asset_manager.get_font("font_150"))
     
     def __init__(self) -> None:
         self.STATES = GameStates
 
         self.active : bool = False
-        self.state : None|GameState = None
-        self.game_timer : Timer|None = None
-        self.game_data : dict|None = {}
+        self.state : GameState
+        self.game_timer : Timer
+        self.game_data : dict
+        self.main_camera : SpriteCamera
 
         
 
@@ -34,7 +38,7 @@ class Game:
         self.active = True
         self.game_timer = Timer(-1)
         self.game_data = {}
-        self.main_camera : SpriteCamera = SpriteCamera()
+        self.main_camera = SpriteCamera()
         self.make_connections()
         initialise_game(self, event)
 
@@ -42,8 +46,8 @@ class Game:
     def alert_player(self, text : str, alert_speed : float = 1):
         text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
                                          TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
-        mid_height : int = text_sprite.size.y // 2
-        self.add_temp(text_sprite, 5)
+        mid_height : float = text_sprite.size.y // 2
+        core_object.main_ui.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo
         goal1 = {'position.value.y' : 50 + mid_height}
         info1 = TInfo(interpolation.quad_ease_out, 0.3 / alert_speed)
@@ -111,9 +115,9 @@ class Game:
         #Cleanup basic variables
         self.active = False
         self.state.cleanup()
-        self.state = None
-        self.game_timer = None
-        self.main_camera = None
+        del self.state
+        del self.game_timer
+        del self.main_camera
         self.game_data.clear()
 
         #Cleanup ingame object

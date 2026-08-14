@@ -4,13 +4,6 @@ import os
 from typing import Any, TypedDict
 from framework.utils.helpers import AnyJson
 
-if PLATFORM == 'emscripten':
-    from platform import window
-
-class MockGameData(TypedDict):
-    """This is the base class for the game data that needs to be stored."""
-    pass
-
 class BaseGameStorage:
     """This is the base class for game storage. It must be implemented in game_storage.py."""
     def __init__(self) -> None:
@@ -21,16 +14,16 @@ class BaseGameStorage:
         """Variables are set to their default values here."""
         pass
     
-    def validate_data(self, data : MockGameData) -> bool:
+    def validate_data(self, data : dict) -> bool:
         """Function that validates that the game data that was passed to it is valid."""
         if data is None: return False
         return True
 
-    def _get_data(self) -> MockGameData:
+    def _get_data(self) -> dict:
         """Function that extracts the game data from the current storage object."""
-        return {}
+        ...
 
-    def _load_data(self, data : MockGameData) -> bool:
+    def _load_data(self, data : dict) -> bool:
         """Function that loads the passed game data into the current storage object."""
         if not self.validate_data(data):
             print('Data is invalid!')
@@ -98,7 +91,7 @@ class BaseGameStorage:
             key: The name of the value to access.
         Returns --> The string representing the value if it exists, otherwise None.
         """
-        return window.localStorage.getItem(key)
+        return window.localStorage.getItem(key) # type: ignore
 
     def set_web(self, key : str, value : str):
         """
@@ -106,4 +99,4 @@ class BaseGameStorage:
             key: The name of the value to set.
             value: The value to set.
         """
-        window.localStorage.setItem(key, str(value))
+        window.localStorage.setItem(key, str(value)) # type: ignore

@@ -4,7 +4,7 @@ from sys import platform as PLATFORM
 from framework.utils.helpers import AnyJson
 
 if PLATFORM == 'emscripten':
-    from platform import window
+    from platform import window #type: ignore
 
 class SettingException(BaseException):
     pass
@@ -82,10 +82,10 @@ class BaseSettings:
         self.set_web('SettingsData', json.dumps(data))
 
     def get_web(self, key : str) -> str:
-        return window.localStorage.getItem(key)
+        return window.localStorage.getItem(key) #type: ignore
 
     def set_web(self, key : str, value : Any):
-        window.localStorage.setItem(key, str(value))
+        window.localStorage.setItem(key, str(value)) #type: ignore
 
     @classmethod
     def set_default(cls, new_default : BaseSettingsDict) -> bool:

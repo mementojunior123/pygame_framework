@@ -12,18 +12,20 @@ from framework.utils.my_timer import Timer
 from framework.ui import BrightnessOverlay
 from math import floor, ceil
 from framework.utils.helpers import ColorType
-from typing import Callable
+from typing import Callable, cast
+
+from framework.core.asset_manager import asset_manager
 
 def noop():
     pass
 
 class Menu(BaseMenu):
     """Implementation of the menu class."""
-    font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
-    font_50 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 50)
-    font_60 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 60)
-    font_70 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 70)
-    font_150 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 150)
+    font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
+    font_50 = cast(pygame.Font, asset_manager.get_font("font_50"))
+    font_60 = cast(pygame.Font, asset_manager.get_font("font_60"))
+    font_70 = cast(pygame.Font, asset_manager.get_font("font_70"))
+    font_150 = cast(pygame.Font, asset_manager.get_font("font_150"))
 
     @staticmethod
     def _get_core_object():
@@ -42,8 +44,8 @@ class Menu(BaseMenu):
 
         self.stage = 1
         
-        self.stage_data : list[dict] = [None, {}, {}]
-        self.stages = [None, 
+        self.stage_data : list[dict] = [{}, {}, {}]
+        self.stages = [[], 
         [BaseUiElements.new_text_sprite('Game Title', (Menu.font_60, 'Black', False), 0, 'midtop', (centerx, 50)),
         BaseUiElements.new_button('BlueButton', 'Play', 1, 'midbottom', (centerx, window_size[1] - 15), (0.5, 1.4), 
         (Menu.font_40, 'Black', False), name='play_button'),
@@ -90,19 +92,19 @@ class Menu(BaseMenu):
         return shown_text
 
 
-    def get_stage_2_frame(self, page_index : int) -> list[UiDrawable]:
+    def get_stage_2_frame(self, page_index : int) -> "Menu.CustomFrameStage2":
         new_frame = self.CustomFrameStage2(self.get_shown_text(page_index))
         return new_frame
         
     def increment_stage2(self):
         new_index = (self.stage_data[2]['page_index'] + 1) % (self.stage_data[2]['page_count'])
-        test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame")
+        test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame") #type: ignore
         test_frame.switch_text_list(self.get_shown_text(new_index))
         self.stage_data[2]['page_index'] = new_index
 
     def decrement_stage2(self):
         new_index = (self.stage_data[2]['page_index'] - 1) % (self.stage_data[2]['page_count'])
-        test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame")
+        test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame") #type: ignore
         test_frame.switch_text_list(self.get_shown_text(new_index))
         self.stage_data[2]['page_index'] = new_index
 

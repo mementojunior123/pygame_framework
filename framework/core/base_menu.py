@@ -11,7 +11,9 @@ from framework.utils.my_timer import Timer
 from framework.ui import BrightnessOverlay
 from math import floor, ceil
 from framework.utils.helpers import ColorType
-from typing import Callable
+from typing import Callable, cast
+
+from framework.core.asset_manager import asset_manager
 
 def noop():
     pass
@@ -19,11 +21,11 @@ def noop():
 class BaseMenu:
     TAG_EVENT = pygame.event.custom_type()
     """Base class for the menu."""
-    font_40 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 40)
-    font_50 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 50)
-    font_60 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 60)
-    font_70 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 70)
-    font_150 = pygame.font.Font(r'assets/fonts/Pixeltype.ttf', 150)
+    font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
+    font_50 = cast(pygame.Font, asset_manager.get_font("font_50"))
+    font_60 = cast(pygame.Font, asset_manager.get_font("font_60"))
+    font_70 = cast(pygame.Font, asset_manager.get_font("font_70"))
+    font_150 = cast(pygame.Font, asset_manager.get_font("font_150"))
 
     @staticmethod
     def _get_core_object():
@@ -34,7 +36,7 @@ class BaseMenu:
     def __init__(self) -> None:
         """Constructor for the menu object that runs before runtime imports."""
         self.stage : int
-        self.stages : list[list[UiDrawable]|None]
+        self.stages : list[list[UiDrawable]]
         self.bg_color : ColorType|str
         self.temp : dict[UiDrawable, Timer] = {}
         
@@ -42,8 +44,8 @@ class BaseMenu:
         """Initialises a menu object. Must be ran after runtime imports."""
         self.bg_color = (94, 129, 162)
         self.stage = 1
-        self.stage_data : list[dict] = [None, {}]
-        self.stages = [None, []]
+        self.stage_data : list[dict] = [{}, {}]
+        self.stages = [[], []]
     
     def add_temp(self, element : UiDrawable, time : float|Timer, 
                  override = False, time_source : Callable[[], float]|None = None, time_scale : float = 1):
@@ -56,7 +58,7 @@ class BaseMenu:
             time_scale: The multiplicative factor that gets applied to the timestamp function of the element's timer. Is optional.
         """
         if element not in self.temp or override == True:
-            timer = time if type(time) == Timer else Timer(time, time_source, time_scale)
+            timer = time if isinstance(time, Timer) else Timer(time, time_source, time_scale)
             self.temp[element] = timer
     
     def alert_player(self, text : str, alert_speed : float = 1):
@@ -67,7 +69,7 @@ class BaseMenu:
         """
         text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
                                  TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
-        mid_height : int = text_sprite.size.y // 2
+        mid_height : float = text_sprite.size.y // 2
         self.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo
         goal1 = {'position.value.y' : 50 + mid_height}
@@ -226,23 +228,24 @@ class BaseMenu:
         Only one of the 3 criteria (old_sprite, tag, name) has to match.
         No search criteria is obligatory, but alteast one must be given.
         """
-        found : bool = False
+        found : int = -1
+
         for index, sprite in enumerate(self.stages[stage]):
             if sprite == old_sprite and old_sprite is not None:
-                found = True
+                found = index
                 break
             if sprite.tag == tag and tag is not None:
-                found = True
+                found = index
                 break
             if sprite.name == name and name is not None:
-                found = True
+                found = index
                 break
         
-        if found:
-            self.stages[stage][index] = new_sprite
+        if found != -1:
+            self.stages[stage][found] = new_sprite
         else:
             print('Find and replace failed')
-        return found
+        return found != -1
     
     def remove_sprite(self, stage : int, sprite : UiDrawable|None = None, 
                       name : str|None = None, tag : int|None = None) -> None|UiDrawable:

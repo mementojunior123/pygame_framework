@@ -6,7 +6,7 @@ TimeSource : TypeAlias = Callable[[], float]
 class Timer:
     
     @staticmethod
-    def time_source() -> float:
+    def base_time_source() -> float:
         return perf_counter()
     
     def get_timestamp(self) -> float:
@@ -16,6 +16,7 @@ class Timer:
         self.duration = treshold
         self.time_source : TimeSource
         if time_source: self.time_source = time_source
+        else: self.time_source = Timer.base_time_source
         self.scale_factor : float = scale_factor
         self.start_time = self.get_timestamp()
         self.init_time = self.get_timestamp()
@@ -47,6 +48,7 @@ class Timer:
     
     def unpause(self):
         if not self.paused: return
+        assert self.pause_start is not None # this is done for the sake of the type chkecer
         self.pause_duration += self.get_timestamp() - self.pause_start
         self.paused = False
         self.pause_start = None
@@ -63,7 +65,9 @@ class Timer:
     
     def get_pause_time(self):
         if self.paused == False: return self.pause_duration
-        else: return self.pause_duration + self.get_timestamp() - self.pause_start
+        else:
+            assert self.pause_start is not None # this is done for the sake of the type chkecer
+            return self.pause_duration + self.get_timestamp() - self.pause_start
     
     def get_time_left(self):
         return self.duration - self.get_time()

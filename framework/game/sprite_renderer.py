@@ -64,7 +64,7 @@ class SpriteCamera():
         origin_to_sprite : pygame.Vector2 = pygame.Vector2((sprite.true_position - self.offset) - origin)
         scaled_origin_to_sprite : pygame.Vector2 = origin_to_sprite * self.zoom
         sprite_final_position : pygame.Vector2 = origin + scaled_origin_to_sprite.rotate(-self.rotation)
-        transformed_rect : pygame.Surface = transformed.get_rect(center = sprite_final_position)
+        transformed_rect : pygame.Rect = transformed.get_rect(center = sprite_final_position)
         display.blit(transformed, transformed_rect)
 
     def clear_cache(self):

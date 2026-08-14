@@ -1,8 +1,10 @@
 import pygame
-from .ui_position import AnyUiPosition, UiPosition, AnchorStr
+from .ui_position import AnyUiPosition, UiPosition
+from framework.utils.helpers import AnchorStr
 from .ui_sprite import UiSprite
 from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 
+from typing import overload
 from dataclasses import dataclass
 
 @dataclass
@@ -35,17 +37,19 @@ class UiFrame(UiSpriteGroup):
     
 
     def translate_local_to_world(self, point : pygame.typing.Point) -> pygame.Vector2:
-        point : pygame.Vector2 = pygame.Vector2(point)
+        point_v2 : pygame.Vector2 = pygame.Vector2(point)
 
         local_topleft = self.position.calculate_anchor(self.size, 'topleft')
         #TODO : Handle rotation and scale
-        point += local_topleft
-        return point
+        point_v2 += local_topleft
+        return point_v2
 
     def translate_local_rect_to_world(self, rect : TransformedRect|pygame.Rect) -> TransformedRect:
         if isinstance(rect, pygame.Rect):
-            rect : TransformedRect = {'topleft' : rect.topleft, 'topright' : rect.topright, 'bottomright' : rect.bottomright, 'bottomleft' : rect.bottomleft}
-        return {k : self.translate_local_to_world(rect[k]) for k in rect}
+            rect_t : TransformedRect = {'topleft' : pygame.Vector2(rect.topleft), 'topright' : pygame.Vector2(rect.topright), 
+                                        'bottomright' : pygame.Vector2(rect.bottomright), 'bottomleft' : pygame.Vector2(rect.bottomleft)}
+        else: rect_t = rect
+        return {k : self.translate_local_to_world(rect_t[k]) for k in rect_t}
 
     def get_local_rotoscaled_rect(self) -> TransformedRect:
         return {anchor : self.position.calculate_anchor(self.size, anchor) for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
@@ -66,7 +70,11 @@ class UiFrame(UiSpriteGroup):
         min_y = min(val.y for val in local_trs_rect.values())
         max_y = max(val.y for val in local_trs_rect.values())
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
-    
+
+    @overload
+    def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
+    @overload
+    def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
     def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame)
         if world_trs_rect is None: return None
@@ -83,11 +91,13 @@ class UiFrame(UiSpriteGroup):
         ...
 
 
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         if not self.visible:
             return
-        draw_rect : pygame.Rect = self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame)
-        if self.surf:
+        draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        if draw_rect is None:
+            return
+        if self.base_surf:
             self.surf = self.base_surf.copy()
             for element in self.elements:
                 element.draw(self.surf, None)
