@@ -14,10 +14,12 @@
 -Implement use_abs_pos(?)
 
 -Handle UiFrame.size in cases where UiFrame has a surf
--Add ways to make easy UI layouts?
+
 -Add a UiSprite.base_surf property that automatically calls _render?
--Descendant search
--Update docs in base_menu
--Validation?
+
 -Implement rotation, scaling and opacity (not important for now)
 -Implement missing ui sprites
+
+-Add ways to make easy UI layouts?
+-Update docs in base_menu
+-Validation?
