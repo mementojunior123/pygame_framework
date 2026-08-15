@@ -15,7 +15,6 @@ class BrightnessOverlay(UiSprite):
         self._render_base(init=True)
 
         super().__init__(info, self._base_surf)
-        self._render()
 
     @property
     def size(self) -> pygame.Vector2:

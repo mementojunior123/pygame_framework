@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from typing import Sequence
 
-class TextBox(UiSprite):
+class Textbox(UiSprite):
     _base_surf_changeable = False
     def __init__(self, info : BaseDrawableInfo, background : pygame.Surface, text : str, text_style : TextStyle,
                  text_pos : AnchorStr|Sequence[float] = (0.5, 0.5), text_aligment : AnchorStr|Sequence[float] = (0.5, 0.5), 
@@ -32,7 +32,6 @@ class TextBox(UiSprite):
 
         self._render_base(True)
         super().__init__(info, self._base_surf)
-        self._render()
 
     def get_shown_text(self) -> str:
         text_index = floor(self._text_percent * len(self._text))
@@ -44,7 +43,9 @@ class TextBox(UiSprite):
 
     @background.setter
     def background(self, new_value : pygame.Surface):
-        self._background = new_value
+        if new_value != self._background:
+            self._background = new_value
+            self._render_base()
 
     @property
     def text(self) -> str:
@@ -77,6 +78,7 @@ class TextBox(UiSprite):
     @text_style.setter
     def text_style(self, new_value : TextStyle):
         self._text_style = new_value
+        self._render_base()
 
     # TODO : properties for text_pos and text_aligment
 

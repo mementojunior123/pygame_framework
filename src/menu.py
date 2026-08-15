@@ -5,6 +5,7 @@ from framework.ui import UiPosition, BaseDrawableInfo
 from framework.ui import UiSprite, UiDrawable, UiSpriteGroup
 from framework.ui import UiFrame, BaseUiFrameInfo
 from framework.ui import TextSprite, TextSpriteInfo, TextStyle
+from framework.ui import InputTextbox, InputTextboxInfo
 from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
@@ -18,7 +19,8 @@ from framework.core.asset_manager import asset_manager
 
 def noop():
     pass
-
+test_image  = pygame.image.load('assets/graphics/button_templates/textbox_green_colorkey.png').convert()
+test_image.set_colorkey((0, 255, 0))
 class Menu(BaseMenu):
     """Implementation of the menu class."""
     font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
@@ -57,7 +59,10 @@ class Menu(BaseMenu):
         BaseUiElements.new_button('BlueButton', 'Next', 2, 'bottomright', (wx - 20, window_size[1] - 25), (0.4, 1.0), 
         (Menu.font_40, 'Black', False), name='next_button'),
         BaseUiElements.new_button('BlueButton', 'Back', 3, 'topleft', (15, 15), (0.4, 1.0), 
-        (Menu.font_40, 'Black', False), name='back_button'),]
+        (Menu.font_40, 'Black', False), name='back_button'),
+        InputTextbox(BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), zindex=50), test_image,
+                     "", TextStyle(Menu.font_40, "Black", False), text_pos=(0.1, 0.5), text_aligment='midleft', 
+                     input_textbox_info=InputTextboxInfo(on_confirm_callbacks=[lambda t : core_object.log(t._text)]))]
         ]
         self.bg_color = (94, 129, 162)
         self.add_connections()

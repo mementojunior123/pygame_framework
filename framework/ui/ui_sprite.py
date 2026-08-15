@@ -9,7 +9,8 @@ class UiSprite(UiDrawable):
     def __init__(self, info : BaseDrawableInfo, base_surf : pygame.Surface):
         super().__init__(info)
         self._base_surf : pygame.Surface = base_surf
-        self._surf : pygame.Surface = base_surf.copy()
+        self._surf : pygame.Surface
+        self._render()
 
     @property
     def base_surf(self) -> pygame.Surface:

@@ -13,7 +13,7 @@ class TextStyle:
     text_stroke_color : pygame.typing.ColorLike|None = None
     text_stroke_size : int|None = None
     max_line_length : int = 0
-    newline_height : int = 5
+    newline_height : int = 5 # does not currently function
     colorkey : pygame.typing.ColorLike|None = None
     text_scale : float = 1
 

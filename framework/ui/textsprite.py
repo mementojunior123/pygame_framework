@@ -28,7 +28,6 @@ class TextSprite(UiSprite):
 
         self._render_base(True)
         super().__init__(info, self._base_surf)
-        self._render()
 
     def get_shown_text(self) -> str:
         text_index = floor(self._text_percent * len(self._text))
@@ -65,6 +64,7 @@ class TextSprite(UiSprite):
     @style.setter
     def style(self, new_value : TextStyle):
         self._style = new_value
+        self._render_base()
 
     def _on_style_change(self, proxy : TextStyleProxy):
         if proxy._value == self._style:
