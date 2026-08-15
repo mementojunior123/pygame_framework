@@ -74,13 +74,16 @@ class Ui:
             self.temp_elements[element] = timer
             self.complete_list.append(element)
     
-    def update(self):
+    def update(self, delta : float):
+        for sprite in self.elements:
+            sprite.update(delta)
         to_del = []
-        for item in self.temp_elements:
-            if self.temp_elements[item].isover(): to_del.append(item)
-        for item in to_del:
-            self.temp_elements.pop(item)
-            if item in self.complete_list: self.complete_list.remove(item)
+        for sprite in self.temp_elements:
+            sprite.update(delta)
+            if self.temp_elements[sprite].isover(): to_del.append(sprite)
+        for sprite in to_del:
+            self.temp_elements.pop(sprite)
+            if sprite in self.complete_list: self.complete_list.remove(sprite)
 
     def handle_mouse_event(self, event : pygame.Event):
         if event.type == pygame.MOUSEBUTTONDOWN:

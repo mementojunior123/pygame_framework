@@ -272,6 +272,10 @@ class UiSpriteGroup(UiDrawable):
         for element in self.elements:
             element._render()
 
+    def update(self, delta : float):
+        for element in self.elements:
+            element.update(delta)
+    
     def on_click(self, event : pygame.Event):
         super().on_click(event)
         if event.type == pygame.MOUSEBUTTONDOWN:
