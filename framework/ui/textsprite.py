@@ -20,13 +20,14 @@ class TextSpriteInfo:
         ...
 
 class TextSprite(UiSprite):
+    _base_surf_changeable = False
     def __init__(self, info : BaseDrawableInfo, text_sprite_info : TextSpriteInfo):
         self._text : str = text_sprite_info.text
         self._style : TextStyle = text_sprite_info.style
         self._text_percent : float = text_sprite_info.text_percent
 
         self._render_base(True)
-        super().__init__(info, self.base_surf)
+        super().__init__(info, self._base_surf)
         self._render()
 
     def get_shown_text(self) -> str:
@@ -71,6 +72,6 @@ class TextSprite(UiSprite):
 
     def _render_base(self, init : bool = False):
         true_text : str = self.get_shown_text()
-        self.base_surf = self._style.render_text(true_text)
+        self._base_surf = self._style.render_text(true_text)
         if not init:
             self._render()

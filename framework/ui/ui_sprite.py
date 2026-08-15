@@ -5,15 +5,32 @@ from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, Transforme
 from typing import overload
 
 class UiSprite(UiDrawable):
+    _base_surf_changeable = True
     def __init__(self, info : BaseDrawableInfo, base_surf : pygame.Surface):
         super().__init__(info)
-        self.base_surf : pygame.Surface = base_surf
-        self.surf : pygame.Surface = base_surf.copy()
+        self._base_surf : pygame.Surface = base_surf
+        self._surf : pygame.Surface = base_surf.copy()
 
+    @property
+    def base_surf(self) -> pygame.Surface:
+        return self._base_surf
+
+    @base_surf.setter
+    def base_surf(self, new_value : pygame.Surface):
+        if not self._base_surf_changeable:
+            raise AttributeError(f"Base surf of {self} is not changeable.")
+        if self._base_surf == new_value:
+            return
+        self._base_surf = new_value
+        self._render()
+
+    @property
+    def surf(self) -> pygame.Surface:
+        return self._surf
 
     @property
     def size(self) -> pygame.Vector2:
-        return pygame.Vector2(self.base_surf.get_size())
+        return pygame.Vector2(self._base_surf.get_size())
     
     def get_local_rotoscaled_rect(self) -> TransformedRect:
         return {anchor : self.position.calculate_anchor(self.size, anchor) for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
@@ -49,7 +66,7 @@ class UiSprite(UiDrawable):
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
     def _render(self):
-        self.surf = self.base_surf.copy()
+        self._surf = self._base_surf.copy()
 
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
@@ -58,7 +75,7 @@ class UiSprite(UiDrawable):
         draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
         if draw_rect is None:
             return
-        display.blit(self.surf, draw_rect)
+        display.blit(self._surf, draw_rect)
 
 
 def local_imports():

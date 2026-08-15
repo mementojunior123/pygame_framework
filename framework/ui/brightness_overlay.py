@@ -6,13 +6,15 @@ from .ui_sprite import UiSprite
 from .ui_frame import UiFrame
 
 class BrightnessOverlay(UiSprite):
+    _base_surf_changeable = False
     def __init__(self, info : BaseDrawableInfo, size : pygame.typing.IntPoint, brightness : int, experimental_blend : bool = True):
         self._experimental_blend : bool = experimental_blend
         self._size : pygame.Vector2 = pygame.Vector2(size)
         self._brightness : int = brightness
+        self._blend_mode : int
         self._render_base(init=True)
 
-        super().__init__(info, self.base_surf)
+        super().__init__(info, self._base_surf)
         self._render()
 
     @property
@@ -42,6 +44,18 @@ class BrightnessOverlay(UiSprite):
     def experimental_blend(self) -> bool:
         return self._experimental_blend
 
+    @experimental_blend.setter
+    def experimental_blend(self, new_value : bool):
+        if new_value == self._experimental_blend:
+            return
+        self._experimental_blend = new_value
+        self._render_base()
+
+    @property
+    def current_blend_mode(self) -> int:
+        return self._blend_mode
+    
+
     def _render_base(self, init : bool = False):
         if self._experimental_blend:
             self._blend_mode = pygame.BLEND_RGB_ADD if self._brightness >= 0 else pygame.BLEND_RGB_MULT
@@ -50,8 +64,8 @@ class BrightnessOverlay(UiSprite):
             self._blend_mode = pygame.BLEND_RGB_ADD if self._brightness >= 0 else pygame.BLEND_RGB_SUB
             abs_brightness = abs(self._brightness)
 
-        self.base_surf = pygame.surface.Surface(self.size)
-        self.base_surf.fill((abs_brightness, abs_brightness, abs_brightness))
+        self._base_surf = pygame.surface.Surface(self.size)
+        self._base_surf.fill((abs_brightness, abs_brightness, abs_brightness))
         if not init:
             self._render()
 
@@ -61,5 +75,5 @@ class BrightnessOverlay(UiSprite):
         draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
         if draw_rect is None:
             return
-        display.blit(self.surf, draw_rect, special_flags=self._blend_mode)
+        display.blit(self._surf, draw_rect, special_flags=self._blend_mode)
     
