@@ -4,6 +4,9 @@ import os
 from typing import Any, TypedDict
 from framework.utils.helpers import AnyJson
 
+if PLATFORM == 'emscripten':
+    from platform import window #type: ignore
+
 class BaseGameStorage:
     """This is the base class for game storage. It must be implemented in game_storage.py."""
     def __init__(self) -> None:
