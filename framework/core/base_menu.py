@@ -119,11 +119,14 @@ class BaseMenu:
         Function that runs every frame, allowing frame-based updates to happen.
             delta: The current delta factor. See core.py for more details on delta's functionement.
         """
+        for sprite in self.stages[self.stage]:
+            sprite.update(delta)
         to_del = []
-        for item in self.temp:
-            if self.temp[item].isover(): to_del.append(item)
-        for item in to_del:
-            self.temp.pop(item)
+        for sprite in self.temp:
+            sprite.update(delta)
+            if self.temp[sprite].isover(): to_del.append(sprite)
+        for sprite in to_del:
+            self.temp.pop(sprite)
     
     def prepare_entry(self, stage : int = 1):
         """

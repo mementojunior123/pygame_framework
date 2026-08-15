@@ -15,6 +15,7 @@ class TextStyle:
     max_line_length : int = 0
     newline_height : int = 5
     colorkey : pygame.typing.ColorLike|None = None
+    text_scale : float = 1
 
     def __post_init__(self):
         ...
@@ -55,7 +56,8 @@ class TextStyle:
             result = self.font.render(text, self.anti_aliasing, self.text_color, wraplength=self.max_line_length, bgcolor=self.colorkey)
             if self.colorkey:
                 result.set_colorkey(self.colorkey)
-
+        if self.text_scale != 1:
+            result = pygame.transform.rotozoom(result, 0, self.text_scale)
         return result
 
 
@@ -73,6 +75,7 @@ class TextStyleProxy:
         self.max_line_length : int
         self.newline_height : int
         self.colorkey : pygame.typing.ColorLike|None
+        self.text_scale : float
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name not in ("_value", "_on_change"):

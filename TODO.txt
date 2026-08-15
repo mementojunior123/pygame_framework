@@ -11,8 +11,9 @@
 
 ------Ui rework phase 2-------
 -Implement rotation, scaling and opacity (not important for now)
--Implement missing ui sprites
+-Implement input_textbox
 
+-Handle cases where UiFrame._base_surf.get_size() != UiFrame._base_size?
 -Add ways to make easy UI layouts?
 -Update docs in base_menu
 -Validation?

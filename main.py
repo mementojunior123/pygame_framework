@@ -72,7 +72,7 @@ async def main():
                 core.game.state.main_logic(core.dt)
                 ParticleEffect.update_all()
                 window.fill((94,129,162))    
-                core.main_ui.update()
+                core.main_ui.update(core.dt)
                 if core.MIX_UI_AND_SPRITES:
                     element_list : list[Sprite|UiDrawable] = Sprite.active_elements + core.main_ui.complete_list
                     element_list.sort(key = lambda sprite : sprite.zindex)
