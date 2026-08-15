@@ -9,31 +9,45 @@ from dataclasses import dataclass
 
 @dataclass
 class BaseUiFrameInfo:
+    """Note : size arg is ignored if a base surf is passed in"""
     size : pygame.typing.IntPoint
     base_surf : pygame.Surface|None = None
 
     def __post_init__(self):
         ...
 
-
-
-
-
 class UiFrame(UiSpriteGroup):
     def __init__(self, base_drawable_info : BaseDrawableInfo, elements : list[UiDrawable], ui_frame_info : BaseUiFrameInfo):
+        """Note : size arg is ignored if a base surf is passed in"""
         super().__init__(base_drawable_info, elements)
-        self._size : pygame.Vector2 = pygame.Vector2(ui_frame_info.size)
-        self.base_surf : pygame.Surface|None = ui_frame_info.base_surf
-        self.surf : pygame.Surface|None = self.base_surf.copy() if self.base_surf else None
-        self.unpack = self.base_surf is not None
+        self._base_size : pygame.Vector2 = pygame.Vector2(ui_frame_info.size)
+        self._base_surf : pygame.Surface|None = ui_frame_info.base_surf
+        self._surf : pygame.Surface|None = self._base_surf.copy() if self._base_surf else None
+
+    @property
+    def base_surf(self) -> pygame.Surface|None:
+        return self._base_surf
+
+    @base_surf.setter
+    def base_surf(self, new_value : pygame.Surface|None):
+        if self._base_surf == new_value:
+            return
+        self._base_surf = new_value
+        self._render()
+
+    @property
+    def surf(self) -> pygame.Surface|None:
+        return self._surf
 
     @property
     def size(self) -> pygame.Vector2:
-        return self._size
+        if self._base_surf is not None:
+            return pygame.Vector2(self._base_surf.get_size())
+        return self._base_size
 
     @size.setter
     def size(self, value : pygame.Vector2):
-        self._size = value
+        self._base_size = value
     
 
     def translate_local_to_world(self, point : pygame.typing.Point) -> pygame.Vector2:
@@ -86,9 +100,10 @@ class UiFrame(UiSpriteGroup):
 
     def _render(self):
         super()._render()
-        if not self.surf:
+        if not self._base_surf:
+            self._surf = None
             return
-        ...
+        self._surf = self._base_surf.copy()
 
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
@@ -97,11 +112,10 @@ class UiFrame(UiSpriteGroup):
         draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
         if draw_rect is None:
             return
-        if self.base_surf:
-            self.surf = self.base_surf.copy()
+        if self._base_surf and self._surf:
             for element in self.elements:
-                element.draw(self.surf, None)
-            display.blit(self.surf, draw_rect)
+                element.draw(self._surf, None)
+            display.blit(self._surf, draw_rect)
         else:
             for element in self.elements:
                 element.draw(display, self)

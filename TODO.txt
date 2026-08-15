@@ -10,8 +10,6 @@
 -More compact message representation
 
 ------Ui rework phase 2-------
--Handle UiFrame.size in cases where UiFrame has a surf
-
 -Implement rotation, scaling and opacity (not important for now)
 -Implement missing ui sprites
 
