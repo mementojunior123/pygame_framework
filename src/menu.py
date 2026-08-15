@@ -4,7 +4,7 @@ from framework.core.base_menu import BaseMenu
 from framework.ui import UiPosition, BaseDrawableInfo
 from framework.ui import UiSprite, UiDrawable, UiSpriteGroup
 from framework.ui import UiFrame, BaseUiFrameInfo
-from framework.ui import TextSprite, TextSpriteInfo
+from framework.ui import TextSprite, TextSpriteInfo, TextStyle
 from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
@@ -76,7 +76,7 @@ class Menu(BaseMenu):
 
             for text, pos, anchor in zip(text_list, ((0, 0), (1, 0), (0, 1), (1, 1)), ((0, 0), (1, 0), (0, 1), (1, 1))):
                 new_element = TextSprite(BaseDrawableInfo(UiPosition.from_normal_coords(pos, anchor, size), self),
-                                         TextSpriteInfo(text, Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0)))
+                                         TextSpriteInfo(text, TextStyle(Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0))))
                 self.add(new_element)
 
         def switch_text_list(self, new_text_list : list[str]):

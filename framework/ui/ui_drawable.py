@@ -14,7 +14,6 @@ class BaseDrawableInfo:
     name : str|None = None
     tag : int = 0
     start_visible : bool = True
-    use_abs_pos : bool = False
     zindex : int = 0
     data : dict = dataclasses.field(default_factory=lambda : {})
 
@@ -60,7 +59,6 @@ class UiDrawable:
         self.visible : bool = info.start_visible
         self.unpack : bool = False
         self._parent : "UiSpriteGroup|None" = info.parent
-        self.use_abs_pos : bool = info.use_abs_pos
         self.zindex : int = info.zindex
         self.data : dict = info.data
 

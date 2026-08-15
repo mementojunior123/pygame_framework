@@ -3,7 +3,7 @@ import random
 from framework.ui import UiPosition
 from framework.ui import UiSprite, BaseDrawableInfo
 from framework.ui import UiSpriteGroup, UiDrawable
-from framework.ui import TextSprite, TextSpriteInfo
+from framework.ui import TextSprite, TextSpriteInfo, TextStyle
 from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
@@ -68,7 +68,7 @@ class BaseMenu:
             alert_speed: Applies a speedup (or slowdown) factor to the alert animation.
         """
         text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
-                                 TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
+                                 TextSpriteInfo(text, TextStyle(core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0))))
         mid_height : float = text_sprite.size.y // 2
         self.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo

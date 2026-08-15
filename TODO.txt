@@ -10,8 +10,8 @@
 -More compact message representation
 
 ------Ui rework phase 2-------
--Finish adding properties in brightness_overlay, ui_sprite and textsprite
--Implement use_abs_pos(?)
+-Finish adding properties in brightness_overlay, ui_sprite
+
 
 -Handle UiFrame.size in cases where UiFrame has a surf
 

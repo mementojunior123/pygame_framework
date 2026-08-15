@@ -5,12 +5,13 @@ from .ui_frame import UiFrame, BaseUiFrameInfo
 from .brightness_overlay import BrightnessOverlay
 from .textsprite import TextSpriteInfo, TextSprite
 from .base_ui_elements import BaseUiElements
+from .textstyle import TextStyle, TextStyleProxy
 local_imports()
 local_imports2()
 local_imports3()
 __all__ = ("UiDrawable", "UiSpriteGroup", "UiSprite", "UiFrame",
            "BrightnessOverlay", "TextSprite",
-           "BaseUiElements",
+           "BaseUiElements", "TextStyle", "TextStyleProxy",
            "BaseDrawableInfo", "BaseUiFrameInfo", "TextSpriteInfo",
            "TransformedRect", "AnchorStr", 
            "UiPosition", "AnyUiPosition")

@@ -10,7 +10,7 @@ from src.settings import Settings
 from framework.core.bg_manager import BgManager
 from framework.core.ui import Ui
 from src.menu import Menu
-from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition, UiDrawable
+from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition, UiDrawable, TextStyle
 from src.game_storage import GameStorage
 import src.menu
 from framework.game.game_module import Game
@@ -76,10 +76,10 @@ class Core:
         self.frame_counter : int = 0
         self.show_fps_timer : Timer = Timer(0.1, self.global_timer.get_time)
         self.fps_sprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(15 + 63 - 63, 10), 'topleft'), name='fps_sprite'),
-                                                    TextSpriteInfo('FPS : 0', Menu.font_40, 'White', False, 'Black', 2, colorkey=(255, 0, 0)))
+                                                    TextSpriteInfo('FPS : 0', TextStyle(Menu.font_40, 'White', False, 'Black', 2, colorkey=(255, 0, 0))))
         
         self.debug_sprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(15, 200), 'midright'), name='debug_sprite', zindex=9999),
-                                                    TextSpriteInfo('', Menu.font_40, 'White', False, 'Black', 2, colorkey=(255, 0, 0)))
+                                                    TextSpriteInfo('', TextStyle(Menu.font_40, 'White', False, 'Black', 2, colorkey=(255, 0, 0))))
         self.event_manager.bind(self.START_GAME, self.start_game)
         self.event_manager.bind(self.END_GAME, self.end_game)
 
