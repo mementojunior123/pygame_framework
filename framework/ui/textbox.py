@@ -112,9 +112,6 @@ class Textbox(UiSprite):
         if prev_text_alignment != self._text_alignment:
             self._render_base()
 
-
-    # TODO : properties for text_pos and text_aligment
-
     def _on_style_change(self, proxy : TextStyleProxy):
         if proxy._value == self._text_style:
             self._render_base()

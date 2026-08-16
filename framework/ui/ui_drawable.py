@@ -320,10 +320,15 @@ class UiSpriteGroup(UiDrawable):
     def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
     def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         if not self.elements:
-            return pygame.Rect(0, 0, 0, 0)
+            return pygame.Rect(self.position.x, self.position.y, 0, 0)
         if self.get_frame_ancestors(frame) is None:
             return None
-        return self.elements[0].get_world_draw_rect(frame).unionall([e.get_world_draw_rect(frame) for e in self.elements if e != self.elements[0]]) # type: ignore
+        children_rect : list[pygame.Rect] = []
+        for element in self.elements:
+            val : pygame.Rect|None = element.get_world_draw_rect(frame)
+            if val is not None:
+                children_rect.append(val)
+        return children_rect[0].unionall(children_rect[1:])
         
     
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
