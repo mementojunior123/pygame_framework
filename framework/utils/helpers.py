@@ -62,7 +62,7 @@ class Task:
     def execute(self):
         self.callback(*self.args, **self.kwargs)
 
-def scale_surf(surf : pygame.Surface, scale : float|Sequence[float]):
+def scale_surf(surf : pygame.Surface, scale : float|pygame.typing.Point):
     return pygame.transform.scale_by(surf, scale)
 
 def rotate_around_center(image : pygame.Surface, pos : pygame.Vector2, angle : float) -> tuple[pygame.Surface, pygame.Rect]:
@@ -145,7 +145,7 @@ def vector_sum(l : list[pygame.Vector2]) -> pygame.Vector2:
         total += val
     return total
 
-def vector_xmax_ysum(l : list[Sequence[float]]) -> pygame.Vector2:
+def vector_xmax_ysum(l : list[pygame.typing.Point]) -> pygame.Vector2:
     return pygame.Vector2(max([val[0] for val in l]), sum([val[1] for val in l]))
 
 def recolor_image(img : pygame.Surface, new_color : ColorType) -> pygame.Surface:
