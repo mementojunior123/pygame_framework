@@ -9,16 +9,12 @@
 -Client side prediction
 -More compact message representation
 
-------Ui rework phase 2-------
--Finish adding properties in brightness_overlay, ui_sprite and textsprite
--Implement use_abs_pos(?)
-
--Handle UiFrame.size in cases where UiFrame has a surf
+------Ui rework potential phase 3-------
+-Give BaseMenu an Ui object to unify some methods?
+-Support some unused properties in some UiSprites?
+-Add a way to have a different position anchor and rotoscale anchor?
+-Test if MOUSEBUTTONDOWN.button in (1, 2, 3) when triggered by mobile
+-Add some check in properties to see if a re-rendering is really necessary?
 -Add ways to make easy UI layouts?
--Add a UiSprite.base_surf property that automatically calls _render?
--Descendant search
--Update docs in base_menu
+-Update relevant docs
 -Validation?
--Implement some sort of event manager
--Implement rotation, scaling and opacity (not important for now)
--Implement missing ui sprites

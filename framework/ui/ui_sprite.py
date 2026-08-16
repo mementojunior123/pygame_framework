@@ -5,18 +5,37 @@ from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, Transforme
 from typing import overload
 
 class UiSprite(UiDrawable):
+    _base_surf_changeable = True
     def __init__(self, info : BaseDrawableInfo, base_surf : pygame.Surface):
         super().__init__(info)
-        self.base_surf : pygame.Surface = base_surf
-        self.surf : pygame.Surface = base_surf.copy()
+        self._base_surf : pygame.Surface = base_surf
+        self._surf : pygame.Surface
+        self._render()
 
+    @property
+    def base_surf(self) -> pygame.Surface:
+        return self._base_surf
+
+    @base_surf.setter
+    def base_surf(self, new_value : pygame.Surface):
+        if not self._base_surf_changeable:
+            raise AttributeError(f"Base surf of {self} is not changeable.")
+        if self._base_surf == new_value:
+            return
+        self._base_surf = new_value
+        self._render()
+
+    @property
+    def surf(self) -> pygame.Surface:
+        return self._surf
 
     @property
     def size(self) -> pygame.Vector2:
-        return pygame.Vector2(self.base_surf.get_size())
+        return pygame.Vector2(self._base_surf.get_size())
     
     def get_local_rotoscaled_rect(self) -> TransformedRect:
-        return {anchor : self.position.calculate_anchor(self.size, anchor) for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
+        return {anchor : self.position.calculate_anchor(self.size * self._scale, anchor, self._angle) 
+                for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
     def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
         ancestors = self.get_frame_ancestors(frame)
@@ -49,7 +68,32 @@ class UiSprite(UiDrawable):
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
     def _render(self):
-        self.surf = self.base_surf.copy()
+        true_angle : float = self.get_true_angle()
+        true_scale : float = self.get_true_scale()
+        true_opacity : float = self.get_true_opacity()
+        colorkey : pygame.typing.ColorLike|None = self._base_surf.get_colorkey()
+        if true_angle != 0 or true_scale != 1:
+            new_surf : pygame.Surface = pygame.transform.rotozoom(self._base_surf.convert_alpha(), true_angle, true_scale)
+            if true_angle == 0:
+                self._surf = new_surf
+            elif colorkey is not None:
+                self._surf = pygame.Surface(new_surf.get_size())
+                self._surf.set_colorkey(colorkey)
+                self._surf.fill(colorkey)
+                self._surf.blit(new_surf, (0, 0))
+            else:
+                self._surf = pygame.Surface(new_surf.get_size(), pygame.SRCALPHA)
+                self._surf.blit(new_surf, (0, 0))
+
+        else:
+            self._surf = self._base_surf.copy()
+        if true_opacity < 1:
+            base_alpha : int|None = self._surf.get_alpha()
+            if base_alpha is None:
+                base_alpha = 255
+
+            self._surf.set_alpha(round(base_alpha * true_opacity))
+        
 
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
@@ -58,7 +102,7 @@ class UiSprite(UiDrawable):
         draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
         if draw_rect is None:
             return
-        display.blit(self.surf, draw_rect)
+        display.blit(self._surf, draw_rect)
 
 
 def local_imports():

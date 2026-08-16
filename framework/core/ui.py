@@ -33,7 +33,6 @@ class Ui:
         return return_list
 
     def render(self, display : pygame.Surface):
-        
         self.complete_list.sort(key = lambda ui_sprite : ui_sprite.zindex)
         for element in self.complete_list:
             element.draw(display)
@@ -74,13 +73,42 @@ class Ui:
             self.temp_elements[element] = timer
             self.complete_list.append(element)
     
-    def update(self):
-        to_del = []
-        for item in self.temp_elements:
-            if self.temp_elements[item].isover(): to_del.append(item)
-        for item in to_del:
-            self.temp_elements.pop(item)
-            if item in self.complete_list: self.complete_list.remove(item)
+    def update(self, delta : float):
+        to_del : list[UiDrawable] = []
+
+        for sprite in self.elements:
+            sprite.update(delta)
+            if sprite._zombie:
+                to_del.append(sprite)
+        for sprite in to_del:
+            self.elements.remove(sprite)
+            if sprite in self.complete_list:
+                self.complete_list.remove(sprite)
+
+        to_del.clear()
+
+        for sprite in self.temp_elements:
+            sprite.update(delta)
+            if self.temp_elements[sprite].isover() or sprite._zombie: to_del.append(sprite)
+        for sprite in to_del:
+            self.temp_elements.pop(sprite)
+            if sprite in self.complete_list: self.complete_list.remove(sprite)
+
+    def handle_mouse_event(self, event : pygame.Event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            drawables : list[UiDrawable] = self.elements + list(self.temp_elements)
+            clicked : list[UiDrawable] = UiDrawable.get_clicked(drawables, event.pos, do_unpack=True)
+            for cliked_drawable in clicked:
+                cliked_drawable.on_click(event)
+
+    def handle_any_event(self, event : pygame.Event):
+        for drawable in self.elements:
+            if event.type in drawable.relevant_custom_events:
+                drawable.handle_custom_event(event)
+
+        for drawable in self.temp_elements:
+            if event.type in drawable.relevant_custom_events:
+                drawable.handle_custom_event(event)
 
     
     

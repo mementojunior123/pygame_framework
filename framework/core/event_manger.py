@@ -68,5 +68,5 @@ class EventManger:
         if event.type in self.bound_actions:
             for callback in self.bound_actions[event.type]:
                 callback(event)
-            for callback in self.bound_actions[self.ANY_EVENT]:
-                callback(event)
+        for callback in self.bound_actions[self.ANY_EVENT]:
+            callback(event)

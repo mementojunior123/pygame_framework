@@ -6,7 +6,7 @@ import random
 import framework.game.coroutine_scripts
 from framework.game.coroutine_scripts import CoroutineScript
 import framework.utils.tween_module as TweenModule
-from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition
+from framework.ui import TextSprite, BaseDrawableInfo, TextSpriteInfo, UiPosition, TextStyle
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer, TimeSource
 from framework.game.sprite import Sprite
@@ -48,7 +48,7 @@ class NormalGameState(GameState):
         
         pause_ui1 = BrightnessOverlay(BaseDrawableInfo(UiPosition((0, 0), 'topleft'), name='pause_overlay', zindex=9999), window_size, -60)
         pause_ui2 = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(window_size[0] // 2, window_size[1] // 2), 'center'), name='pause_text', zindex=1000),
-                               TextSpriteInfo('Paused', self.game.font_70, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
+                               TextSpriteInfo('Paused', TextStyle(self.game.font_70, 'White', False, 'Black', 2, colorkey=(0, 255, 0))))
         core_object.main_ui.add(pause_ui1)
         core_object.main_ui.add(pause_ui2)
         self.game.state = PausedGameState(self.game, self)
@@ -115,7 +115,7 @@ class NetworkTestPattern(CoroutineScript):
         textsprite_font : pygame.Font = core_object.menu.font_50
 
         new_textsprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="Progress"),
-                                                  TextSpriteInfo("Waiting...", textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0)))
+                                                  TextSpriteInfo("Waiting...", TextStyle(textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0))))
         core_object.main_ui.add(new_textsprite)
         timer : Timer = Timer(0.5, time_source)
         percentage : float = 0
@@ -153,7 +153,7 @@ class NetworkWaitingGameState(GameState):
             core_object.event_manager.bind(event_type, self.network_event_handler)
         self.ui_message : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="waiting_message"),
                                                     TextSpriteInfo(f"Waiting for connection...\nHosting: {host_arg.capitalize()}\nPeer id: {self.peer_id}", 
-                                                                self.game.font_40, "White", False, "Black", 2, colorkey=(0, 255, 0)))
+                                                                TextStyle(self.game.font_40, "White", False, "Black", 2, colorkey=(0, 255, 0))))
         core_object.main_ui.add(self.ui_message)
         
 
@@ -322,21 +322,24 @@ class TestPattern(CoroutineScript):
     def corou(time_source : TimeSource) -> Generator[None, None, str]:
         textsprite_font : pygame.Font = core_object.menu.font_50
         new_textsprite : TextSprite = TextSprite(BaseDrawableInfo(UiPosition((480, 10), 'midtop'), name="Progress"),
-                                                  TextSpriteInfo("Waiting...", textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0)))
+                                                  TextSpriteInfo("Waiting...", TextStyle(textsprite_font, "White", False, "Black", 2, colorkey=(0, 255, 0))))
         core_object.main_ui.add(new_textsprite)
         timer : Timer = Timer(0.5, time_source)
         percentage : float = 0
         yield
         while not timer.isover():
             yield
+        
         timer.set_duration(3, restart=True)
         while not timer.isover():
             percentage = pygame.math.lerp(0, 100, timer.get_time() / timer.duration)
+            new_color = pygame.Color((c_off := round(pygame.math.lerp(255, 0, percentage / 100))), c_off, 255)
             zoom : float = pygame.math.lerp(1, 0.25, interpolation.quad_ease_out(timer.get_time() / timer.duration))
             angle : float = pygame.math.lerp(0, 25, sin(timer.get_time() / timer.duration * 2 * pi * 10), False)
             core_object.game.main_camera.zoom = zoom
             #core_object.game.main_camera.rotation = angle
-            new_textsprite.text = f"{percentage:.2f}%"
+            new_textsprite.style.text_color = new_color
+            #new_textsprite.text = f"{percentage:.2f}%"
             yield
         new_textsprite.text = f"{100}% - Done!"
         timer.set_duration(1, restart=True)

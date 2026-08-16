@@ -3,7 +3,7 @@ import random
 from framework.ui import UiPosition
 from framework.ui import UiSprite, BaseDrawableInfo
 from framework.ui import UiSpriteGroup, UiDrawable
-from framework.ui import TextSprite, TextSpriteInfo
+from framework.ui import TextSprite, TextSpriteInfo, TextStyle
 from framework.ui import BaseUiElements
 import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
@@ -19,7 +19,7 @@ def noop():
     pass
 
 class BaseMenu:
-    TAG_EVENT = pygame.event.custom_type()
+    TAG_EVENT : int = UiDrawable.TAG_EVENT
     """Base class for the menu."""
     font_40 = cast(pygame.Font, asset_manager.get_font("font_40"))
     font_50 = cast(pygame.Font, asset_manager.get_font("font_50"))
@@ -68,7 +68,7 @@ class BaseMenu:
             alert_speed: Applies a speedup (or slowdown) factor to the alert animation.
         """
         text_sprite = TextSprite(BaseDrawableInfo(UiPosition(pygame.Vector2(core_object.main_display.get_width() // 2, -5), 'midbottom')),
-                                 TextSpriteInfo(text, core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0)))
+                                 TextSpriteInfo(text, TextStyle(core_object.menu.font_60, 'White', False, 'Black', 2, colorkey=(0, 255, 0))))
         mid_height : float = text_sprite.size.y // 2
         self.add_temp(text_sprite, 5)
         TInfo = TweenModule.TweenInfo
@@ -91,6 +91,7 @@ class BaseMenu:
         """
         core_object.event_manager.bind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
         core_object.event_manager.bind(BaseMenu.TAG_EVENT, self.handle_tag_event)
+        core_object.event_manager.bind(core_object.event_manager.ANY_EVENT, self.handle_any_event)
     
     def remove_connections(self):
         """
@@ -98,6 +99,7 @@ class BaseMenu:
         """
         core_object.event_manager.unbind(pygame.MOUSEBUTTONDOWN, self.handle_mouse_event)
         core_object.event_manager.unbind(BaseMenu.TAG_EVENT, self.handle_tag_event)
+        core_object.event_manager.unbind(core_object.event_manager.ANY_EVENT, self.handle_any_event)
     
     
 
@@ -117,11 +119,20 @@ class BaseMenu:
         Function that runs every frame, allowing frame-based updates to happen.
             delta: The current delta factor. See core.py for more details on delta's functionement.
         """
-        to_del = []
-        for item in self.temp:
-            if self.temp[item].isover(): to_del.append(item)
-        for item in to_del:
-            self.temp.pop(item)
+        to_del : list[UiDrawable] = []
+        for sprite in self.stages[self.stage]:
+            sprite.update(delta)
+            if sprite._zombie:
+                to_del.append(sprite)
+        for sprite in to_del:
+            self.stages[self.stage].remove(sprite)
+
+        to_del.clear()
+        for sprite in self.temp:
+            sprite.update(delta)
+            if self.temp[sprite].isover() or sprite._zombie: to_del.append(sprite)
+        for sprite in to_del:
+            self.temp.pop(sprite)
     
     def prepare_entry(self, stage : int = 1):
         """
@@ -302,8 +313,13 @@ class BaseMenu:
             event: The event to handle.
         """
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos : tuple = event.pos
-            sprite : UiDrawable
-            for sprite in self.stages[self.stage]:
-                if sprite.get_world_draw_rect().collidepoint(mouse_pos):
-                    pygame.event.post(pygame.Event(BaseMenu.TAG_EVENT, {"tag" : sprite.tag, "name" : sprite.name, 'trigger_type' : 'click'}))
+            drawables : list[UiDrawable] = self.stages[self.stage] + list(self.temp)
+            clicked : list[UiDrawable] = UiDrawable.get_clicked(drawables, event.pos, do_unpack=True)
+            for cliked_drawable in clicked:
+                cliked_drawable.on_click(event)
+
+    def handle_any_event(self, event : pygame.Event):
+        drawables : list[UiDrawable] = self.stages[self.stage] + list(self.temp)
+        for drawable in drawables:
+            if event.type in drawable.relevant_custom_events:
+                drawable.handle_custom_event(event)

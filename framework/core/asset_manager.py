@@ -1,5 +1,5 @@
 import pygame
-from pygame.typing import _PathLike, ColorLike
+from pygame.typing import _PathLike, ColorLike, Point
 from framework.utils.helpers import remove_image_empty
 from typing import Literal, Sequence
 
@@ -10,7 +10,7 @@ class AssetManager:
 
     def load_surface(self, path : _PathLike, name : str,
                      alpha_config : Literal['none', 'colorkey', 'alpha', 'alpha_to_colorkey'], 
-                     base_scale : float|Sequence[float] = 1, colorkey : ColorLike = (0, 255, 0), 
+                     base_scale : float|Point = 1, colorkey : ColorLike = (0, 255, 0), 
                      copy_on_request : bool = False, trim_edges : bool = False) -> bool:
         """
         Note : loading an asset with the same name as an already loaded asset overrides the new asset
