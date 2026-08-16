@@ -134,8 +134,8 @@ class Menu(BaseMenu):
                 time : float = stage_data['timer'].get_time()
                 scale : float = abs(sin(time)) * 2
                 opacity : float = sin(time) / 2 + 0.5
-                test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame")
-                test_input : InputTextbox = self.get_sprite_by_name(2, "test_input")
+                test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame") #type: ignore
+                test_input : InputTextbox = self.get_sprite_by_name(2, "test_input") #type: ignore
                 test_frame.opacity = opacity
                 test_input.opacity = opacity
     

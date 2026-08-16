@@ -11,12 +11,11 @@
 
 ------Ui rework phase 2-------
 -Support the ._zombie property
--Maybe scrap UiFrame.base_surf?
 
-------Ui rework phase 3-------
+------Ui rework cleanup-------
+-Add a way to have a different position anchor and rotoscale anchor?
 -Test if MOUSEBUTTONDOWN.button in (1, 2, 3) when triggered by mobile
 -Add some check in properties to see if a re-rendering is really necessary?
--Handle cases where UiFrame._base_surf.get_size() != UiFrame._base_size?
 -Add ways to make easy UI layouts?
 -Update docs in base_menu
 -Validation?
