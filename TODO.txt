@@ -12,10 +12,8 @@
 ------Ui rework phase 2-------
 -Implement rotation, scaling and opacity
 
--Add properties for text_pos and text_aligmnment in input_textbox and textbox
--Add missing properties in input_textbox
+------Ui rework phase 3-------
 -Test if MOUSEBUTTONDOWN.button in (1, 2, 3) when triggered by mobile
-
 -Add some check in properties to see if a re-rendering is really necessary?
 -Handle cases where UiFrame._base_surf.get_size() != UiFrame._base_size?
 -Add ways to make easy UI layouts?

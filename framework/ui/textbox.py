@@ -16,7 +16,7 @@ from typing import Sequence
 class Textbox(UiSprite):
     _base_surf_changeable = False
     def __init__(self, info : BaseDrawableInfo, background : pygame.Surface, text : str, text_style : TextStyle,
-                 text_pos : AnchorStr|Sequence[float] = (0.5, 0.5), text_aligment : AnchorStr|Sequence[float] = (0.5, 0.5), 
+                 text_pos : AnchorStr|pygame.typing.Point = (0.5, 0.5), text_aligment : AnchorStr|pygame.typing.Point = (0.5, 0.5), 
                  text_percent : float = 1):
         if isinstance(text_pos, str):
             text_pos = ANCHOR_REL_POS_DICT[text_pos]
@@ -79,6 +79,39 @@ class Textbox(UiSprite):
     def text_style(self, new_value : TextStyle):
         self._text_style = new_value
         self._render_base()
+
+    @property
+    def text_pos(self) -> pygame.Vector2:
+        return self._text_pos
+
+    @text_pos.setter
+    def text_pos(self, new_value : pygame.typing.Point|AnchorStr):
+        prev_text_pos : pygame.Vector2 = self._text_pos
+        if isinstance(new_value, str):
+            self._text_pos = pygame.Vector2(ANCHOR_REL_POS_DICT[new_value])
+        elif not isinstance(new_value, pygame.Vector2):
+            self._text_pos = pygame.Vector2(new_value)
+        else:
+            self._text_pos = new_value
+        if prev_text_pos != self._text_pos:
+            self._render_base()
+
+    @property
+    def text_alignment(self) -> pygame.Vector2:
+        return self._text_alignment
+
+    @text_alignment.setter
+    def text_alignment(self, new_value : pygame.typing.Point|AnchorStr):
+        prev_text_alignment : pygame.Vector2 = self._text_alignment
+        if isinstance(new_value, str):
+            self._text_alignment = pygame.Vector2(ANCHOR_REL_POS_DICT[new_value])
+        elif not isinstance(new_value, pygame.Vector2):
+            self._text_alignment = pygame.Vector2(new_value)
+        else:
+            self._text_alignment = new_value
+        if prev_text_alignment != self._text_alignment:
+            self._render_base()
+
 
     # TODO : properties for text_pos and text_aligment
 

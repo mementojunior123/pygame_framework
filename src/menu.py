@@ -62,7 +62,7 @@ class Menu(BaseMenu):
         (Menu.font_40, 'Black', False), name='back_button'),
         InputTextbox(BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), zindex=50), test_image,
                      "", TextStyle(Menu.font_40, "Black", False), text_pos=(0.1, 0.5), text_aligment='midleft', 
-                     input_textbox_info=InputTextboxInfo(on_confirm_callbacks=[lambda t : core_object.log(t._text)]))]
+                     input_textbox_info=InputTextboxInfo(on_confirm_callbacks=[lambda t : core_object.log(t._text)], empty_text="Hello..."))]
         ]
         self.bg_color = (94, 129, 162)
         self.add_connections()

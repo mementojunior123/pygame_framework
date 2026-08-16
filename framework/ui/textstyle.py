@@ -17,6 +17,14 @@ class TextStyle:
     colorkey : pygame.typing.ColorLike|None = None
     text_scale : float = 1
 
+    def __copy__(self) -> "TextStyle":
+        return self.copy()
+
+    def copy(self) -> "TextStyle":
+        return TextStyle(self.font, self.text_color, self.anti_aliasing,
+                         self.text_stroke_color, self.text_stroke_size, self.max_line_length,
+                         self.newline_height, self.colorkey, self.text_scale)
+
     def __post_init__(self):
         ...
 
