@@ -9,13 +9,12 @@
 -Client side prediction
 -More compact message representation
 
-------Ui rework phase 2-------
--Support the ._zombie property
-
-------Ui rework cleanup-------
+------Ui rework potential phase 3-------
+-Give BaseMenu an Ui object to unify some methods?
+-Support some unused properties in some UiSprites?
 -Add a way to have a different position anchor and rotoscale anchor?
 -Test if MOUSEBUTTONDOWN.button in (1, 2, 3) when triggered by mobile
 -Add some check in properties to see if a re-rendering is really necessary?
 -Add ways to make easy UI layouts?
--Update docs in base_menu
+-Update relevant docs
 -Validation?

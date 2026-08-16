@@ -119,12 +119,18 @@ class BaseMenu:
         Function that runs every frame, allowing frame-based updates to happen.
             delta: The current delta factor. See core.py for more details on delta's functionement.
         """
+        to_del : list[UiDrawable] = []
         for sprite in self.stages[self.stage]:
             sprite.update(delta)
-        to_del = []
+            if sprite._zombie:
+                to_del.append(sprite)
+        for sprite in to_del:
+            self.stages[self.stage].remove(sprite)
+
+        to_del.clear()
         for sprite in self.temp:
             sprite.update(delta)
-            if self.temp[sprite].isover(): to_del.append(sprite)
+            if self.temp[sprite].isover() or sprite._zombie: to_del.append(sprite)
         for sprite in to_del:
             self.temp.pop(sprite)
     

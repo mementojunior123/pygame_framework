@@ -33,7 +33,6 @@ class Ui:
         return return_list
 
     def render(self, display : pygame.Surface):
-        
         self.complete_list.sort(key = lambda ui_sprite : ui_sprite.zindex)
         for element in self.complete_list:
             element.draw(display)
@@ -75,12 +74,22 @@ class Ui:
             self.complete_list.append(element)
     
     def update(self, delta : float):
+        to_del : list[UiDrawable] = []
+
         for sprite in self.elements:
             sprite.update(delta)
-        to_del = []
+            if sprite._zombie:
+                to_del.append(sprite)
+        for sprite in to_del:
+            self.elements.remove(sprite)
+            if sprite in self.complete_list:
+                self.complete_list.remove(sprite)
+
+        to_del.clear()
+
         for sprite in self.temp_elements:
             sprite.update(delta)
-            if self.temp_elements[sprite].isover(): to_del.append(sprite)
+            if self.temp_elements[sprite].isover() or sprite._zombie: to_del.append(sprite)
         for sprite in to_del:
             self.temp_elements.pop(sprite)
             if sprite in self.complete_list: self.complete_list.remove(sprite)
