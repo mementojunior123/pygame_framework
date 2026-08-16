@@ -21,6 +21,10 @@ class BaseDrawableInfo:
     fire_tag_events : bool = True
     obstructs_cliks : bool = True
 
+    angle : float = 0
+    scale : float = 1
+    opacity : float = 1
+
     def __post_init__(self):
         ...
 
@@ -66,6 +70,11 @@ class UiDrawable:
         self.do_fire_tag_events : bool = info.fire_tag_events
         self.obstructs_clicks : bool = info.obstructs_cliks
 
+        self._angle : float = info.angle
+        self._scale : float = info.scale
+        self._opacity : float = info.opacity
+        self._zombie : bool = False
+
     @property
     def relevant_custom_events(self) -> set[int]:
         return self._relevant_custom_events
@@ -82,10 +91,45 @@ class UiDrawable:
     def parent(self) -> "UiSpriteGroup|None":
         return self._parent
 
+    @property
+    def angle(self) -> float:
+        return self._angle
+
+    @angle.setter
+    def angle(self, new_value : float):
+        if new_value != self._angle:
+            self._angle = new_value
+            self._render()
+
+    @property
+    def scale(self) -> float:
+        return self._scale
+
+    @scale.setter
+    def scale(self, new_value : float):
+        if new_value != self._scale:
+            self._scale = new_value
+            self._render()
+
+    @property
+    def opacity(self) -> float:
+        return self._opacity
+
+    @opacity.setter
+    def opacity(self, new_value : float):
+        if new_value != self._opacity:
+            self._opacity = new_value
+            self._render()
+
+    @property
+    def is_zombie(self) -> bool:
+        return self._zombie
+
     def delete(self):
         if self.parent is None:
             return
         self.parent.remove(self)
+        self._zombie = True
 
     def change_parent_to(self, parent : "UiSpriteGroup"):
         if self.parent:
@@ -111,6 +155,26 @@ class UiDrawable:
             return None
         return ancestor_list
 
+    def get_true_angle(self) -> float:
+        result : float = self._angle
+        current_sprite = self
+        while (current_sprite := current_sprite.parent) is not None:
+            result += current_sprite.angle
+        return result
+
+    def get_true_scale(self) -> float:
+        result : float = self._scale
+        current_sprite = self
+        while (current_sprite := current_sprite.parent) is not None:
+            result *= current_sprite.scale
+        return result
+
+    def get_true_opacity(self) -> float:
+        result : float = self._opacity
+        current_sprite = self
+        while (current_sprite := current_sprite.parent) is not None:
+            result *= current_sprite.opacity
+        return result
     
     def get_local_rotoscaled_rect(self) -> TransformedRect:
         raise NotImplementedError
@@ -146,7 +210,7 @@ class UiDrawable:
         raise NotImplementedError
 
     def _render(self):
-        pass
+        raise NotImplementedError
     
     def update(self, delta : float):
         pass

@@ -53,8 +53,11 @@ class UiFrame(UiSpriteGroup):
     def translate_local_to_world(self, point : pygame.typing.Point) -> pygame.Vector2:
         point_v2 : pygame.Vector2 = pygame.Vector2(point)
 
-        local_topleft = self.position.calculate_anchor(self.size, 'topleft')
-        #TODO : Handle rotation and scale
+        point_v2.rotate_ip(-self._angle)
+        if (mag := point_v2.magnitude()) != 0:
+            point_v2.scale_to_length(mag * self._scale)
+
+        local_topleft = self.position.calculate_anchor(self.size * self._scale, 'topleft', -self._angle)
         point_v2 += local_topleft
         return point_v2
 
@@ -66,7 +69,8 @@ class UiFrame(UiSpriteGroup):
         return {k : self.translate_local_to_world(rect_t[k]) for k in rect_t}
 
     def get_local_rotoscaled_rect(self) -> TransformedRect:
-        return {anchor : self.position.calculate_anchor(self.size, anchor) for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
+        return {anchor : self.position.calculate_anchor(self.size * self._scale, anchor, -self._angle) 
+                        for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
     def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
         ancestors = self.get_frame_ancestors(frame)
@@ -103,7 +107,19 @@ class UiFrame(UiSpriteGroup):
         if not self._base_surf:
             self._surf = None
             return
-        self._surf = self._base_surf.copy()
+        true_angle : float = self.get_true_angle()
+        true_scale : float = self.get_true_scale()
+        true_opacity : float = self.get_true_opacity()
+        if true_angle != 0 or true_scale != 1:
+            self._surf = pygame.transform.rotozoom(self._base_surf, true_angle, true_scale)
+        else:
+            self._surf = self._base_surf.copy()
+        if true_opacity < 1:
+            base_alpha : int|None = self._surf.get_alpha()
+            if base_alpha is None:
+                base_alpha = 255
+
+            self._surf.set_alpha(round(base_alpha * true_opacity))
 
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):

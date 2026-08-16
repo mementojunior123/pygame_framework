@@ -10,7 +10,8 @@
 -More compact message representation
 
 ------Ui rework phase 2-------
--Implement rotation, scaling and opacity
+-Support the ._zombie property
+-Maybe scrap UiFrame.base_surf?
 
 ------Ui rework phase 3-------
 -Test if MOUSEBUTTONDOWN.button in (1, 2, 3) when triggered by mobile

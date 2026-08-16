@@ -11,7 +11,7 @@ import framework.utils.tween_module as TweenModule
 import framework.utils.interpolation as interpolation
 from framework.utils.my_timer import Timer
 from framework.ui import BrightnessOverlay
-from math import floor, ceil
+from math import floor, ceil, sin
 from framework.utils.helpers import ColorType
 from typing import Callable, cast
 
@@ -60,7 +60,7 @@ class Menu(BaseMenu):
         (Menu.font_40, 'Black', False), name='next_button'),
         BaseUiElements.new_button('BlueButton', 'Back', 3, 'topleft', (15, 15), (0.4, 1.0), 
         (Menu.font_40, 'Black', False), name='back_button'),
-        InputTextbox(BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), zindex=50), test_image,
+        InputTextbox(BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), zindex=50, name="test_input"), test_image,
                      "", TextStyle(Menu.font_40, "Black", False), text_pos=(0.1, 0.5), text_aligment='midleft', 
                      input_textbox_info=InputTextboxInfo(on_confirm_callbacks=[lambda t : core_object.log(t._text)], empty_text="Hello..."))]
         ]
@@ -68,7 +68,7 @@ class Menu(BaseMenu):
         self.add_connections()
 
     def enter_stage_2(self):
-        self.stage_data[2] = {'page_index' : 0, 'page_count' : 3, 'page_len' : 4}
+        self.stage_data[2] = {'page_index' : 0, 'page_count' : 3, 'page_len' : 4, 'timer' : Timer(-1)}
         self.stages[2].append(self.get_stage_2_frame(0))
 
     class CustomFrameStage2(UiFrame):
@@ -79,7 +79,7 @@ class Menu(BaseMenu):
             self.elements : list[UiDrawable] = []
             super().__init__(base_drawable_info, self.elements, ui_frame_info)
 
-            for text, pos, anchor in zip(text_list, ((0, 0), (1, 0), (0, 1), (1, 1)), ((0, 0), (1, 0), (0, 1), (1, 1))):
+            for text, pos, anchor in zip(text_list, ((0, 0.15), (1, 0.15), (0, 0.85), (1, 0.85)), ((0, 0), (1, 0), (0, 1), (1, 1))):
                 new_element = TextSprite(BaseDrawableInfo(UiPosition.from_normal_coords(pos, anchor, size), self),
                                          TextSpriteInfo(text, TextStyle(Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0))))
                 self.add(new_element)
@@ -130,6 +130,14 @@ class Menu(BaseMenu):
         match self.stage:
             case 1:
                 pass
+            case 2:
+                time : float = stage_data['timer'].get_time()
+                scale : float = abs(sin(time)) * 2
+                opacity : float = sin(time) / 2 + 0.5
+                test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame")
+                test_input : InputTextbox = self.get_sprite_by_name(2, "test_input")
+                test_frame.opacity = opacity
+                test_input.opacity = opacity
     
     def handle_tag_event(self, event : pygame.Event):
         """
