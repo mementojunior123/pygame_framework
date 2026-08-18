@@ -3,6 +3,7 @@ import asyncio
 import traceback
 pygame.init()
 
+PROFILING : bool = False
 GAME_ICON = pygame.image.load('assets/graphics/icon.png')
 GAME_TITLE : str = "Test game title"
 pygame.display.set_icon(GAME_ICON)
@@ -96,6 +97,10 @@ async def main():
             core_object.log_to_js_console(''.join(traceback.format_exception(e)))
         raise e
 
-asyncio.run(main())
+if PROFILING:
+    import cProfile
+    cProfile.run('asyncio.run(main())', sort=1)
+else:
+    asyncio.run(main())
 
 
