@@ -10,6 +10,7 @@
 -More compact message representation
 
 ------Ui rework potential phase 3-------
+-Add mobile_keyboard and mobile_joystick (from bounce_arena)
 -Give BaseMenu an Ui object to unify some methods?
 -Support some unused properties in some UiSprites?
 -Add a way to have a different position anchor and rotoscale anchor?
