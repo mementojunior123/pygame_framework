@@ -370,6 +370,7 @@ class UiSpriteGroup(UiDrawable):
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         if not self.visible:
             return
+        self.elements.sort(key = lambda d : d.zindex)
         for element in self.elements:
             element.draw(display, frame)
 
