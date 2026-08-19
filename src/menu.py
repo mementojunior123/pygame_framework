@@ -136,7 +136,7 @@ class Menu(BaseMenu):
                 opacity : float = sin(time) / 2 + 0.5
                 test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame") #type: ignore
                 test_input : InputTextbox = self.get_sprite_by_name(2, "test_input") #type: ignore
-                test_frame.opacity = opacity
+                test_frame.scale = (scale, test_frame.scale.y)
                 test_input.opacity = opacity
     
     def handle_tag_event(self, event : pygame.Event):

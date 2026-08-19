@@ -34,10 +34,9 @@ class UiFrame(UiSpriteGroup):
         point_v2 : pygame.Vector2 = pygame.Vector2(point)
 
         point_v2.rotate_ip(-self._angle)
-        if (mag := point_v2.magnitude()) != 0:
-            point_v2.scale_to_length(mag * self._scale)
+        point_v2 *= self._scale.elementwise()
 
-        local_topleft = self.position.calculate_anchor(self.size * self._scale, 'topleft', -self._angle)
+        local_topleft = self.position.calculate_anchor(self.size * self._scale.elementwise(), 'topleft', -self._angle)
         point_v2 += local_topleft
         return point_v2
 
@@ -49,7 +48,7 @@ class UiFrame(UiSpriteGroup):
         return {k : self.translate_local_to_world(rect_t[k]) for k in rect_t}
 
     def get_local_rotoscaled_rect(self) -> TransformedRect:
-        return {anchor : self.position.calculate_anchor(self.size * self._scale, anchor, -self._angle) 
+        return {anchor : self.position.calculate_anchor(self.size * self._scale.elementwise(), anchor, -self._angle) 
                         for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
     def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
@@ -83,11 +82,4 @@ class UiFrame(UiSpriteGroup):
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
-        if not self.visible:
-            return
-        draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
-        if draw_rect is None:
-            return
-        else:
-            for element in self.elements:
-                element.draw(display, self)
+        super().draw(display, self)

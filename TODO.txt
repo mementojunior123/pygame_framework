@@ -13,6 +13,9 @@
 -Add UI layout classes
     -Figure out how i'm going to do it
 
+-Make scale a vector instead of a float
+-Make changes to a property invalidate cache instead of re-rendering right away
+
 -9 sclicing support
 -Add mobile_keyboard and mobile_joystick (from bounce_arena)
 -Give BaseMenu an Ui object to unify some methods?

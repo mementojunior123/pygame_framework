@@ -35,7 +35,7 @@ class UiSprite(UiDrawable):
         return pygame.Vector2(self._base_surf.get_size())
     
     def get_local_rotoscaled_rect(self) -> TransformedRect:
-        return {anchor : self.position.calculate_anchor(self.size * self._scale, anchor, self._angle) 
+        return {anchor : self.position.calculate_anchor(self.size.elementwise() * self._scale, anchor, self._angle) 
                 for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
     def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
@@ -70,11 +70,12 @@ class UiSprite(UiDrawable):
 
     def _render(self):
         true_angle : float = self.get_true_angle()
-        true_scale : float = self.get_true_scale()
+        true_scale : pygame.Vector2 = self.get_true_scale()
         true_opacity : float = self.get_true_opacity()
         colorkey : pygame.typing.ColorLike|None = self._base_surf.get_colorkey()
-        if true_angle != 0 or true_scale != 1:
-            new_surf : pygame.Surface = pygame.transform.rotozoom(self._base_surf.convert_alpha(), true_angle, true_scale)
+        if true_angle != 0 or true_scale != pygame.Vector2(1, 1):
+            int_surf = pygame.transform.scale_by(self._base_surf, true_scale)
+            new_surf : pygame.Surface = pygame.transform.rotate(int_surf.convert_alpha(), true_angle)
             if true_angle == 0:
                 self._surf = new_surf
             elif colorkey is not None:

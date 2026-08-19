@@ -26,7 +26,7 @@ class BaseDrawableInfo:
     obstructs_cliks : bool = True
 
     angle : float = 0
-    scale : float = 1
+    scale : float|pygame.typing.Point = 1
     opacity : float = 1
 
     final_anchor : AnchorStr|pygame.typing.Point|None = None
@@ -78,7 +78,7 @@ class UiDrawable:
         self.obstructs_clicks : bool = info.obstructs_cliks
 
         self._angle : float = info.angle
-        self._scale : float = info.scale
+        self._scale : pygame.Vector2 = pygame.Vector2((info.scale, info.scale) if isinstance(info.scale, (float, int)) else info.scale)
         self._opacity : float = info.opacity
         self._zombie : bool = False
 
@@ -109,11 +109,15 @@ class UiDrawable:
             self._render()
 
     @property
-    def scale(self) -> float:
+    def scale(self) -> pygame.Vector2:
         return self._scale
 
     @scale.setter
-    def scale(self, new_value : float):
+    def scale(self, new_value : float|pygame.typing.Point):
+        if isinstance(new_value, (float, int)):
+            new_value = pygame.Vector2(new_value, new_value)
+        elif not isinstance(new_value, pygame.Vector2):
+            new_value = pygame.Vector2(new_value)
         if new_value != self._scale:
             self._scale = new_value
             self._render()
@@ -146,6 +150,12 @@ class UiDrawable:
     def change_anchor(self, new_anchor : AnchorStr|pygame.typing.Point):
         self.position = UiPosition(self.position.calculate_anchor(self.size, new_anchor, self._angle), new_anchor)
 
+    def get_layout_parent(self) -> "BaseLayout|None":
+        current_ancestor : UiSpriteGroup|None = self.parent
+        while isinstance(current_ancestor, UiDrawable) and not isinstance(current_ancestor, BaseLayout):
+            current_ancestor = current_ancestor.parent
+        return current_ancestor
+
     def get_frame_parent(self) -> "UiFrame|None":
         current_ancestor : UiSpriteGroup|None = self.parent
         while isinstance(current_ancestor, UiDrawable) and not isinstance(current_ancestor, UiFrame):
@@ -172,11 +182,11 @@ class UiDrawable:
             result += current_sprite.angle
         return result
 
-    def get_true_scale(self) -> float:
-        result : float = self._scale
+    def get_true_scale(self) -> pygame.Vector2:
+        result : pygame.Vector2 = self._scale
         current_sprite = self
         while (current_sprite := current_sprite.parent) is not None:
-            result *= current_sprite.scale
+            result *= current_sprite.scale.elementwise()
         return result
 
     def get_true_opacity(self) -> float:
@@ -220,6 +230,10 @@ class UiDrawable:
 
     def clear_custom_event_handlers(self):
         self._custom_event_handlers.clear()
+
+    def _trigger_parent_layout_update(self):
+        if layout_parent := self.get_layout_parent():
+            layout_parent.update_layout()
     
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         """
@@ -385,6 +399,18 @@ class UiSpriteGroup(UiDrawable):
             self.elements.append(new_element)
             new_element._parent = self
 
+    def add_multiple(self, new_elements : Iterable[UiDrawable]):
+        prev_element : UiDrawable|None = None
+        for element in new_elements:
+            if prev_element is not None:
+                if prev_element not in self.elements:
+                    self.elements.append(prev_element)
+                    prev_element._parent = self
+            prev_element = element
+        if prev_element is None:
+            return
+        self.add(prev_element)
+
     def remove(self, element : UiDrawable):
         if element not in self.elements:
             raise ValueError("Element is not a chlid of this sprite group.")
@@ -407,3 +433,5 @@ class UiSpriteGroup(UiDrawable):
 def local_imports2():
     global UiFrame
     from .ui_frame import UiFrame
+    global BaseLayout
+    from .base_layout import BaseLayout
