@@ -336,6 +336,7 @@ class InputTextbox(UiSprite):
                 self.focus()
 
     def handle_custom_event(self, event : pygame.Event):
+        super().handle_custom_event(event)
         if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN):
             self.handle_mouse_event(event)
         elif event.type in (pygame.KEYDOWN, pygame.KEYUP):

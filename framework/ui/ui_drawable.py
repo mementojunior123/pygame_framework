@@ -1,11 +1,14 @@
 import pygame
 from .ui_position import AnyUiPosition, UiPosition
 
-from typing import Literal, TypeAlias, overload, Iterable
+from framework.utils.helpers import AnchorStr
+
+from typing import Literal, TypeAlias, overload, Iterable, Any, Callable
 from dataclasses import dataclass
 import dataclasses
 
 TransformedRect : TypeAlias = dict[Literal['topleft', 'topright', 'bottomright', 'bottomleft'], pygame.Vector2]
+CustomEventCallback : TypeAlias = Callable[["UiDrawable", pygame.Event], None]
 
 @dataclass
 class BaseDrawableInfo:
@@ -15,15 +18,18 @@ class BaseDrawableInfo:
     tag : int = 0
     start_visible : bool = True
     zindex : int = 0
-    data : dict = dataclasses.field(default_factory=lambda : {})
+    data : Any = None
 
     relevant_events : Iterable[int] = tuple()
+    custom_event_handlers : Iterable[CustomEventCallback] = tuple()
     fire_tag_events : bool = True
     obstructs_cliks : bool = True
 
     angle : float = 0
     scale : float = 1
     opacity : float = 1
+
+    final_anchor : AnchorStr|pygame.typing.Point|None = None
 
     def __post_init__(self):
         ...
@@ -64,9 +70,10 @@ class UiDrawable:
         self.unpack : bool = False
         self._parent : "UiSpriteGroup|None" = info.parent
         self.zindex : int = info.zindex
-        self.data : dict = info.data
+        self.data : Any = info.data
 
         self._relevant_custom_events : set[int] = set(info.relevant_events)
+        self._custom_event_handlers : list[CustomEventCallback] = list(info.custom_event_handlers)
         self.do_fire_tag_events : bool = info.fire_tag_events
         self.obstructs_clicks : bool = info.obstructs_cliks
 
@@ -136,6 +143,9 @@ class UiDrawable:
             self.parent.remove(self)
         parent.add(self)
 
+    def change_anchor(self, new_anchor : AnchorStr|pygame.typing.Point):
+        self.position = UiPosition(self.position.calculate_anchor(self.size, new_anchor, self._angle), new_anchor)
+
     def get_frame_parent(self) -> "UiFrame|None":
         current_ancestor : UiSpriteGroup|None = self.parent
         while isinstance(current_ancestor, UiDrawable) and not isinstance(current_ancestor, UiFrame):
@@ -199,6 +209,17 @@ class UiDrawable:
 
     def collidepoint(self, point : pygame.typing.Point):
         return self.get_world_draw_rect().collidepoint(point)
+
+    def add_custom_event_handler(self, custom_event_handler : CustomEventCallback):
+        if custom_event_handler not in self._custom_event_handlers:
+            self._custom_event_handlers.append(custom_event_handler)
+
+    def remove_custom_event_handler(self, custom_event_handler : CustomEventCallback):
+        if custom_event_handler in self._custom_event_handlers:
+            self._custom_event_handlers.remove(custom_event_handler)
+
+    def clear_custom_event_handlers(self):
+        self._custom_event_handlers.clear()
     
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
         """
@@ -222,7 +243,8 @@ class UiDrawable:
                 {"tag" : self.tag, "name" : self.name, 'trigger_type' : 'click', 'trigger_event' : event}))
 
     def handle_custom_event(self, event : pygame.Event):
-        ...
+        for event_handler in self._custom_event_handlers:
+            event_handler(self, event)
 
 class UiSpriteGroup(UiDrawable):
     def __init__(self, base_drawable_info : BaseDrawableInfo, elements : list[UiDrawable]):
@@ -353,6 +375,7 @@ class UiSpriteGroup(UiDrawable):
                     element.on_click(event)
 
     def handle_custom_event(self, event : pygame.Event):
+        super().handle_custom_event(event)
         for element in self.elements:
             if event.type in element.relevant_custom_events:
                 element.handle_custom_event(event)

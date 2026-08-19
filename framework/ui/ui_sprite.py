@@ -11,6 +11,7 @@ class UiSprite(UiDrawable):
         self._base_surf : pygame.Surface = base_surf
         self._surf : pygame.Surface
         self._render()
+        if info.final_anchor is not None: self.change_anchor(info.final_anchor)
 
     @property
     def base_surf(self) -> pygame.Surface:

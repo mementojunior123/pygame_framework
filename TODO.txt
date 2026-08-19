@@ -10,12 +10,14 @@
 -More compact message representation
 
 ------Ui rework potential phase 3-------
+-Add UI layout classes
+    -Figure out how i'm going to do it
+
+-9 sclicing support
 -Add mobile_keyboard and mobile_joystick (from bounce_arena)
 -Give BaseMenu an Ui object to unify some methods?
 -Support some unused properties in some UiSprites?
--Add a way to have a different position anchor and rotoscale anchor?
 -Test if MOUSEBUTTONDOWN.button in (1, 2, 3) when triggered by mobile
 -Add some check in properties to see if a re-rendering is really necessary?
--Add ways to make easy UI layouts?
 -Update relevant docs
 -Validation?

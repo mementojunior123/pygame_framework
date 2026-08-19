@@ -20,6 +20,7 @@ class UiFrame(UiSpriteGroup):
         """Note : size arg is ignored if a base surf is passed in"""
         super().__init__(base_drawable_info, elements)
         self._base_size : pygame.Vector2 = pygame.Vector2(ui_frame_info.size)
+        if base_drawable_info.final_anchor is not None: self.change_anchor(base_drawable_info.final_anchor)
 
     @property
     def size(self) -> pygame.Vector2:
