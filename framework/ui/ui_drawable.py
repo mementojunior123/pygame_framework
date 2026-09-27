@@ -352,7 +352,11 @@ class UiSpriteGroup(UiDrawable):
             if isinstance(child, UiSpriteGroup) and (child_result := child.search_descendants_multiple(drawable, name, tag, match_all)):
                 result.extend(child_result)
         return result
-    
+
+    def get_local_rotoscaled_rect(self) -> TransformedRect:
+        local_draw_rect : pygame.Rect = self.get_local_draw_rect()
+        return {'topleft' : pygame.Vector2(local_draw_rect.topleft), 'topright' : pygame.Vector2(local_draw_rect.topright),
+                'bottomleft' : pygame.Vector2(local_draw_rect.bottomleft), 'bottomright' : pygame.Vector2(local_draw_rect.bottomright)}
     
     def get_local_draw_rect(self) -> pygame.Rect:
         if not self.elements:
@@ -374,6 +378,13 @@ class UiSpriteGroup(UiDrawable):
             if val is not None:
                 children_rect.append(val)
         return children_rect[0].unionall(children_rect[1:])
+
+    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
+        world_draw_rect : pygame.Rect|None = self.get_world_draw_rect(frame)
+        if world_draw_rect is None:
+            return None
+        return {'topleft' : pygame.Vector2(world_draw_rect.topleft), 'topright' : pygame.Vector2(world_draw_rect.topright),
+                'bottomleft' : pygame.Vector2(world_draw_rect.bottomleft), 'bottomright' : pygame.Vector2(world_draw_rect.bottomright)}
         
     
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 

@@ -22,6 +22,7 @@ class UiFrame(UiSpriteGroup):
         self._base_size : pygame.Vector2 = pygame.Vector2(ui_frame_info.size)
         if base_drawable_info.final_anchor is not None: self.change_anchor(base_drawable_info.final_anchor)
         self.obstructs_clicks = False
+        self.temp_local_tranfs_rect : TransformedRect|None = None
 
     @property
     def size(self) -> pygame.Vector2:
@@ -32,14 +33,22 @@ class UiFrame(UiSpriteGroup):
         self._base_size = value
     
     def translate_local_to_world(self, point : pygame.typing.Point) -> pygame.Vector2:
-        point_v2 : pygame.Vector2 = pygame.Vector2(point)
+        if self.temp_local_tranfs_rect is None:
+            point_v2 : pygame.Vector2 = pygame.Vector2(point)
 
-        point_v2.rotate_ip(-self._angle)
-        point_v2 *= self._scale.elementwise()
+            point_v2.rotate_ip(-self._angle)
+            point_v2 *= self._scale.elementwise()
 
-        local_topleft = self.position.calculate_anchor(self.size * self._scale.elementwise(), 'topleft', -self._angle)
-        point_v2 += local_topleft
-        return point_v2
+            local_topleft = self.position.calculate_anchor(self.size * self._scale.elementwise(), 'topleft', -self._angle)
+            point_v2 += local_topleft
+            return point_v2
+        else:
+            actual_tranfs_rect : TransformedRect = self.get_local_rotoscaled_rect()
+            old_x_axis : pygame.Vector2 = (actual_tranfs_rect['topright'] - actual_tranfs_rect['topleft'])
+            old_y_axis : pygame.Vector2 = (actual_tranfs_rect['bottomleft'] - actual_tranfs_rect['topleft'])
+            x_axis : pygame.Vector2 = (self.temp_local_tranfs_rect['topright'] - self.temp_local_tranfs_rect['topleft']) / old_x_axis.length()
+            y_axis : pygame.Vector2 = (self.temp_local_tranfs_rect['bottomleft'] - self.temp_local_tranfs_rect['topleft']) / old_y_axis.length()
+            return point[0] * x_axis + point[1] * y_axis + self.temp_local_tranfs_rect['topleft']
 
     def translate_local_rect_to_world(self, rect : TransformedRect|pygame.Rect) -> TransformedRect:
         if isinstance(rect, pygame.Rect):
@@ -80,4 +89,10 @@ class UiFrame(UiSpriteGroup):
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
-        super().draw(display, self)
+        if not self.visible:
+            return
+        self.temp_local_tranfs_rect = override_pos_local
+        self.elements.sort(key = lambda d : d.zindex)
+        for element in self.elements:
+            element.draw(display, self)
+        self.temp_local_tranfs_rect = None

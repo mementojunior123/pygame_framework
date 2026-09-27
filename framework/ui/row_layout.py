@@ -15,6 +15,14 @@ class RowLayout(BaseLayout):
     def __init__(self, base_drawable_info: BaseDrawableInfo, elements: list[UiDrawable], ui_frame_info: BaseUiFrameInfo):
         super().__init__(base_drawable_info, elements, ui_frame_info)
 
+    def update_layout(self):
+        self.curr_layout = {}
+        prev_rect_drawn : pygame.Rect|None = None
+        for element in self.elements:
+            transformed_elem_rect : TransformedRect = self._calculate_local_draw_pos(element, prev_rect_drawn)
+            self.curr_layout[element] = transformed_elem_rect
+            prev_rect_drawn = UiDrawable.get_draw_rect_from_transformed(transformed_elem_rect)
+
     def _calculate_local_draw_pos(self, element : UiDrawable, element_position_data : pygame.Rect|None = None, 
                                   other_data : dict|None = None) -> TransformedRect:
         if element_position_data is None:
@@ -37,15 +45,3 @@ class RowLayout(BaseLayout):
             'bottomright' : bottomright + offset
         }
         return new_transf_rect
-
-
-    def draw(self, display: pygame.Surface, frame : UiFrame | None = None, 
-             override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
-        if not self.visible:
-            return
-        self.elements.sort(key = lambda d : d.zindex)
-        prev_rect_drawn : pygame.Rect|None = None
-        for element in self.elements:
-            transformed_elem_rect : TransformedRect = self._calculate_local_draw_pos(element, prev_rect_drawn)
-            element.draw(display, self, override_pos_local=transformed_elem_rect)
-            prev_rect_drawn = UiDrawable.get_draw_rect_from_transformed(transformed_elem_rect)
