@@ -3,7 +3,7 @@ import random
 from framework.core.base_menu import BaseMenu
 from framework.ui import UiPosition, BaseDrawableInfo
 from framework.ui import UiSprite, UiDrawable, UiSpriteGroup
-from framework.ui import UiFrame, BaseUiFrameInfo
+from framework.ui import UiFrame, BaseUiFrameInfo, RowLayout
 from framework.ui import TextSprite, TextSpriteInfo, TextStyle
 from framework.ui import InputTextbox, InputTextboxInfo
 from framework.ui import BaseUiElements
@@ -63,6 +63,7 @@ class Menu(BaseMenu):
         InputTextbox(BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), zindex=50, name="test_input"), test_image,
                      "", TextStyle(Menu.font_40, "Black", False), text_pos=(0.1, 0.5), text_aligment='midleft', 
                      input_textbox_info=InputTextboxInfo(on_confirm_callbacks=[lambda t : core_object.log(t._text)], empty_text="Hello..."))]
+
         ]
         self.bg_color = (94, 129, 162)
         self.add_connections()
@@ -70,6 +71,7 @@ class Menu(BaseMenu):
     def enter_stage_2(self):
         self.stage_data[2] = {'page_index' : 0, 'page_count' : 3, 'page_len' : 4, 'timer' : Timer(-1)}
         self.stages[2].append(self.get_stage_2_frame(0))
+        self.stages[2].append(self.CustomRowStage2(["allassso", "25", "23"]))
 
     class CustomFrameStage2(UiFrame):
         def __init__(self, text_list : list[str]):
@@ -84,6 +86,24 @@ class Menu(BaseMenu):
                                          TextSpriteInfo(text, TextStyle(Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0))))
                 self.add(new_element)
 
+        def switch_text_list(self, new_text_list : list[str]):
+            for element, text in zip(self.elements, new_text_list):
+                if isinstance(element, TextSprite):
+                    element.text = text
+
+    class CustomRowStage2(RowLayout):
+        def __init__(self, text_list : list[str]):
+            size = (200, 100)
+            base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.9), (0.5, 0.5)), name="test_row",)
+            ui_frame_info = BaseUiFrameInfo(size)
+            self.elements : list[UiDrawable] = []
+            super().__init__(base_drawable_info, self.elements, ui_frame_info)
+            for text in text_list:
+                new_element = TextSprite(
+                    BaseDrawableInfo(UiPosition.from_normal_coords(pygame.Vector2(0,0), pygame.Vector2(0,0), size), self),
+                    TextSpriteInfo(text, TextStyle(Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0)))
+                )
+                self.add(new_element)
         def switch_text_list(self, new_text_list : list[str]):
             for element, text in zip(self.elements, new_text_list):
                 if isinstance(element, TextSprite):
@@ -117,6 +137,10 @@ class Menu(BaseMenu):
         frame_index = self.get_sprite_index(2, "test_frame")
         if frame_index is not None:
             self.stages[2].pop(frame_index)
+
+        row_index = self.get_sprite_index(2, "test_row")
+        if row_index is not None:
+            self.stages[2].pop(row_index)
         self.stage_data[2].clear()
 
     
@@ -136,8 +160,10 @@ class Menu(BaseMenu):
                 opacity : float = sin(time) / 2 + 0.5
                 test_frame : Menu.CustomFrameStage2 = self.get_sprite_by_name(2, "test_frame") #type: ignore
                 test_input : InputTextbox = self.get_sprite_by_name(2, "test_input") #type: ignore
+                test_row : Menu.CustomRowStage2 = self.get_sprite_by_name(2, "test_row") #type: ignore
                 test_frame.scale = (scale, test_frame.scale.y)
                 test_input.opacity = opacity
+                test_row.angle = time * 90
     
     def handle_tag_event(self, event : pygame.Event):
         """

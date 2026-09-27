@@ -14,6 +14,7 @@
     -Figure out how i'm going to do it
 
 -Make changes to a property invalidate cache instead of re-rendering right away
+-Implement a proper sprite cache
 
 -9 sclicing support
 -Add mobile_keyboard and mobile_joystick (from bounce_arena)

@@ -62,6 +62,14 @@ class UiDrawable:
                     break
         return result
 
+    @staticmethod
+    def get_draw_rect_from_transformed(transformed_rect : TransformedRect):
+        min_x = min(val.x for val in transformed_rect.values())
+        max_x = max(val.x for val in transformed_rect.values())
+        min_y = min(val.y for val in transformed_rect.values())
+        max_y = max(val.y for val in transformed_rect.values())
+        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+
     def __init__(self, info : BaseDrawableInfo):
         self.position : AnyUiPosition = info.position
         self.name : str|None = info.name
@@ -235,7 +243,8 @@ class UiDrawable:
         if layout_parent := self.get_layout_parent():
             layout_parent.update_layout()
     
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
+             override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         """
         When frame is None: draw at local pos
         when frame is not None: convert from local to world pos, then draw
@@ -367,7 +376,8 @@ class UiSpriteGroup(UiDrawable):
         return children_rect[0].unionall(children_rect[1:])
         
     
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
+             override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         if not self.visible:
             return
         self.elements.sort(key = lambda d : d.zindex)

@@ -21,6 +21,7 @@ class UiFrame(UiSpriteGroup):
         super().__init__(base_drawable_info, elements)
         self._base_size : pygame.Vector2 = pygame.Vector2(ui_frame_info.size)
         if base_drawable_info.final_anchor is not None: self.change_anchor(base_drawable_info.final_anchor)
+        self.obstructs_clicks = False
 
     @property
     def size(self) -> pygame.Vector2:
@@ -51,22 +52,18 @@ class UiFrame(UiSpriteGroup):
         return {anchor : self.position.calculate_anchor(self.size * self._scale.elementwise(), anchor, -self._angle) 
                         for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
-    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
+    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None) -> TransformedRect|None:
         ancestors = self.get_frame_ancestors(frame)
         if ancestors is None:
             return None
-        current_result : TransformedRect = self.get_local_rotoscaled_rect()
+        current_result : TransformedRect = override_local_rect or self.get_local_rotoscaled_rect()
         for ancestor in ancestors:
             current_result = ancestor.translate_local_rect_to_world(current_result)
         return current_result
         
     def get_local_draw_rect(self) -> pygame.Rect:
         local_trs_rect = self.get_local_rotoscaled_rect()
-        min_x = min(val.x for val in local_trs_rect.values())
-        max_x = max(val.x for val in local_trs_rect.values())
-        min_y = min(val.y for val in local_trs_rect.values())
-        max_y = max(val.y for val in local_trs_rect.values())
-        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+        return UiDrawable.get_draw_rect_from_transformed(local_trs_rect)
 
     @overload
     def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
@@ -81,5 +78,6 @@ class UiFrame(UiSpriteGroup):
         max_y = max(val.y for val in world_trs_rect.values())
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
+             override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         super().draw(display, self)

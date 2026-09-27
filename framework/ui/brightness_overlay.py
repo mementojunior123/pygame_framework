@@ -68,10 +68,18 @@ class BrightnessOverlay(UiSprite):
         if not init:
             self._render()
 
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
+             override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         if not self.visible:
             return
-        draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        draw_rect : pygame.Rect|None
+        if override_pos_global is not None:
+            draw_rect = override_pos_global
+        elif override_pos_local is not None:
+            tranfs_rect : TransformedRect|None = override_pos_local if frame is None else self.get_world_rotoscaled_rect(frame, override_pos_local)
+            draw_rect = UiDrawable.get_draw_rect_from_transformed(tranfs_rect) if tranfs_rect else None
+        else:
+            draw_rect = self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame)
         if draw_rect is None:
             return
         display.blit(self._surf, draw_rect, special_flags=self._blend_mode)
