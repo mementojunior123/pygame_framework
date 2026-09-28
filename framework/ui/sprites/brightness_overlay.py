@@ -1,9 +1,9 @@
 import pygame
-from .ui_position import AnyUiPosition, UiPosition
+from ..ui_position import AnyUiPosition, UiPosition
 from framework.utils.helpers import AnchorStr
-from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
-from .ui_sprite import UiSprite
-from .ui_frame import UiFrame
+from ..ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from ..ui_sprite import UiSprite
+from ..ui_frame import UiFrame
 
 class BrightnessOverlay(UiSprite):
     _base_surf_changeable = False

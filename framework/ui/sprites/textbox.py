@@ -1,11 +1,11 @@
 import pygame
 
-from .ui_position import AnyUiPosition, UiPosition
+from ..ui_position import AnyUiPosition, UiPosition
 from framework.utils.helpers import AnchorStr, ANCHOR_REL_POS_DICT
-from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
-from .ui_sprite import UiSprite
-from .ui_frame import UiFrame
-from .textstyle import TextStyle, TextStyleProxy
+from ..ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from ..ui_sprite import UiSprite
+from ..ui_frame import UiFrame
+from ..textstyle import TextStyle, TextStyleProxy
 
 from framework.utils.helpers import vector_xmax_ysum
 from math import floor

@@ -1,11 +1,11 @@
 import pygame
 
 from framework.ui.ui_frame import BaseUiFrameInfo
-from .ui_position import AnyUiPosition, UiPosition
+from ..ui_position import AnyUiPosition, UiPosition
 from framework.utils.helpers import AnchorStr
-from .ui_sprite import UiSprite
-from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
-from .ui_frame import UiFrame
+from ..ui_sprite import UiSprite
+from ..ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from ..ui_frame import UiFrame
 from .base_layout import BaseLayout
 
 from typing import overload, Any, Literal

@@ -2,14 +2,14 @@ from .ui_position import UiPosition, AnchorStr, AnyUiPosition, local_imports3
 from .ui_drawable import UiDrawable, UiSpriteGroup, local_imports2, BaseDrawableInfo, TransformedRect
 from .ui_sprite import UiSprite, local_imports
 from .ui_frame import UiFrame, BaseUiFrameInfo
-from .brightness_overlay import BrightnessOverlay
-from .textsprite import TextSpriteInfo, TextSprite
+from .sprites.brightness_overlay import BrightnessOverlay
+from .sprites.textsprite import TextSpriteInfo, TextSprite
 from .base_ui_elements import BaseUiElements
 from .textstyle import TextStyle, TextStyleProxy
-from .textbox import Textbox
-from .input_textbox import InputTextbox, InputTextboxInfo
-from .base_layout import BaseLayout
-from .row_layout import RowLayout
+from .sprites.textbox import Textbox
+from .sprites.input_textbox import InputTextbox, InputTextboxInfo
+from .layouts.base_layout import BaseLayout
+from .layouts.row_layout import RowLayout
 local_imports()
 local_imports2()
 local_imports3()
