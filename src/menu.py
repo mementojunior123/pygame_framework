@@ -3,7 +3,7 @@ import random
 from framework.core.base_menu import BaseMenu
 from framework.ui import UiPosition, BaseDrawableInfo
 from framework.ui import UiSprite, UiDrawable, UiSpriteGroup
-from framework.ui import UiFrame, BaseUiFrameInfo, RowLayout
+from framework.ui import UiFrame, BaseUiFrameInfo, RowLayout, ColumnLayout
 from framework.ui import TextSprite, TextSpriteInfo, TextStyle
 from framework.ui import InputTextbox, InputTextboxInfo
 from framework.ui import BaseUiElements
@@ -91,10 +91,10 @@ class Menu(BaseMenu):
                 if isinstance(element, TextSprite):
                     element.text = text
 
-    class CustomRowStage2(RowLayout):
+    class CustomColumnStage2(ColumnLayout):
         def __init__(self, text_list : list[str]):
-            size = (200, 100)
-            base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.9), (0.5, 0.5)), name="test_row",)
+            size = (100, 100)
+            base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.9), (0.5, 0.5), (200, 100)), name="test_column",)
             ui_frame_info = BaseUiFrameInfo(size)
             self.elements : list[UiDrawable] = []
             super().__init__(base_drawable_info, self.elements, ui_frame_info)
@@ -104,6 +104,27 @@ class Menu(BaseMenu):
                     TextSpriteInfo(text, TextStyle(Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0)))
                 )
                 self.add(new_element)
+
+        def switch_text_list(self, new_text_list : list[str]):
+            for element, text in zip(self.elements, new_text_list):
+                if isinstance(element, TextSprite):
+                    element.text = text
+
+    class CustomRowStage2(RowLayout):
+        def __init__(self, text_list : list[str]):
+            size = (200, 100)
+            base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.9), (0.5, 0.5)), name="test_row",)
+            ui_frame_info = BaseUiFrameInfo(size)
+            self.elements : list[UiDrawable] = []
+            super().__init__(base_drawable_info, self.elements, ui_frame_info)
+            for text in text_list[:-2]:
+                new_element = TextSprite(
+                    BaseDrawableInfo(UiPosition.from_normal_coords(pygame.Vector2(0,0), pygame.Vector2(0,0), size), self),
+                    TextSpriteInfo(text, TextStyle(Menu.font_40, "Black", False, "White", 2, colorkey=(0, 255, 0)))
+                )
+                self.add(new_element)
+            self.add(Menu.CustomColumnStage2(text_list[-2:]))
+
         def switch_text_list(self, new_text_list : list[str]):
             for element, text in zip(self.elements, new_text_list):
                 if isinstance(element, TextSprite):

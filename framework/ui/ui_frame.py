@@ -94,5 +94,5 @@ class UiFrame(UiSpriteGroup):
         self.temp_local_tranfs_rect = override_pos_local
         self.elements.sort(key = lambda d : d.zindex)
         for element in self.elements:
-            element.draw(display, self)
+            element.draw(display, self if frame is None else frame)
         self.temp_local_tranfs_rect = None

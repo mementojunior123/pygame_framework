@@ -202,5 +202,3 @@ def rect_intersect(r1 : pygame.Rect, r2 : pygame.Rect) -> pygame.Rect|None:
         y_len = y_end - y_start
 
     return pygame.Rect((x_start, y_start), (x_len, y_len))
-
-print(rect_intersect(pygame.Rect((0, 0), (5, 5)), pygame.Rect((2, 2), (2, 2))))

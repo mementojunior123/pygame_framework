@@ -247,8 +247,9 @@ class UiDrawable:
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         """
         When frame is None: draw at local pos
-        when frame is not None: convert from local to world pos, then draw
+        when frame is not None: convert from local to frame world pos, then draw
         Note : If the frame passed in is not an ancestor of this item, it will be ignored.
+        Note 2 : The frame passed in must be the first frame in the hierarchy after the draw target
 
         """
         raise NotImplementedError

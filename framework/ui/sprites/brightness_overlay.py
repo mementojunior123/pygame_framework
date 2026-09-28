@@ -91,7 +91,6 @@ class BrightnessOverlay(UiSprite):
             if pygame.Vector2(x_size, y_size) == pygame.Vector2(original_x_size, original_y_size):
                 int_surf1 = self._surf
             else:
-                print(x_size, y_size, pygame.Vector2(original_x_size, original_y_size))
                 int_surf1 : pygame.Surface = pygame.transform.scale(self._surf, (x_size, y_size))
             if abs(extra_rotation) < 0.001:
                 source = int_surf1

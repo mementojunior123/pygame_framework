@@ -34,5 +34,5 @@ class BaseLayout(UiFrame):
         self.temp_local_tranfs_rect = override_pos_local
         for element in self.elements: 
             transformed_elem_rect : TransformedRect = self.curr_layout[element]
-            element.draw(display, self, override_pos_local=transformed_elem_rect)
+            element.draw(display, self if frame is None else frame, override_pos_local=transformed_elem_rect)
         self.temp_local_tranfs_rect = None

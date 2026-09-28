@@ -10,6 +10,7 @@ from .sprites.textbox import Textbox
 from .sprites.input_textbox import InputTextbox, InputTextboxInfo
 from .layouts.base_layout import BaseLayout
 from .layouts.row_layout import RowLayout
+from .layouts.column_layout import ColumnLayout
 local_imports()
 local_imports2()
 local_imports3()
@@ -20,7 +21,7 @@ __all__ = ("UiDrawable", "UiSpriteGroup", "UiSprite", "UiFrame",
            "BaseDrawableInfo", "BaseUiFrameInfo", "TextSpriteInfo",
            "TransformedRect", "AnchorStr", 
            "UiPosition", "AnyUiPosition",
-           "BaseLayout", "RowLayout")
+           "BaseLayout", "RowLayout", "ColumnLayout")
 
 del (
     local_imports,
