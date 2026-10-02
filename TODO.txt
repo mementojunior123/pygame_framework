@@ -10,9 +10,6 @@
 -More compact message representation
 
 ------Ui rework potential phase 3-------
--Add UI layout classes
-    -Figure out how i'm going to do it
-
 -Make changes to a property invalidate cache instead of re-rendering right away
 -Implement a proper sprite cache (including overrides)
 -Implement a layout cache
