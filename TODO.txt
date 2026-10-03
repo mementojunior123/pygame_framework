@@ -10,7 +10,6 @@
 -More compact message representation
 
 ------Ui rework potential phase 3-------
--Make changes to a property invalidate cache instead of re-rendering right away
 -Implement a proper sprite cache (including overrides)
 -Implement a layout cache
 -Make override_pos_global work on UiFrame
