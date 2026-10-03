@@ -402,3 +402,4 @@ class InputTextbox(UiSprite):
         self._base_surf.blit(text_surf, text_rect, area=text_drawn_rect)
         if not init:
             self._render()
+            self._trigger_parent_frame_update(True)

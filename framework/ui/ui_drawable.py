@@ -115,6 +115,7 @@ class UiDrawable:
         if new_value != self._angle:
             self._angle = new_value
             self._render()
+            self._trigger_parent_frame_update()
 
     @property
     def scale(self) -> pygame.Vector2:
@@ -129,6 +130,7 @@ class UiDrawable:
         if new_value != self._scale:
             self._scale = new_value
             self._render()
+            self._trigger_parent_frame_update()
 
     @property
     def opacity(self) -> float:
@@ -139,6 +141,7 @@ class UiDrawable:
         if new_value != self._opacity:
             self._opacity = new_value
             self._render()
+            self._trigger_parent_frame_update(True) # Make this not trigger a layout update?
 
     @property
     def is_zombie(self) -> bool:
@@ -255,9 +258,9 @@ class UiDrawable:
     def clear_custom_event_handlers(self):
         self._custom_event_handlers.clear()
 
-    def _trigger_parent_layout_update(self):
-        if layout_parent := self.get_layout_parent():
-            layout_parent.update_layout()
+    def _trigger_parent_frame_update(self, do_update_layout : bool = True):
+        if frame_parent := self.get_frame_parent():
+            frame_parent.on_child_update(do_update_layout)
 
     def calculate_overriden_draw_pos(self, local_override : TransformedRect|None = None, frame : "UiFrame|None" = None) -> pygame.Rect|None:
         tranfs_rect : TransformedRect|None = local_override if frame is None else self.get_world_rotoscaled_rect(frame, local_override)

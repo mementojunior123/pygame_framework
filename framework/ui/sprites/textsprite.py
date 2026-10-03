@@ -75,3 +75,4 @@ class TextSprite(UiSprite):
         self._base_surf = self._style.render_text(true_text)
         if not init:
             self._render()
+            self._trigger_parent_frame_update(True)

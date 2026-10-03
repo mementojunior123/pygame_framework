@@ -67,6 +67,7 @@ class BrightnessOverlay(UiSprite):
         self._base_surf.fill((abs_brightness, abs_brightness, abs_brightness))
         if not init:
             self._render()
+            self._trigger_parent_frame_update(True)
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):

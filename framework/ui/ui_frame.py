@@ -4,7 +4,7 @@ from framework.utils.helpers import AnchorStr
 from .ui_sprite import UiSprite
 from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
 
-from typing import overload
+from typing import Iterable, overload
 from dataclasses import dataclass
 
 @dataclass
@@ -16,7 +16,18 @@ class BaseUiFrameInfo:
     def __post_init__(self):
         ...
 
+class UiFrameCacheLine:
+    def __init__(self, priority : int, result : pygame.Surface, local_override : TransformedRect|None = None,
+                 scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 1) -> None:
+        self.priority : int = priority
+        self.result : pygame.Surface = result
+        self.scale : pygame.Vector2 = scale if scale is not None else pygame.Vector2(1, 1)
+        self.angle : float = angle
+        self.opacity : float = opacity
+        self.local_override : TransformedRect|None = None
+
 class UiFrame(UiSpriteGroup):
+    MAX_CACHE_SIZE : int = 12
     def __init__(self, base_drawable_info : BaseDrawableInfo, elements : list[UiDrawable], ui_frame_info : BaseUiFrameInfo):
         """Note : size arg is ignored if a base surf is passed in"""
         super().__init__(base_drawable_info, elements)
@@ -26,8 +37,15 @@ class UiFrame(UiSpriteGroup):
         self.temp_local_tranfs_rect : TransformedRect|None = None
         self._do_clip = ui_frame_info.do_clip
         self._surf : pygame.Surface|None = None
+        self._curr_cache_no : int = 0
+        self._cache_line_count : int = 0
+        self._cache : dict[tuple[float, float], list[UiFrameCacheLine]] = {}
         if self._do_clip:
             self._render()
+
+    def _next_cache_no(self) -> int:
+        self._curr_cache_no += 1
+        return self._curr_cache_no - 1
 
     @property
     def do_clip(self) -> bool:
@@ -46,6 +64,7 @@ class UiFrame(UiSpriteGroup):
     @size.setter
     def size(self, value : pygame.Vector2):
         self._base_size = value
+        self._cache.clear()
     
     def translate_local_to_world(self, point : pygame.typing.Point) -> pygame.Vector2:
         if self.temp_local_tranfs_rect is None:
@@ -102,14 +121,86 @@ class UiFrame(UiSpriteGroup):
         max_y = max(val.y for val in world_trs_rect.values())
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
-    def _render(self, local_override : TransformedRect|None = None):
-        self._surf = pygame.Surface(UiDrawable.get_draw_rect_from_transformed(local_override).size if local_override else self.size, pygame.SRCALPHA)
+    @staticmethod
+    def _does_cache_match(cache_line : UiFrameCacheLine, scale : pygame.Vector2, angle : float, opacity : float,
+                          local_override : TransformedRect|None = None) -> bool:
+        SCALE_MARGIN : float = 0
+        ANGLE_MARGIN : float = 0
+        OPACITY_MARGIN : float = 0
+        if ((scale - cache_line.scale).magnitude() < SCALE_MARGIN 
+            and abs(angle - cache_line.angle) < ANGLE_MARGIN  
+            and abs(opacity - cache_line.opacity) < OPACITY_MARGIN
+            and local_override == cache_line.local_override):
+            return True
+        return False
+
+    def _get_cached(self, scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 1, target_size : pygame.Vector2|None = None,
+                    local_override : TransformedRect|None = None) -> pygame.Surface|None:
+        if target_size is None:
+            target_size = self.size
+        if scale is None:
+            scale = pygame.Vector2(1, 1)
+        for cache_line in self._cache.get((target_size[0], target_size[1]), []):
+            if UiFrame._does_cache_match(cache_line, scale, angle, opacity, local_override):
+                cache_line.priority = self._next_cache_no()
+                return cache_line.result
+        return None
+
+    def _cache_surf(self, target_size : pygame.Vector2|None = None, scale : pygame.Vector2|None = None, angle : float = 0,
+                    opacity : float = 1, local_override : TransformedRect|None = None) -> UiFrameCacheLine:
+        if target_size is None:
+            target_size = self.size
+        if scale is None:
+            scale = pygame.Vector2(1, 1)
+        result : pygame.Surface = pygame.Surface(target_size, pygame.SRCALPHA)
         for element in self.elements:
-            element.draw(self._surf, None)
-        self._surf = pygame.transform.scale_by(self._surf, self.get_true_scale(local_override))
-        self._surf = pygame.transform.rotate(self._surf, self.get_true_angle(local_override))
-        a : int|None = self._surf.get_alpha()
-        self._surf.set_alpha(round((255 if a is None else a) * self.get_true_opacity()))
+            element.draw(result, None)
+        result = pygame.transform.scale_by(result, scale)
+        result = pygame.transform.rotate(result, angle)
+        a : int|None = result.get_alpha()
+        result.set_alpha(round((255 if a is None else a) * self.get_true_opacity()))
+        
+        cache_line : UiFrameCacheLine = UiFrameCacheLine(self._next_cache_no(), result, local_override, scale, angle, opacity)
+        self._add_to_cache(target_size, cache_line)
+        return cache_line
+
+    def _add_to_cache(self, target_size : pygame.Vector2, cache_line : UiFrameCacheLine):
+        self._cache_line_count += 1
+        if (target_size[0], target_size[1]) not in self._cache:
+            self._cache[(target_size[0], target_size[1])] = []
+            
+        self._cache[(target_size[0], target_size[1])].append(cache_line)
+        if self._cache_line_count > self.MAX_CACHE_SIZE:
+            self._remove_oldest_cache_line()
+
+    def _remove_oldest_cache_line(self) -> UiFrameCacheLine|None:
+        lowest_priority : int = -1
+        lowest_target_size : tuple[float, float]|None = None
+        lowest_cache_line : UiFrameCacheLine|None = None
+        for target_size, cache_line_list in self._cache.items():
+            for cache_line in cache_line_list:
+                if cache_line.priority < lowest_priority or lowest_cache_line is None:
+                    lowest_target_size = target_size
+                    lowest_cache_line = cache_line
+                    lowest_priority = cache_line.priority
+        if lowest_cache_line and lowest_target_size:
+            self._cache[lowest_target_size].remove(lowest_cache_line)
+            if len(self._cache[lowest_target_size]) == 0:
+                del self._cache[lowest_target_size]
+            self._cache_line_count -= 1
+        return lowest_cache_line
+
+    def _render(self, local_override : TransformedRect|None = None):
+        scale : pygame.Vector2 = self.get_true_scale(local_override)
+        angle : float = self.get_true_angle(local_override)
+        opacity : float = self.get_true_opacity()
+        if (cached_surf := self._get_cached(scale, angle, opacity, self.size, local_override)):
+            self._surf = cached_surf
+        else:
+            self._surf = self._cache_surf(self.size, scale, angle, opacity, local_override).result
+
+    def on_child_update(self, do_update_layout : bool = True):
+        self._cache.clear()
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
@@ -128,3 +219,11 @@ class UiFrame(UiSpriteGroup):
             for element in self.elements:
                 element.draw(display, self if frame is None else frame)
         self.temp_local_tranfs_rect = None
+
+    def add(self, new_element: UiDrawable):
+        super().add(new_element)
+        self.on_child_update()
+
+    def remove(self, element: UiDrawable):
+        super().remove(element)
+        self.on_child_update()

@@ -6,7 +6,7 @@ from typing import overload, TypeAlias
 
 class UiSpriteCacheLine:
     def __init__(self, priority : int, result : pygame.Surface, 
-                 scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 0) -> None:
+                 scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 1) -> None:
         self.priority : int = priority
         self.result : pygame.Surface = result
         self.scale : pygame.Vector2 = scale if scale is not None else pygame.Vector2(1, 1)
@@ -40,8 +40,11 @@ class UiSprite(UiDrawable):
             raise AttributeError(f"Base surf of {self} is not changeable.")
         if self._base_surf == new_value:
             return
+        old_size = self._base_surf.get_size()
+        new_size = new_value.get_size()
         self._base_surf = new_value
         self._render()
+        self._trigger_parent_frame_update(old_size != new_size)
 
     @property
     def surf(self) -> pygame.Surface:
@@ -85,7 +88,7 @@ class UiSprite(UiDrawable):
         max_y = max(val.y for val in world_trs_rect.values())
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
-    def _get_cached(self, scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 0, target_surf : pygame.Surface|None = None) -> pygame.Surface|None:
+    def _get_cached(self, scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 1, target_surf : pygame.Surface|None = None) -> pygame.Surface|None:
         if target_surf is None:
             target_surf = self._base_surf
         if scale is None:
@@ -96,7 +99,7 @@ class UiSprite(UiDrawable):
                 return cache_line.result
         return None
 
-    def _cache_surf(self, target_surf : pygame.Surface|None = None, scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 0) -> UiSpriteCacheLine:
+    def _cache_surf(self, target_surf : pygame.Surface|None = None, scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 1) -> UiSpriteCacheLine:
         if target_surf is None:
             target_surf = self._base_surf
         if scale is None:
@@ -170,6 +173,7 @@ class UiSprite(UiDrawable):
             self._surf = cached_result
         else:
             self._surf = self._cache_surf(self._base_surf, true_scale, true_angle, true_opacity).result
+        self._trigger_parent_frame_update(False)
         return
         
     def calculate_overriden_draw_source(self, local_override : TransformedRect|None = None, frame : "UiFrame|None" = None) -> pygame.Surface|None:

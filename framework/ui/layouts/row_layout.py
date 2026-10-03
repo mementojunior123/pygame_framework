@@ -16,6 +16,7 @@ class RowLayout(BaseLayout):
         super().__init__(base_drawable_info, elements, ui_frame_info)
 
     def update_layout(self):
+        super().update_layout()
         self.curr_layout = {}
         prev_rect_drawn : pygame.Rect|None = None
         for element in self.elements:
