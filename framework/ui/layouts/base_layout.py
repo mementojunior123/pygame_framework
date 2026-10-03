@@ -26,13 +26,34 @@ class BaseLayout(UiFrame):
                                   other_data : dict|None = None) -> TransformedRect:
         ...
 
+    def _render(self, local_override : TransformedRect|None = None):
+        self.update_layout()
+        self._surf = pygame.Surface(UiDrawable.get_draw_rect_from_transformed(local_override).size if local_override else self.size, pygame.SRCALPHA)
+        for element in self.elements:
+            transformed_elem_rect : TransformedRect = self.curr_layout[element]
+            element.draw(self._surf, None, override_pos_local=transformed_elem_rect)
+        self._surf = pygame.transform.scale_by(self._surf, self.get_true_scale(local_override))
+        self._surf = pygame.transform.rotate(self._surf, self.get_true_angle(local_override))
+        a : int|None = self._surf.get_alpha()
+        self._surf.set_alpha(round((255 if a is None else a) * self.get_true_opacity()))
+
     def draw(self, display: pygame.Surface, frame : UiFrame | None = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         if not self.visible:
             return
-        self.update_layout()
+        
         self.temp_local_tranfs_rect = override_pos_local
-        for element in self.elements: 
-            transformed_elem_rect : TransformedRect = self.curr_layout[element]
-            element.draw(display, self if frame is None else frame, override_pos_local=transformed_elem_rect)
+        self.elements.sort(key = lambda d : d.zindex)
+        if self._do_clip:
+            self._render(override_pos_local)
+            if self._surf is None: return
+            draw_rect : pygame.Rect|None = self.calculate_draw_rect(override_pos_global, override_pos_local, frame)
+            if draw_rect is None:
+                return
+            display.blit(self._surf, draw_rect)
+        else:
+            self.update_layout()
+            for element in self.elements:
+                transformed_elem_rect : TransformedRect = self.curr_layout[element]
+                element.draw(display, self if frame is None else frame, override_pos_local=transformed_elem_rect)
         self.temp_local_tranfs_rect = None

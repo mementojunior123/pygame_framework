@@ -77,7 +77,7 @@ class Menu(BaseMenu):
         def __init__(self, text_list : list[str]):
             size = (480, 540)
             base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.5), (0.5, 0.5)), name="test_frame",)
-            ui_frame_info = BaseUiFrameInfo(size)
+            ui_frame_info = BaseUiFrameInfo(size, do_clip=True)
             self.elements : list[UiDrawable] = []
             super().__init__(base_drawable_info, self.elements, ui_frame_info)
 
@@ -95,7 +95,7 @@ class Menu(BaseMenu):
         def __init__(self, text_list : list[str]):
             size = (100, 100)
             base_drawable_info = BaseDrawableInfo(UiPosition.from_normal_coords((0.5, 0.9), (0.5, 0.5), (200, 100)), name="test_column",)
-            ui_frame_info = BaseUiFrameInfo(size)
+            ui_frame_info = BaseUiFrameInfo(size, do_clip=True)
             self.elements : list[UiDrawable] = []
             super().__init__(base_drawable_info, self.elements, ui_frame_info)
             for text in text_list:

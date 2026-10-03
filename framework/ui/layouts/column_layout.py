@@ -45,14 +45,3 @@ class ColumnLayout(BaseLayout):
             'bottomright' : bottomright + offset
         }
         return new_transf_rect
-
-    def draw(self, display: pygame.Surface, frame : UiFrame | None = None, 
-                 override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
-        if not self.visible:
-            return
-        self.update_layout()
-        self.temp_local_tranfs_rect = override_pos_local
-        for element in self.elements: 
-            transformed_elem_rect : TransformedRect = self.curr_layout[element]
-            element.draw(display, self if frame is None else frame, override_pos_local=transformed_elem_rect)
-        self.temp_local_tranfs_rect = None

@@ -73,42 +73,15 @@ class BrightnessOverlay(UiSprite):
         if not self.visible:
             return
         source : pygame.Surface = self._surf
-        draw_rect : pygame.Rect|None
-        if override_pos_global is not None:
-            draw_rect = override_pos_global
-        elif override_pos_local is not None:
-            tranfs_rect : TransformedRect|None = override_pos_local if frame is None else self.get_world_rotoscaled_rect(frame, override_pos_local)
-            if tranfs_rect is None:
-                return
-            x_size : float = (tranfs_rect['topright'] - tranfs_rect['topleft']).length()
-            y_size : float = (tranfs_rect['topright'] - tranfs_rect['topleft']).length()
-            original_local_tranfs_rect : TransformedRect = self.get_local_rotoscaled_rect()
-            original_x_size : float = (original_local_tranfs_rect['topright'] - original_local_tranfs_rect['topleft']).length()
-            original_y_size : float = (original_local_tranfs_rect['topright'] - original_local_tranfs_rect['topleft']).length()
-            extra_rotation : float = (original_local_tranfs_rect['topright'] - original_local_tranfs_rect['topleft']).angle_to(
-                tranfs_rect['topright'] - tranfs_rect['topleft']
-            )
-            if pygame.Vector2(x_size, y_size) == pygame.Vector2(original_x_size, original_y_size):
-                int_surf1 = self._surf
-            else:
-                int_surf1 : pygame.Surface = pygame.transform.scale(self._surf, (x_size, y_size))
-            if abs(extra_rotation) < 0.001:
-                source = int_surf1
-            else:
-                colorkey = int_surf1.get_colorkey()
-                if colorkey is not None:
-                    source = pygame.Surface(int_surf1.get_size())
-                    source.set_colorkey(colorkey)
-                    source.fill(colorkey)
-                    source.blit(int_surf1, (0, 0))
-                else:
-                    source = pygame.Surface(int_surf1.get_size(), pygame.SRCALPHA)
-                    source.blit(int_surf1, (0, 0))
-
-            draw_rect = UiDrawable.get_draw_rect_from_transformed(tranfs_rect)
-        else:
-            draw_rect = self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame)
+        draw_rect : pygame.Rect|None = self.calculate_draw_rect(override_pos_global, override_pos_local, frame)
         if draw_rect is None:
             return
+        if not override_pos_global and override_pos_local:
+            if (new_source := self.calculate_overriden_draw_source(override_pos_local, frame)) is None:
+                return
+            else:
+                source = new_source
+        else:
+            self._render()
         display.blit(source, draw_rect, special_flags=self._blend_mode)
     

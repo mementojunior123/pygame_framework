@@ -15,7 +15,6 @@
 -Implement a layout cache
 -Make override_pos_global work on UiFrame
 -Add an option to UiDrawable.get_[]_rect that accounts for the layout parent
--Add UIFrame clipping (true_scale --> stop at a parent with do_clip?)
 
 -9 sclicing support
 -Add mobile_keyboard and mobile_joystick (from bounce_arena)

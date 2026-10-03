@@ -74,16 +74,17 @@ class UiSprite(UiDrawable):
         true_opacity : float = self.get_true_opacity()
         colorkey : pygame.typing.ColorLike|None = self._base_surf.get_colorkey()
         if true_angle != 0 or true_scale != pygame.Vector2(1, 1):
-            int_surf = pygame.transform.scale_by(self._base_surf, true_scale)
-            new_surf : pygame.Surface = pygame.transform.rotate(int_surf.convert_alpha(), true_angle)
+            int_surf = pygame.transform.scale_by(self._base_surf.convert_alpha(), true_scale)
             if true_angle == 0:
-                self._surf = new_surf
+                self._surf = int_surf
             elif colorkey is not None:
+                new_surf : pygame.Surface = pygame.transform.rotozoom(int_surf.convert_alpha(), true_angle, 1)
                 self._surf = pygame.Surface(new_surf.get_size())
                 self._surf.set_colorkey(colorkey)
                 self._surf.fill(colorkey)
                 self._surf.blit(new_surf, (0, 0))
             else:
+                new_surf : pygame.Surface = pygame.transform.rotozoom(int_surf.convert_alpha(), true_angle, 1)
                 self._surf = pygame.Surface(new_surf.get_size(), pygame.SRCALPHA)
                 self._surf.blit(new_surf, (0, 0))
 
@@ -96,50 +97,45 @@ class UiSprite(UiDrawable):
 
             self._surf.set_alpha(round(base_alpha * true_opacity))
         
-
+    def calculate_overriden_draw_source(self, local_override : TransformedRect|None = None, frame : "UiFrame|None" = None) -> pygame.Surface|None:
+        tranfs_rect : TransformedRect|None = local_override if frame is None else self.get_world_rotoscaled_rect(frame, local_override)
+        if tranfs_rect is None:
+            return None
+        target_scale : pygame.Vector2 = self.get_true_scale(local_override)
+        target_rotation : float = self.get_true_angle(local_override)
+        int_surf1 : pygame.Surface = pygame.transform.scale_by(self._base_surf.convert_alpha(), target_scale)
+        if abs(target_rotation) < 0.001:
+            source = int_surf1
+        else:
+            int_surf2 : pygame.Surface
+            colorkey = int_surf1.get_colorkey()
+            if colorkey is not None:
+                int_surf2 = pygame.transform.rotozoom(int_surf1.convert_alpha(), target_rotation, 1)
+                source = pygame.Surface(int_surf2.get_size())
+                source.set_colorkey(colorkey)
+                source.fill(colorkey)
+                source.blit(int_surf2, (0, 0))
+            else:
+                int_surf2 = pygame.transform.rotozoom(int_surf1.convert_alpha(), target_rotation, 1)
+                source = pygame.Surface(int_surf2.get_size(), pygame.SRCALPHA)
+                source.blit(int_surf2, (0, 0))
+        return source
 
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         if not self.visible:
             return
         source : pygame.Surface = self._surf
-        draw_rect : pygame.Rect|None
-        if override_pos_global is not None:
-            draw_rect = override_pos_global
-        elif override_pos_local is not None:
-            tranfs_rect : TransformedRect|None = override_pos_local if frame is None else self.get_world_rotoscaled_rect(frame, override_pos_local)
-            if tranfs_rect is None:
-                return
-            x_size : float = (tranfs_rect['topright'] - tranfs_rect['topleft']).length()
-            y_size : float = (tranfs_rect['topright'] - tranfs_rect['topleft']).length()
-            original_local_tranfs_rect : TransformedRect = self.get_local_rotoscaled_rect()
-            original_x_size : float = (original_local_tranfs_rect['topright'] - original_local_tranfs_rect['topleft']).length()
-            original_y_size : float = (original_local_tranfs_rect['topright'] - original_local_tranfs_rect['topleft']).length()
-            extra_rotation : float = (original_local_tranfs_rect['topright'] - original_local_tranfs_rect['topleft']).angle_to(
-                tranfs_rect['topright'] - tranfs_rect['topleft']
-            )
-            if pygame.Vector2(x_size, y_size) == pygame.Vector2(original_x_size, original_y_size):
-                int_surf1 = self._surf
-            else:
-                int_surf1 : pygame.Surface = pygame.transform.scale(self._surf, (x_size, y_size))
-            if abs(extra_rotation) < 0.001:
-                source = int_surf1
-            else:
-                colorkey = int_surf1.get_colorkey()
-                if colorkey is not None:
-                    source = pygame.Surface(int_surf1.get_size())
-                    source.set_colorkey(colorkey)
-                    source.fill(colorkey)
-                    source.blit(int_surf1, (0, 0))
-                else:
-                    source = pygame.Surface(int_surf1.get_size(), pygame.SRCALPHA)
-                    source.blit(int_surf1, (0, 0))
-
-            draw_rect = UiDrawable.get_draw_rect_from_transformed(tranfs_rect)
-        else:
-            draw_rect = self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame)
+        draw_rect : pygame.Rect|None = self.calculate_draw_rect(override_pos_global, override_pos_local, frame)
         if draw_rect is None:
             return
+        if not override_pos_global and override_pos_local:
+            if (new_source := self.calculate_overriden_draw_source(override_pos_local, frame)) is None:
+                return
+            else:
+                source = new_source
+        else:
+            self._render()
         display.blit(source, draw_rect)
 
 

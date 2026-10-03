@@ -183,17 +183,31 @@ class UiDrawable:
             return None
         return ancestor_list
 
-    def get_true_angle(self) -> float:
-        result : float = self._angle
+    def get_true_angle(self, local_override : TransformedRect|None = None) -> float:
+        result : float
+        if local_override is None:
+            result = self._angle
+        else:
+            result = (local_override['topright'] - local_override['topleft']).angle_to(pygame.Vector2(1, 0))
         current_sprite = self
         while (current_sprite := current_sprite.parent) is not None:
+            if (isinstance(current_sprite, UiFrame)) and current_sprite.do_clip:
+                break
             result += current_sprite.angle
         return result
 
-    def get_true_scale(self) -> pygame.Vector2:
-        result : pygame.Vector2 = self._scale
+    def get_true_scale(self, local_override : TransformedRect|None = None) -> pygame.Vector2:
+        result : pygame.Vector2
+        if local_override is None:
+            result = self._scale
+        else:
+            size : pygame.Vector2 = self.size
+            result = pygame.Vector2((local_override['topright'] - local_override['topleft']).magnitude() / size.x, 
+                                    (local_override['bottomleft'] - local_override['topleft']).magnitude() / size.y)
         current_sprite = self
         while (current_sprite := current_sprite.parent) is not None:
+            if (isinstance(current_sprite, UiFrame)) and current_sprite.do_clip:
+                break
             result *= current_sprite.scale.elementwise()
         return result
 
@@ -201,13 +215,15 @@ class UiDrawable:
         result : float = self._opacity
         current_sprite = self
         while (current_sprite := current_sprite.parent) is not None:
+            if (isinstance(current_sprite, UiFrame)) and current_sprite.do_clip:
+                break
             result *= current_sprite.opacity
         return result
     
     def get_local_rotoscaled_rect(self) -> TransformedRect:
         raise NotImplementedError
 
-    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
+    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None) -> TransformedRect|None:
         """Note : If frame is given and not an ancestor, None is returned.
         If None is passed in as a frame, gets window pos"""
         raise NotImplementedError
@@ -242,7 +258,27 @@ class UiDrawable:
     def _trigger_parent_layout_update(self):
         if layout_parent := self.get_layout_parent():
             layout_parent.update_layout()
-    
+
+    def calculate_overriden_draw_pos(self, local_override : TransformedRect|None = None, frame : "UiFrame|None" = None) -> pygame.Rect|None:
+        tranfs_rect : TransformedRect|None = local_override if frame is None else self.get_world_rotoscaled_rect(frame, local_override)
+        if tranfs_rect is None:
+            return None
+        return UiDrawable.get_draw_rect_from_transformed(tranfs_rect)
+
+    def calculate_draw_rect(self, override_pos_global : pygame.Rect|None, override_pos_local: TransformedRect|None = None,
+                            frame : "UiFrame|None" = None) -> pygame.Rect|None:
+        draw_rect : pygame.Rect|None
+        if override_pos_global is not None:
+            draw_rect = override_pos_global
+        elif override_pos_local is not None:
+            draw_rect = self.calculate_overriden_draw_pos(override_pos_local, frame)
+        else:
+
+            draw_rect = self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame)
+        if draw_rect is None:
+            return None
+        return draw_rect
+
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         """
@@ -380,7 +416,7 @@ class UiSpriteGroup(UiDrawable):
                 children_rect.append(val)
         return children_rect[0].unionall(children_rect[1:])
 
-    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None) -> TransformedRect|None:
+    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None) -> TransformedRect|None:
         world_draw_rect : pygame.Rect|None = self.get_world_draw_rect(frame)
         if world_draw_rect is None:
             return None

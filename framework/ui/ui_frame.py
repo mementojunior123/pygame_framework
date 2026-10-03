@@ -11,6 +11,7 @@ from dataclasses import dataclass
 class BaseUiFrameInfo:
     """Note : size arg is ignored if a base surf is passed in"""
     size : pygame.typing.IntPoint
+    do_clip : bool = False
 
     def __post_init__(self):
         ...
@@ -23,6 +24,20 @@ class UiFrame(UiSpriteGroup):
         if base_drawable_info.final_anchor is not None: self.change_anchor(base_drawable_info.final_anchor)
         self.obstructs_clicks = False
         self.temp_local_tranfs_rect : TransformedRect|None = None
+        self._do_clip = ui_frame_info.do_clip
+        self._surf : pygame.Surface|None = None
+        if self._do_clip:
+            self._render()
+
+    @property
+    def do_clip(self) -> bool:
+        return self._do_clip
+
+    @do_clip.setter
+    def do_clip(self, value : bool):
+        self._do_clip = value
+        if value:
+            self.unpack = False
 
     @property
     def size(self) -> pygame.Vector2:
@@ -87,12 +102,29 @@ class UiFrame(UiSpriteGroup):
         max_y = max(val.y for val in world_trs_rect.values())
         return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
 
+    def _render(self, local_override : TransformedRect|None = None):
+        self._surf = pygame.Surface(UiDrawable.get_draw_rect_from_transformed(local_override).size if local_override else self.size, pygame.SRCALPHA)
+        for element in self.elements:
+            element.draw(self._surf, None)
+        self._surf = pygame.transform.scale_by(self._surf, self.get_true_scale(local_override))
+        self._surf = pygame.transform.rotate(self._surf, self.get_true_angle(local_override))
+        a : int|None = self._surf.get_alpha()
+        self._surf.set_alpha(round((255 if a is None else a) * self.get_true_opacity()))
+
     def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
              override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         if not self.visible:
             return
         self.temp_local_tranfs_rect = override_pos_local
         self.elements.sort(key = lambda d : d.zindex)
-        for element in self.elements:
-            element.draw(display, self if frame is None else frame)
+        if self._do_clip:
+            self._render(override_pos_local)
+            if self._surf is None: return
+            draw_rect : pygame.Rect|None = self.calculate_draw_rect(override_pos_global, override_pos_local, frame)
+            if draw_rect is None:
+                return
+            display.blit(self._surf, draw_rect)
+        else:
+            for element in self.elements:
+                element.draw(display, self if frame is None else frame)
         self.temp_local_tranfs_rect = None
