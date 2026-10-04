@@ -141,7 +141,7 @@ class UiDrawable:
         if new_value != self._opacity:
             self._opacity = new_value
             self._render()
-            self._trigger_parent_frame_update(True) # Make this not trigger a layout update?
+            self._trigger_parent_frame_update(False)
 
     @property
     def is_zombie(self) -> bool:

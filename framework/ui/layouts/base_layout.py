@@ -11,10 +11,6 @@ from typing import overload, Any
 from dataclasses import dataclass
 
 class BaseLayout(UiFrame):
-    ...
-    # Ability to control de position of its elements
-    # Ability to automatically scale its elements?
-
     def __init__(self, base_drawable_info: BaseDrawableInfo, elements: list[UiDrawable], ui_frame_info: BaseUiFrameInfo):
         self._update_layout_next_draw : bool = True
         self.curr_layout : dict[UiDrawable, TransformedRect] = {}
@@ -26,7 +22,7 @@ class BaseLayout(UiFrame):
 
     def _calculate_local_draw_pos(self, element : UiDrawable, element_position_data : Any = None, 
                                   other_data : dict|None = None) -> TransformedRect:
-        ...
+        raise NotImplementedError
 
     def _cache_surf(self, target_size : pygame.Vector2|None = None, scale : pygame.Vector2|None = None, angle : float = 0,
                         opacity : float = 1, local_override : TransformedRect|None = None) -> UiFrameCacheLine:
