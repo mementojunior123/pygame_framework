@@ -177,3 +177,28 @@ def remove_image_empty(img : pygame.Surface) -> pygame.Surface:
         new_surf.fill(colorkey)
     new_surf.blit(img, (0, 0), area = bounding_box)
     return new_surf
+
+def rect_intersect(r1 : pygame.Rect, r2 : pygame.Rect) -> pygame.Rect|None:
+    if not r1.colliderect(r2):
+        return None
+    x_start : int
+    x_len : int
+    if r1.left < r2.left and r1.right > r2.right:
+        x_start = r2.left
+        x_len = r2.width
+    else:
+        x_start = max(r1.left, r2.left)
+        x_end : int = min(r1.right, r2.right)
+        x_len = x_end - x_start
+
+    y_start : int
+    y_len : int
+    if r1.top < r2.top and r1.bottom > r2.bottom:
+        y_start = r2.top
+        y_len = r2.width
+    else:
+        y_start = max(r1.top, r2.top)
+        y_end : int = min(r1.bottom, r2.bottom)
+        y_len = y_end - y_start
+
+    return pygame.Rect((x_start, y_start), (x_len, y_len))

@@ -1,9 +1,9 @@
-from .ui_position import AnyUiPosition, UiPosition
+from ..ui_position import AnyUiPosition, UiPosition
 from framework.utils.helpers import AnchorStr
-from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
-from .ui_sprite import UiSprite
-from .ui_frame import UiFrame
-from .textstyle import TextStyle, TextStyleProxy
+from ..ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from ..ui_sprite import UiSprite
+from ..ui_frame import UiFrame
+from ..textstyle import TextStyle, TextStyleProxy
 
 from framework.utils.helpers import vector_xmax_ysum
 from math import floor
@@ -75,3 +75,4 @@ class TextSprite(UiSprite):
         self._base_surf = self._style.render_text(true_text)
         if not init:
             self._render()
+            self._trigger_parent_frame_update(True)

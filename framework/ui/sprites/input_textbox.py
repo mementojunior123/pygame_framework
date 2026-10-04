@@ -1,11 +1,11 @@
 import pygame
 
-from .ui_position import AnyUiPosition, UiPosition
+from ..ui_position import AnyUiPosition, UiPosition
 from framework.utils.helpers import AnchorStr, ANCHOR_REL_POS_DICT
-from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
-from .ui_sprite import UiSprite
-from .ui_frame import UiFrame
-from .textstyle import TextStyle, TextStyleProxy
+from ..ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from ..ui_sprite import UiSprite
+from ..ui_frame import UiFrame
+from ..textstyle import TextStyle, TextStyleProxy
 
 from framework.utils.my_timer import Timer, TimeSource
 from framework.utils.helpers import vector_xmax_ysum
@@ -336,6 +336,7 @@ class InputTextbox(UiSprite):
                 self.focus()
 
     def handle_custom_event(self, event : pygame.Event):
+        super().handle_custom_event(event)
         if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN):
             self.handle_mouse_event(event)
         elif event.type in (pygame.KEYDOWN, pygame.KEYUP):
@@ -401,3 +402,4 @@ class InputTextbox(UiSprite):
         self._base_surf.blit(text_surf, text_rect, area=text_drawn_rect)
         if not init:
             self._render()
+            self._trigger_parent_frame_update(True)

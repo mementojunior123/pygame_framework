@@ -50,12 +50,14 @@ class SpriteCamera():
                 original_image = sprite.pivot.original_image
                 pivot_compensation_angle = sprite.pivot.angle
                 colorkey = sprite.pivot.img_colorkey
-            if colorkey is None:
-                colorkey = (0, 255, 0)
             new_image = pygame.transform.rotozoom(original_image.convert_alpha(), self.rotation - pivot_compensation_angle, self.zoom)
-            transformed : pygame.Surface = pygame.Surface(new_image.get_size())
-            transformed.set_colorkey(colorkey)
-            transformed.fill(colorkey)
+            transformed : pygame.Surface
+            if colorkey is None:
+                transformed = pygame.Surface(new_image.get_size(), pygame.SRCALPHA)
+            else:
+                transformed = pygame.Surface(new_image.get_size())
+                transformed.set_colorkey(colorkey)
+                transformed.fill(colorkey)
             transformed.blit(new_image, (0, 0))
             self._add_to_cache(sprite, transformed)
             # TODO : Find a way to not have to create two surfaces each time

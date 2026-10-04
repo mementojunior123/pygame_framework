@@ -1,9 +1,9 @@
 import pygame
-from .ui_position import AnyUiPosition, UiPosition
+from ..ui_position import AnyUiPosition, UiPosition
 from framework.utils.helpers import AnchorStr
-from .ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
-from .ui_sprite import UiSprite
-from .ui_frame import UiFrame
+from ..ui_drawable import UiDrawable, UiSpriteGroup, BaseDrawableInfo, TransformedRect
+from ..ui_sprite import UiSprite
+from ..ui_frame import UiFrame
 
 class BrightnessOverlay(UiSprite):
     _base_surf_changeable = False
@@ -67,12 +67,22 @@ class BrightnessOverlay(UiSprite):
         self._base_surf.fill((abs_brightness, abs_brightness, abs_brightness))
         if not init:
             self._render()
+            self._trigger_parent_frame_update(True)
 
-    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, override_draw_pos : pygame.Rect|None = None):
+    def draw(self, display : pygame.Surface, frame : "UiFrame|None" = None, 
+             override_pos_local: TransformedRect|None = None, override_pos_global : pygame.Rect|None = None):
         if not self.visible:
             return
-        draw_rect : pygame.Rect|None = override_draw_pos or (self.get_local_draw_rect() if frame is None else self.get_world_draw_rect(frame))
+        source : pygame.Surface = self._surf
+        draw_rect : pygame.Rect|None = self.calculate_draw_rect(override_pos_global, override_pos_local, frame)
         if draw_rect is None:
             return
-        display.blit(self._surf, draw_rect, special_flags=self._blend_mode)
+        if not override_pos_global and override_pos_local:
+            if (new_source := self.calculate_overriden_draw_source(override_pos_local, frame)) is None:
+                return
+            else:
+                source = new_source
+        else:
+            self._render()
+        display.blit(source, draw_rect, special_flags=self._blend_mode)
     
