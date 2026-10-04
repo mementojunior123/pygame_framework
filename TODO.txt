@@ -9,7 +9,7 @@
 -Client side prediction
 -More compact message representation
 
-------Ui rework potential phase 3-------
+------Ui potential improvements-------
 -Make override_pos_global work on UiFrame
 -Make it clearer that UiSpriteGroup is an abstract class
 
