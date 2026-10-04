@@ -174,36 +174,28 @@ class BgManager:
                 "PATH_LIST" : None
             })
         self.SOUNDS : dict[str, tuple[pygame.mixer.Sound, str]] = {}
-        sound_list : list[tuple[str, str, float]] = [
-            ('test_music', 'assets/audio/music/test_music.ogg', 1.0),
-            ('test_sfx', 'assets/audio/sfx/test_sfx.ogg', 1.0),
-            ('PLACEHOLDER_DO_NOT_TOUCH', 'assets/audio/NOTHING.ogg', 1.0)
-        ]
-        path_list : list[str] = []
-        for name, path, vol in sound_list:
-            self.load_sound(path, vol, name)
-            path_list.append(path)
-        if self.core.is_web():
-            self.core.run_js_source_file('make_web_channel', {
-                "CHANNEL_COUNT" : str(BgManager.MAX_CHANNEL_COUNT),
-                "PATH_LIST" : str(path_list)
-            })
 
-    @staticmethod
-    def find_unused_channel(force : bool = False) -> AnyChannel|None:
-        WebChannel._get_unused_channel(force) if core_object.is_web() else pygame.mixer.find_channel(force)
+    def find_unused_channel(self, force : bool = False) -> AnyChannel|None:
+        WebChannel._get_unused_channel(force) if core_object.is_web() and self.USE_WEB_ENGINE else pygame.mixer.find_channel(force)
 
-    def load_sound(self, path : str, vol : float, name : str):
+    def _load_sound(self, path : str, vol : float, name : str):
+        """Use asset_manager.load_sound instead"""
         sound = pygame.mixer.Sound(path)
         sound.set_volume(vol)
         self.SOUNDS[name] = (sound, path)
+
+    def _unload_sound(self, name : str) -> tuple[pygame.mixer.Sound, str]|None:
+        """Use asset_manager.unload_asset instead"""
+        if name in self.SOUNDS:
+            return self.SOUNDS.pop(name)
+        return None
     
     def get_sound_obj(self, sound_name : str) -> pygame.mixer.Sound|None:
         return self.SOUNDS.get(sound_name, (None, None))[0]
     
-    
     def test_play_web(self, name : str):
         if not self.core.is_web(): return
+        raise NotImplementedError("The web audio engine is currently unsupported!")
         channel : WebChannel = WebChannel(WebChannel._get_unused_channel(True))
         channel.play(name)
 
@@ -215,6 +207,7 @@ class BgManager:
 
     def _play_web(self, track_name : str, volume : float, loops = -1, maxtime = 0, fade_ms = 0, 
                   sound_type : str|None = 'Music'):
+        raise NotImplementedError("The web audio engine is currently unsupported!")
         channel : WebChannel = WebChannel(WebChannel._get_unused_channel(True))
         channel.play(track_name, loops, maxtime, fade_ms, volume)
         channel.set_volume(volume * self.global_volume)

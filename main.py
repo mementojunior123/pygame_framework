@@ -18,7 +18,16 @@ from framework.core.asset_manager import asset_manager
 for size in (40, 50, 60, 70, 150):
     asset_manager.load_font(r'assets/fonts/Pixeltype.ttf', f"font_{size}", size)
 
+sound_list : list[tuple[str, str, float]] = [
+    ('test_music', 'assets/audio/music/test_music.ogg', 1.0),
+    ('test_sfx', 'assets/audio/sfx/test_sfx.ogg', 1.0),
+    ('PLACEHOLDER_DO_NOT_TOUCH', 'assets/audio/NOTHING.ogg', 1.0)
+]
+for name, path, vol in sound_list:
+    r = asset_manager.load_sound(path, name, vol)
+
 from framework.core.core import Core, core_object
+
 import src.settings as settings_module
 core = core_object
 core.init(window)

@@ -1,13 +1,15 @@
--Improve networking (cleaner networking, multiple connections, etc.)
--Improve latency and memory performance in the web audio engine
+---Particle effects and animations---
 -Move particle_effects and animation to src/
--Move the loading of sound assets to src/
--Improve the particle effect and animation system
--Make some improvements to improve exe builds
+-General improvements (type safety?)
 
----Networking demo improvements---
+---Web audio engine---
+-Make it functional
+-Reduce latency
+
+---Networking improvements---
 -Client side prediction
 -More compact message representation
+-Cleaner networking in general
 
 ------Ui potential improvements-------
 -Make override_pos_global work on UiFrame

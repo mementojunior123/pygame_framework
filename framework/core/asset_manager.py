@@ -5,9 +5,21 @@ from typing import Literal, Sequence
 
 class AssetManager:
     def __init__(self):
+        self.core : "Core"
+
         self.surfaces : dict[str, tuple[pygame.Surface, bool]] = {}
         self.fonts : dict[str, tuple[pygame.Font, int]] = {}
+        self.sounds : dict[str, tuple[pygame.Sound, str, float]] = {}
 
+    def inject_core_reference(self, core_refrence : "Core"):
+        self.core = core_refrence
+        global core_object
+        core_object = core_refrence
+        self.sync_bg_manager()
+
+    def sync_bg_manager(self):
+        self.core.bg_manager.SOUNDS = {name : (self.sounds[name][0], self.sounds[name][1]) for name in self.sounds}
+        
     def load_surface(self, path : _PathLike, name : str,
                      alpha_config : Literal['none', 'colorkey', 'alpha', 'alpha_to_colorkey'], 
                      base_scale : float|Point = 1, colorkey : ColorLike = (0, 255, 0), 
@@ -56,12 +68,29 @@ class AssetManager:
         self.fonts[name] = (font, font_size)
         return True
 
+    def load_sound(self, path : _PathLike, name : str, base_vol : float) -> bool:
+        try:
+            sound : pygame.Sound = pygame.Sound(path)
+        except (FileNotFoundError, pygame.error, TypeError):
+            return False
+        sound.set_volume(base_vol)
+        path_str : str = str(path)
+        self.sounds[name] = (sound, path_str, base_vol)
+        if hasattr(self, 'core'):
+            self.core.bg_manager.SOUNDS[name] = (sound, path_str)
+        return True
+
     def unload_asset(self, asset_name : str) -> bool:
         if asset_name in self.surfaces:
             self.surfaces.pop(asset_name)
             return True
         if asset_name in self.fonts:
             self.fonts.pop(asset_name)
+            return True
+        if asset_name in self.sounds:
+            self.sounds.pop(asset_name)
+            if hasattr(self, 'core'):
+                self.core.bg_manager._unload_sound(asset_name)
             return True
         return False
 
@@ -74,6 +103,8 @@ class AssetManager:
                 return surf
         elif asset_name in self.fonts:
             return self.fonts[asset_name][0]
+        elif asset_manager in self.sounds:
+            return self.sounds[asset_name][0]
         else:
             return None
 
@@ -91,4 +122,13 @@ class AssetManager:
             return self.fonts[asset_name][0]
         return None
 
+    def get_sound(self, asset_name : str) -> pygame.Sound|None:
+        if asset_name in self.sounds:
+            return self.sounds[asset_name][0]
+        return None
+
 asset_manager : AssetManager = AssetManager()
+
+def _runtime_hints():
+    global Core
+    from framework.core.core import Core
