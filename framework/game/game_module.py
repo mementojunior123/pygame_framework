@@ -12,7 +12,7 @@ from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
 from framework.game.sprite_renderer import SpriteCamera
 from src.game_states import GameState, GameStates, initialise_game
-import framework.utils.particle_effects
+import framework.utils.base_particle_effects
 from framework.core.asset_manager import asset_manager
 
 
@@ -130,7 +130,7 @@ class Game:
 
         #Cleanup ingame object
         Sprite.kill_all_sprites()
-        framework.utils.particle_effects.ParticleEffect.elements.clear()
+        framework.utils.base_particle_effects.ParticleEffect.elements.clear()
         core_object.main_ui.clear_all()
 
         #Clear game varaibles

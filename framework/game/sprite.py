@@ -1,5 +1,5 @@
 import pygame
-from framework.utils.animation import AnimationTrack, Animation
+from framework.utils.base_animation import AnimationTrack, Animation
 from typing import Any, Self, Type, TypeAlias, Iterable
 from framework.utils.helpers import is_sorted
 from framework.utils.pivot_2d import Pivot2D

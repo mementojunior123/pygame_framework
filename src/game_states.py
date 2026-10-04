@@ -12,7 +12,7 @@ from framework.utils.my_timer import Timer, TimeSource
 from framework.game.sprite import Sprite
 from framework.utils.helpers import average, random_float
 from framework.ui import BrightnessOverlay
-from framework.utils.particle_effects import ParticleEffect
+from framework.utils.base_particle_effects import ParticleEffect
 
 class GameState:
     def __init__(self, game_object : 'Game'):

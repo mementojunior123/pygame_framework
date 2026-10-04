@@ -24,6 +24,12 @@ ANCHOR_REL_POS_DICT : dict[AnchorStr, tuple[float, float]] = {
 RectSideAnchorStr : TypeAlias = Literal['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
 RectSideAnchorNameList : list[RectSideAnchorStr] = ['left', 'right', 'top', 'bottom', 'x', 'y', 'centerx', 'centery']
 
+def is_rect_side(name : str) -> bool:
+    return name in RectSideAnchorNameList
+
+def is_rect_pos(name : str) -> bool:
+    return name in AnchorNameList
+
 def to_roman(num : int) -> str:
 
     roman = OrderedDict()
@@ -51,7 +57,7 @@ def to_roman(num : int) -> str:
 
     return "".join([a for a in roman_num(num)])
 
-ColorType = Union[list[int], tuple[int, int, int], pygame.Color, str]
+ColorType : TypeAlias = Union[list[int], tuple[int, int, int], pygame.Color, str]
 
 class Task:
     def __init__(self, callback : Callable, *args, **kwargs) -> None:

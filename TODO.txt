@@ -1,6 +1,11 @@
 ---Particle effects and animations---
--Move particle_effects and animation to src/
 -General improvements (type safety?)
+
+---Settings and game storage---
+-General improvements
+
+---Menu---
+-General improvements
 
 ---Web audio engine---
 -Make it functional
@@ -11,7 +16,7 @@
 -More compact message representation
 -Cleaner networking in general
 
-------Ui potential improvements-------
+------UI-------
 -Make override_pos_global work on UiFrame
 -Make it clearer that UiSpriteGroup is an abstract class
 

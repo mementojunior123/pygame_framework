@@ -18,7 +18,7 @@ from framework.core.task_scheduler import TaskScheduler
 from framework.core.asset_manager import AssetManager, asset_manager
 import framework.core.asset_manager
 from framework.utils.tween_module import TweenTrack, TweenChain
-from framework.utils.animation import AnimationTrack
+from framework.utils.base_animation import AnimationTrack
 import sys
 import platform
 from typing import Any, TypedDict, Callable, cast

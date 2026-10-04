@@ -1,6 +1,6 @@
 import pygame
 from framework.utils.my_timer import Timer, TimeSource
-from framework.utils.animation import Animation
+from framework.utils.base_animation import Animation
 import framework.utils.interpolation as interpolation
 from random import random
 from math import sin, radians, cos, atan2
@@ -252,6 +252,18 @@ class ParticleEffect:
         self.dynamic_origin : bool = dynamic_origin
         self.position : pygame.Vector2 = pygame.Vector2(0,0)
         self._zombie : bool = False
+
+    @classmethod
+    def add_effect(cls, name : str, data : EffectDataDict, override : bool = True):
+        if name in cls.effects_data and not override:
+            return
+        cls.effects_data[name] = data
+
+    @classmethod
+    def add_special_effect_class(cls, name : str, effect_class : type['ParticleEffect'], override : bool = True):
+        if name in cls.special_effect_name_dict and not override:
+            return
+        cls.special_effect_name_dict[name] = effect_class
     
     @classmethod
     def load_effect(cls, name : str, persistance : bool = False, dynamic_origin : bool = False):
@@ -374,7 +386,7 @@ class SpecialParticleEffect(ParticleEffect):
 class TestParticleEffect(SpecialParticleEffect):
     pass
 
-ParticleEffect.special_effect_name_dict['test'] = TestParticleEffect
+ParticleEffect.add_special_effect_class('test', TestParticleEffect)
 class TestEffectData(EffectDataDict):
     pass
 
@@ -396,26 +408,6 @@ class ParticleEffectTrack:
     
     def stop_emission(self):
         self.can_emit = False
-
-TEMPLATE : EffectDataDict = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : [0,360], 'speed' : [0,0],
-            'accel_x' : [0,0], 'accel_y' : [0,0], 'drag' : [0, 0],
-            'init_spawn_count' : 0, 'cooldown' : 0.25, 'target_spawn_count' : 0, 'lifetime' : [0,0], 'part_per_wave' : 1,
-            'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
-            'update_method' : 'simulated', 'destroy_offscreen' : True, 'copy_surface' : False, 'type' : None}
-
-test_effect : EffectDataDict = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [0,0], 'velocity_y' : [0,0], 'angle' : [80, 100], 'speed' : [5, 9],
-            'accel_x' : [0,0], 'accel_y' : [0.15,0.12], 'drag' : [0, 0],
-            'init_spawn_count' : 3, 'cooldown' : 0.20, 'target_spawn_count' : 35, 'lifetime' : [5,5], 'part_per_wave' : 3,
-            'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
-            'update_method' : 'simulated', 'destroy_offscreen' : False, 'copy_surface' : False, 'type' : None}
-
-test_effect2 : EffectDataDict = {'offset_x' : [0, 0], 'offset_y' : [0, 0], 'velocity_x' : [1.5,1.6], 'velocity_y' : [0.8,0.82], 'angle' : [0, 20], 'speed' : [20, 22],
-            'accel_x' : [0,0], 'accel_y' : [0.0,0.0], 'drag' : [0, 0],
-            'init_spawn_count' : 1, 'cooldown' : 0.05, 'target_spawn_count' : 35, 'lifetime' : [5,5], 'part_per_wave' : 1,
-            'main_texture' : Particle.test_image, 'alt_textures' : None, "animation" : None,
-            'update_method' : 'spiral', 'destroy_offscreen' : False, 'copy_surface' : False, 'type' : None}
-
-ParticleEffect.effects_data = {'test' : test_effect, 'test2' : test_effect2}
 
 def runtime_imports():
     global core_object

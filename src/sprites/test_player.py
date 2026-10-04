@@ -2,7 +2,7 @@ import pygame
 from framework.game.sprite import Sprite
 from framework.core.core import core_object
 
-from framework.utils.animation import Animation
+from framework.utils.base_animation import Animation
 from framework.utils.pivot_2d import Pivot2D
 
 from typing import cast
