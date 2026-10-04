@@ -41,12 +41,14 @@ Sprite._core_hint()
 
 from framework.utils.base_animation import Animation, AnimationTrack, _sprite_hint
 _sprite_hint()
+import src.animations
 
 from framework.ui import UiDrawable
 from framework.utils.helpers import copysign
 from framework.utils.base_particle_effects import ParticleEffect, Particle
 import framework.utils.base_particle_effects
 framework.utils.base_particle_effects.runtime_imports()
+import src.particle_effects
 from framework.utils.my_timer import Timer
 import framework.utils.interpolation as interpolation
 import framework.utils.tween_module as TweenModule

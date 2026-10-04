@@ -1,5 +1,6 @@
 ---Particle effects and animations---
 -General improvements (type safety?)
+-Logging improvements
 
 ---Settings and game storage---
 -General improvements
