@@ -1,7 +1,7 @@
 from .ui_position import UiPosition, AnchorStr, AnyUiPosition, local_imports3
 from .ui_drawable import UiDrawable, UiSpriteGroup, local_imports2, BaseDrawableInfo, TransformedRect
 from .ui_sprite import UiSprite, local_imports
-from .ui_frame import UiFrame, BaseUiFrameInfo
+from .ui_frame import UiFrame, BaseUiFrameInfo, local_imports4
 from .sprites.brightness_overlay import BrightnessOverlay
 from .sprites.textsprite import TextSpriteInfo, TextSprite
 from .base_ui_elements import BaseUiElements
@@ -14,6 +14,7 @@ from .layouts.column_layout import ColumnLayout
 local_imports()
 local_imports2()
 local_imports3()
+local_imports4()
 __all__ = ("UiDrawable", "UiSpriteGroup", "UiSprite", "UiFrame",
            "BrightnessOverlay", "TextSprite",
            "Textbox", "InputTextbox", "InputTextboxInfo",
@@ -26,5 +27,6 @@ __all__ = ("UiDrawable", "UiSpriteGroup", "UiSprite", "UiFrame",
 del (
     local_imports,
     local_imports2,
-    local_imports3
+    local_imports3,
+    local_imports4
 )

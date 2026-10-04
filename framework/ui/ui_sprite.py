@@ -54,39 +54,37 @@ class UiSprite(UiDrawable):
     def size(self) -> pygame.Vector2:
         return pygame.Vector2(self._base_surf.get_size())
     
-    def get_local_rotoscaled_rect(self) -> TransformedRect:
+    def get_local_rotoscaled_rect(self, use_parent_layout : bool = False) -> TransformedRect:
+        if use_parent_layout and isinstance((layout_parent := self.get_frame_parent()), BaseLayout) and self in layout_parent.curr_layout:
+            return layout_parent.curr_layout[self]
         return {anchor : self.position.calculate_anchor(self.size.elementwise() * self._scale, anchor, self._angle) 
                 for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
-    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None) -> TransformedRect|None:
+    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None,
+                                  use_parent_layout : bool = False) -> TransformedRect|None:
         ancestors = self.get_frame_ancestors(frame)
         if ancestors is None:
             return None
-        current_result : TransformedRect = override_local_rect or self.get_local_rotoscaled_rect()
+        current_result : TransformedRect = override_local_rect or self.get_local_rotoscaled_rect(use_parent_layout=use_parent_layout)
         for ancestor in ancestors:
             current_result = ancestor.translate_local_rect_to_world(current_result)
         return current_result
         
-    def get_local_draw_rect(self) -> pygame.Rect:
-        local_trs_rect = self.get_local_rotoscaled_rect()
-        min_x = min(val.x for val in local_trs_rect.values())
-        max_x = max(val.x for val in local_trs_rect.values())
-        min_y = min(val.y for val in local_trs_rect.values())
-        max_y = max(val.y for val in local_trs_rect.values())
-        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+    def get_local_draw_rect(self, use_parent_layout : bool = False) -> pygame.Rect:
+        local_trs_rect = self.get_local_rotoscaled_rect(use_parent_layout=use_parent_layout)
+        return UiDrawable.get_draw_rect_from_transformed(local_trs_rect)
     
     @overload
-    def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
+    def get_world_draw_rect(self, frame : None = None,
+                                  use_parent_layout : bool = False) -> pygame.Rect: ...
     @overload
-    def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
-    def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
-        world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame)
+    def get_world_draw_rect(self, frame : "UiFrame",
+                                  use_parent_layout : bool = False) -> pygame.Rect|None: ...
+    def get_world_draw_rect(self, frame : "UiFrame|None" = None,
+                                  use_parent_layout : bool = False) -> pygame.Rect|None:
+        world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame, use_parent_layout=use_parent_layout)
         if world_trs_rect is None: return None
-        min_x = min(val.x for val in world_trs_rect.values())
-        max_x = max(val.x for val in world_trs_rect.values())
-        min_y = min(val.y for val in world_trs_rect.values())
-        max_y = max(val.y for val in world_trs_rect.values())
-        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+        return UiDrawable.get_draw_rect_from_transformed(world_trs_rect)
 
     def _get_cached(self, scale : pygame.Vector2|None = None, angle : float = 0, opacity : float = 1, target_surf : pygame.Surface|None = None) -> pygame.Surface|None:
         if target_surf is None:
@@ -212,3 +210,5 @@ class UiSprite(UiDrawable):
 def local_imports():
     global UiFrame
     from .ui_frame import UiFrame
+    global BaseLayout
+    from .layouts.base_layout import BaseLayout

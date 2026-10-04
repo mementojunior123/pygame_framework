@@ -91,35 +91,35 @@ class UiFrame(UiSpriteGroup):
         else: rect_t = rect
         return {k : self.translate_local_to_world(rect_t[k]) for k in rect_t}
 
-    def get_local_rotoscaled_rect(self) -> TransformedRect:
+    def get_local_rotoscaled_rect(self, use_parent_layout : bool = False) -> TransformedRect:
+        if use_parent_layout and isinstance((layout_parent := self.get_frame_parent()), BaseLayout) and self in layout_parent.curr_layout:
+            return layout_parent.curr_layout[self]
         return {anchor : self.position.calculate_anchor(self.size * self._scale.elementwise(), anchor, -self._angle) 
                         for anchor in ('topleft', 'topright', 'bottomright', 'bottomleft')}
 
-    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None) -> TransformedRect|None:
+    def get_world_rotoscaled_rect(self, frame : "UiFrame|None" = None, override_local_rect : TransformedRect|None = None, 
+                                  use_parent_layout : bool = False) -> TransformedRect|None:
         ancestors = self.get_frame_ancestors(frame)
         if ancestors is None:
             return None
-        current_result : TransformedRect = override_local_rect or self.get_local_rotoscaled_rect()
+        current_result : TransformedRect = override_local_rect or self.get_local_rotoscaled_rect(use_parent_layout=use_parent_layout)
         for ancestor in ancestors:
             current_result = ancestor.translate_local_rect_to_world(current_result)
         return current_result
         
-    def get_local_draw_rect(self) -> pygame.Rect:
-        local_trs_rect = self.get_local_rotoscaled_rect()
+    def get_local_draw_rect(self, use_parent_layout : bool = False) -> pygame.Rect:
+        local_trs_rect = self.get_local_rotoscaled_rect(use_parent_layout)
         return UiDrawable.get_draw_rect_from_transformed(local_trs_rect)
 
     @overload
-    def get_world_draw_rect(self, frame : None = None) -> pygame.Rect: ...
+    def get_world_draw_rect(self, frame : None = None, use_parent_layout : bool = False) -> pygame.Rect: ...
     @overload
-    def get_world_draw_rect(self, frame : "UiFrame") -> pygame.Rect|None: ...
-    def get_world_draw_rect(self, frame : "UiFrame|None" = None) -> pygame.Rect|None:
-        world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame)
+    def get_world_draw_rect(self, frame : "UiFrame", use_parent_layout : bool = False) -> pygame.Rect|None: ...
+    def get_world_draw_rect(self, frame : "UiFrame|None" = None, use_parent_layout : bool = False) -> pygame.Rect|None:
+        world_trs_rect : TransformedRect|None = self.get_world_rotoscaled_rect(frame, use_parent_layout=use_parent_layout)
         if world_trs_rect is None: return None
-        min_x = min(val.x for val in world_trs_rect.values())
-        max_x = max(val.x for val in world_trs_rect.values())
-        min_y = min(val.y for val in world_trs_rect.values())
-        max_y = max(val.y for val in world_trs_rect.values())
-        return pygame.Rect((round(min_x), round(min_y)), (round(max_x - min_x), round(max_y - min_y)))
+        return UiDrawable.get_draw_rect_from_transformed(world_trs_rect)
+        
 
     @staticmethod
     def _does_cache_match(cache_line : UiFrameCacheLine, scale : pygame.Vector2, angle : float, opacity : float,
@@ -227,3 +227,7 @@ class UiFrame(UiSpriteGroup):
     def remove(self, element: UiDrawable):
         super().remove(element)
         self.on_child_update()
+
+def local_imports4():
+    global BaseLayout
+    from .layouts.base_layout import BaseLayout
